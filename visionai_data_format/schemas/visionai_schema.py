@@ -79,6 +79,13 @@ class Frame(BaseModel):
         + ' Object values may contain an "object_data" JSON object.',
     )
 
+    contexts: Optional[dict[str, ContextInFrame]] = Field(
+        None,
+        description="This is a JSON object that contains dynamic information on VisionAI contexts."
+        + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
+        + ' Context values may contain an "context_data" JSON object.',
+    )
+
     frame_properties: FrameProperties = Field(
         None,
         description="This is a JSON object which contains information about this frame.",
@@ -471,6 +478,10 @@ class CoordinateSystem(BaseModel):
     __root__: dict[str, CoordinateSystemInfo]
 
 
+class ContextInFrame(BaseModel):
+    context_data: ObjectData
+
+
 class ContextInfo(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -539,6 +550,7 @@ class VisionAIModel(BaseModel):
 Attributes.update_forward_refs()
 Context.update_forward_refs()
 ContextInfo.update_forward_refs()
+ContextInFrame.update_forward_refs()
 Frame.update_forward_refs()
 Object.update_forward_refs()
 ObjectData.update_forward_refs()
