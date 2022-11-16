@@ -432,6 +432,25 @@ class ElementDataPointer(BaseModel):
     )
 
 
+class ContextDataPointer(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    attributes: Optional[dict[str, TypeAttribute]] = Field(
+        None,
+        description="This is a JSON object which contains pointers to the attributes of"
+        + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
+        + " attribute of the element data this pointer points to.",
+    )
+    frame_intervals: list[FrameInterval] = Field(
+        ...,
+        description="List of frame intervals of the element data pointed by this pointer.",
+    )
+    type: Optional[TypeAttribute] = Field(
+        None, description="Type of the element data pointed by this pointer."
+    )
+
+
 class SchemaVersion(str, Enum):
     field_1_0_0 = "1.0.0"
 
@@ -495,7 +514,7 @@ class ContextInfo(BaseModel):
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
     context_data: Optional[ObjectData] = None
-    context_data_pointers: Optional[dict[str, ElementDataPointer]] = None
+    context_data_pointers: Optional[dict[str, ContextDataPointer]] = None
     type: str = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",

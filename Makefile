@@ -9,7 +9,7 @@ install-dev: install-dev-pkgs install-git-hooks install-commit-message-template 
 
 .PHONY: install-dev-pkgs
 install-dev-pkgs: ci/dev.txt ## install dev pacakges
-	# Installing dev pacakges
+	# Installing dev packages
 	@$(PIP) install -q -r $<
 
 ###########################################################
