@@ -262,8 +262,6 @@ class Cuboid(ObjectDataElement):
 
 
 class Boolean(BaseModel):
-    class Config:
-        extra = Extra.allow
 
     attributes: Optional[Attributes] = None
     name: Optional[str] = Field(
@@ -282,9 +280,14 @@ class Boolean(BaseModel):
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
 
+    class Config:
+        extra = Extra.allow
+        use_enum_values = True
+
 
 class Number(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     attributes: Optional[Attributes] = None
@@ -307,6 +310,7 @@ class Number(BaseModel):
 
 class Text(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     attributes: Optional[Attributes] = None
@@ -329,6 +333,7 @@ class Text(BaseModel):
 
 class Vec(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     attributes: Optional[Attributes] = None
@@ -415,6 +420,7 @@ class FrameObjectData(BaseModel):
 
 class ElementDataPointer(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.forbid
 
     attributes: Optional[dict[str, TypeAttribute]] = Field(
@@ -434,6 +440,7 @@ class ElementDataPointer(BaseModel):
 
 class ContextDataPointer(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.forbid
 
     attributes: Optional[dict[str, TypeAttribute]] = Field(
@@ -457,6 +464,7 @@ class SchemaVersion(str, Enum):
 
 class Metadata(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     schema_version: SchemaVersion = Field(
@@ -475,6 +483,9 @@ class StreamInfo(BaseModel):
     uri: Optional[str] = ""
     description: Optional[str] = ""
     stream_properties: Optional[StreamProperties] = None
+
+    class Config:
+        use_enum_values = True
 
 
 class Stream(BaseModel):
