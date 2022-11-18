@@ -79,6 +79,13 @@ class Frame(BaseModel):
         + ' Object values may contain an "object_data" JSON object.',
     )
 
+    contexts: Optional[dict[str, ContextInFrame]] = Field(
+        None,
+        description="This is a JSON object that contains dynamic information on VisionAI contexts."
+        + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
+        + ' Context values may contain an "context_data" JSON object.',
+    )
+
     frame_properties: FrameProperties = Field(
         None,
         description="This is a JSON object which contains information about this frame.",
@@ -255,8 +262,6 @@ class Cuboid(ObjectDataElement):
 
 
 class Boolean(BaseModel):
-    class Config:
-        extra = Extra.allow
 
     attributes: Optional[Attributes] = None
     name: Optional[str] = Field(
@@ -275,9 +280,14 @@ class Boolean(BaseModel):
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
 
+    class Config:
+        extra = Extra.allow
+        use_enum_values = True
+
 
 class Number(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     attributes: Optional[Attributes] = None
@@ -300,6 +310,7 @@ class Number(BaseModel):
 
 class Text(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     attributes: Optional[Attributes] = None
@@ -322,6 +333,7 @@ class Text(BaseModel):
 
 class Vec(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     attributes: Optional[Attributes] = None
@@ -408,6 +420,7 @@ class FrameObjectData(BaseModel):
 
 class ElementDataPointer(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.forbid
 
     attributes: Optional[dict[str, TypeAttribute]] = Field(
@@ -425,12 +438,33 @@ class ElementDataPointer(BaseModel):
     )
 
 
+class ContextDataPointer(BaseModel):
+    class Config:
+        use_enum_values = True
+        extra = Extra.forbid
+
+    attributes: Optional[dict[str, TypeAttribute]] = Field(
+        None,
+        description="This is a JSON object which contains pointers to the attributes of"
+        + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
+        + " attribute of the element data this pointer points to.",
+    )
+    frame_intervals: list[FrameInterval] = Field(
+        ...,
+        description="List of frame intervals of the element data pointed by this pointer.",
+    )
+    type: Optional[TypeAttribute] = Field(
+        None, description="Type of the element data pointed by this pointer."
+    )
+
+
 class SchemaVersion(str, Enum):
     field_1_0_0 = "1.0.0"
 
 
 class Metadata(BaseModel):
     class Config:
+        use_enum_values = True
         extra = Extra.allow
 
     schema_version: SchemaVersion = Field(
@@ -449,6 +483,9 @@ class StreamInfo(BaseModel):
     uri: Optional[str] = ""
     description: Optional[str] = ""
     stream_properties: Optional[StreamProperties] = None
+
+    class Config:
+        use_enum_values = True
 
 
 class Stream(BaseModel):
@@ -471,6 +508,10 @@ class CoordinateSystem(BaseModel):
     __root__: dict[str, CoordinateSystemInfo]
 
 
+class ContextInFrame(BaseModel):
+    context_data: ObjectData
+
+
 class ContextInfo(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -484,7 +525,7 @@ class ContextInfo(BaseModel):
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
     context_data: Optional[ObjectData] = None
-    context_data_pointers: Optional[dict[str, ElementDataPointer]] = None
+    context_data_pointers: Optional[dict[str, ContextDataPointer]] = None
     type: str = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",
@@ -539,6 +580,7 @@ class VisionAIModel(BaseModel):
 Attributes.update_forward_refs()
 Context.update_forward_refs()
 ContextInfo.update_forward_refs()
+ContextInFrame.update_forward_refs()
 Frame.update_forward_refs()
 Object.update_forward_refs()
 ObjectData.update_forward_refs()
