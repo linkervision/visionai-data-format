@@ -53,7 +53,6 @@ class ObjectInFrame(BaseModel):
 
 
 class FramePropertyInfo(BaseModel):
-
     uri: str = Field(..., description="the urls of image")
 
     class Config:
@@ -65,29 +64,29 @@ class FramePropertyStream(BaseModel):
 
 
 class FrameProperties(BaseModel):
-    streams: FramePropertyStream
+    streams: FramePropertyStream = Field(default_factory=dict)
 
 
 class Frame(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    objects: Optional[dict[str, ObjectInFrame]] = Field(
-        None,
+    objects: dict[str, ObjectInFrame] = Field(
+        default_factory=dict,
         description="This is a JSON object that contains dynamic information on VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs."
         + ' Object values may contain an "object_data" JSON object.',
     )
 
-    contexts: Optional[dict[str, ContextInFrame]] = Field(
-        None,
+    contexts: dict[str, ContextInFrame] = Field(
+        default_factory=dict,
         description="This is a JSON object that contains dynamic information on VisionAI contexts."
         + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
         + ' Context values may contain an "context_data" JSON object.',
     )
 
     frame_properties: FrameProperties = Field(
-        None,
+        default_factory=dict,
         description="This is a JSON object which contains information about this frame.",
     )
 
@@ -96,27 +95,23 @@ class FrameInterval(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    frame_start: Optional[int] = Field(
-        None, description="Initial frame number of the interval."
-    )
-    frame_end: Optional[int] = Field(
-        None, description="Ending frame number of the interval."
-    )
+    frame_start: int = Field(..., description="Initial frame number of the interval.")
+    frame_end: int = Field(..., description="Ending frame number of the interval.")
 
 
 class Attributes(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    boolean: Optional[list[Boolean]] = None
-    number: Optional[list[Number]] = None
-    text: Optional[list[Text]] = None
-    vec: Optional[list[Vec]] = None
+    boolean: list[Boolean] = Field(default_factory=list)
+    number: list[Number] = Field(default_factory=list)
+    text: list[Text] = Field(default_factory=list)
+    vec: list[Vec] = Field(default_factory=list)
 
 
 class ObjectDataElement(BaseModel):
 
-    attributes: Optional[Attributes] = None
+    attributes: Attributes = Field(default_factory=dict)
     name: str = Field(
         ...,
         description="This is a string encoding the name of this object data."
@@ -247,8 +242,8 @@ class Cuboid(ObjectDataElement):
     class Config:
         extra = Extra.allow
 
-    val: Optional[list[float]] = Field(
-        None,
+    val: list[float] = Field(
+        default_factory=list,
         description="List of values encoding the position, rotation and dimensions."
         + " Two options are supported, using 9 or 10 values. If 9 values are used,"
         + " the format is (x, y, z, rx, ry, rz, sx, sy, sz), where (x, y, z) encodes the position,"
@@ -263,9 +258,9 @@ class Cuboid(ObjectDataElement):
 
 class Boolean(BaseModel):
 
-    attributes: Optional[Attributes] = None
-    name: Optional[str] = Field(
-        None,
+    attributes: Attributes = Field(default_factory=dict)
+    name: str = Field(
+        ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
     )
@@ -290,9 +285,9 @@ class Number(BaseModel):
         use_enum_values = True
         extra = Extra.allow
 
-    attributes: Optional[Attributes] = None
-    name: Optional[str] = Field(
-        None,
+    attributes: Attributes = Field(default_factory=dict)
+    name: str = Field(
+        ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
     )
@@ -313,7 +308,7 @@ class Text(BaseModel):
         use_enum_values = True
         extra = Extra.allow
 
-    attributes: Optional[Attributes] = None
+    attributes: Attributes = Field(default_factory=dict)
     name: Optional[str] = Field(
         None,
         description="This is a string encoding the name of this object data."
@@ -336,9 +331,9 @@ class Vec(BaseModel):
         use_enum_values = True
         extra = Extra.allow
 
-    attributes: Optional[Attributes] = None
-    name: Optional[str] = Field(
-        None,
+    attributes: Attributes = Field(default_factory=dict)
+    name: str = Field(
+        ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
     )
@@ -347,7 +342,9 @@ class Vec(BaseModel):
         description="This attribute specifies whether the vector shall be"
         + " considered as a descriptor of individual values or as a definition of a range.",
     )
-    val: list[str] = Field(..., description="The values of the vector (list).")
+    val: list[Union[float, int, str]] = Field(
+        ..., description="The values of the vector (list)."
+    )
     coordinate_system: Optional[str] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
@@ -366,8 +363,8 @@ class Object(BaseModel):
         ...,
         description="Name of the object. It is a friendly name and not used for indexing.",
     )
-    object_data: Optional[ObjectData] = None
-    object_data_pointers: Optional[dict[str, ElementDataPointer]] = None
+    object_data: ObjectData = Field(default_factory=dict)
+    object_data_pointers: dict[str, ElementDataPointer] = Field(default_factory=dict)
     type: str = Field(
         ...,
         description="The type of an object, defines the class the object corresponds to.",
@@ -489,16 +486,16 @@ class StreamInfo(BaseModel):
 
 
 class Stream(BaseModel):
-    __root__: Optional[dict[str, StreamInfo]] = Field(
-        None,
+    __root__: dict[str, StreamInfo] = Field(
+        default_factory=dict,
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
 
 
 class CoordinateSystemInfo(BaseModel):
     type: str
-    parent: Optional[str] = ""
-    children: Optional[list[str]] = []
+    parent: str = ""
+    children: list[str] = Field(default_factory=list)
 
     class Config:
         extra = Extra.allow
@@ -509,23 +506,25 @@ class CoordinateSystem(BaseModel):
 
 
 class ContextInFrame(BaseModel):
-    context_data: ObjectData
+    context_data: ObjectData = Field(
+        default_factory=dict,
+    )
 
 
 class ContextInfo(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    frame_intervals: Optional[list[FrameInterval]] = Field(
-        None,
+    frame_intervals: list[FrameInterval] = Field(
+        ...,
         description="The array of frame intervals where this object exists or is defined.",
     )
     name: str = Field(
         ...,
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
-    context_data: Optional[ObjectData] = None
-    context_data_pointers: Optional[dict[str, ContextDataPointer]] = None
+    context_data: ObjectData = Field(default_factory=dict)
+    context_data_pointers: dict[str, ContextDataPointer] = Field(default_factory=dict)
     type: str = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",
@@ -541,33 +540,33 @@ class VisionAI(BaseModel):
         extra = Extra.forbid
 
     contexts: Optional[Context] = Field(
-        None,
+        default_factory=dict,
         description="This is the JSON object of VisionAI classified class context."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
 
     frame_intervals: Optional[list[FrameInterval]] = Field(
-        None, description="This is an array of frame intervals."
+        default_factory=dict, description="This is an array of frame intervals."
     )
     frames: Optional[dict[str, Frame]] = Field(
-        None,
+        default_factory=dict,
         description="This is the JSON object of frames that contain the dynamic, timewise, annotations."
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
     objects: Optional[dict[str, Object]] = Field(
-        None,
+        default_factory=dict,
         description="This is the JSON object of VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
     coordinate_systems: Optional[CoordinateSystem] = Field(
-        None,
+        default_factory=dict,
         description="This is the JSON object of coordinate system. Object keys are strings."
         + " Values are dictionary containing information of current key device.",
     )
 
-    streams: Optional[Stream] = None
+    streams: Stream = Field(default_factory=dict)
 
-    metadata: Optional[Metadata] = None
+    metadata: Metadata = Field(default_factory=dict)
 
 
 class VisionAIModel(BaseModel):
