@@ -546,7 +546,7 @@ class VisionAI(BaseModel):
     )
 
     frame_intervals: Optional[list[FrameInterval]] = Field(
-        default_factory=dict, description="This is an array of frame intervals."
+        default_factory=list, description="This is an array of frame intervals."
     )
     frames: Optional[dict[str, Frame]] = Field(
         default_factory=dict,
