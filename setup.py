@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 AUTHOR = "LinkerVision"
 PACKAGE_NAME = "visionai-data-format"
-PACKAGE_VERSION = "0.1.2"
+PACKAGE_VERSION = "0.1.3a"
 DESC = "converter tool for visionai format"
 
 setup(
