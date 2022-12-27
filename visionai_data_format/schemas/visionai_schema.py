@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal, Optional, Union
+from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, Extra, Field, validator
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal  #
+
+
+from pydantic import BaseModel, Extra, Field, conlist, validator
 
 
 class Type(str, Enum):
@@ -60,7 +66,7 @@ class FramePropertyInfo(BaseModel):
 
 
 class FramePropertyStream(BaseModel):
-    __root__: dict[str, FramePropertyInfo]
+    __root__: Dict[str, FramePropertyInfo]
 
 
 class FrameProperties(BaseModel):
@@ -71,14 +77,14 @@ class Frame(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    objects: dict[str, ObjectInFrame] = Field(
+    objects: Dict[str, ObjectInFrame] = Field(
         default_factory=dict,
         description="This is a JSON object that contains dynamic information on VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs."
         + ' Object values may contain an "object_data" JSON object.',
     )
 
-    contexts: dict[str, ContextInFrame] = Field(
+    contexts: Dict[str, ContextInFrame] = Field(
         default_factory=dict,
         description="This is a JSON object that contains dynamic information on VisionAI contexts."
         + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
@@ -103,10 +109,10 @@ class Attributes(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    boolean: list[Boolean] = Field(default_factory=list)
-    number: list[Number] = Field(default_factory=list)
-    text: list[Text] = Field(default_factory=list)
-    vec: list[Vec] = Field(default_factory=list)
+    boolean: List[Boolean] = Field(default_factory=list)
+    number: List[Number] = Field(default_factory=list)
+    text: List[Text] = Field(default_factory=list)
+    vec: List[Vec] = Field(default_factory=list)
 
 
 class ObjectDataElement(BaseModel):
@@ -163,7 +169,7 @@ class ObjectDataMatrixElement(ObjectDataElement):
         + " Only `float` or `int` allowed",
     )
 
-    val: list[Union[float, int]] = Field(
+    val: List[Union[float, int]] = Field(
         ..., description="This is a list of flattened values of the matrix."
     )
 
@@ -171,16 +177,17 @@ class ObjectDataMatrixElement(ObjectDataElement):
         extra = Extra.allow
 
     @validator("data_type")
-    def validate_data_type(cls, value):
+    def validate_data_type_data(cls, value):
         allowed_type = {"float", "int"}
         if value not in allowed_type:
             raise ValueError("only `float` or `int` allowed for `data_type` field")
         return value
 
     @validator("val")
-    def validate_val(cls, value, values):
+    def validate_val_data(cls, value, values):
         allowed_type = {"float": float, "int": int}
-        if not (data_type := values.get("data_type")):
+        data_type = values.get("data_type")
+        if not (data_type):
             raise ValueError("Need to define the `data_type`")
 
         cur_type = allowed_type.get(data_type)
@@ -194,9 +201,8 @@ class Bbox(ObjectDataElement):
     class Config:
         extra = Extra.allow
 
-    val: list[float] = Field(
-        ...,
-        description="The array of 4 values that define the [x, y, w, h] values of the bbox.",
+    val: conlist(
+        Union[float, int],
         max_items=4,
         min_items=4,
     )
@@ -206,9 +212,8 @@ class Point2D(ObjectDataElement):
     class Config:
         extra = Extra.allow
 
-    val: list[float] = Field(
-        ...,
-        description="The array of 2 values that define the [x, y] values of the point.",
+    val: conlist(
+        Union[float, int],
         max_items=2,
         min_items=2,
     )
@@ -218,10 +223,8 @@ class Poly2D(ObjectDataElement):
     class Config:
         extra = Extra.allow
 
-    val: list[float] = Field(
-        ...,
-        description="The array of values that define the [x] values of the point"
-        + " in the odd index positions and [y] values of the point in the even index positions.",
+    val: conlist(
+        Union[float, int],
         min_items=2,
     )
     closed: bool = Field(
@@ -242,15 +245,8 @@ class Cuboid(ObjectDataElement):
     class Config:
         extra = Extra.allow
 
-    val: list[float] = Field(
-        default_factory=list,
-        description="List of values encoding the position, rotation and dimensions."
-        + " Two options are supported, using 9 or 10 values. If 9 values are used,"
-        + " the format is (x, y, z, rx, ry, rz, sx, sy, sz), where (x, y, z) encodes the position,"
-        + " (rx, ry, rz) encodes the Euler angles that encode the rotation,"
-        + " and (sx, sy, sz) are the dimensions of the cuboid in its object coordinate system."
-        + " If 10 values are used, then the format is (x, y, z, qx, qy, qz, qw, sx, sy, sz)"
-        + " with the only difference of the rotation values which are the 4 values of a quaternion.",
+    val: conlist(
+        Union[float, int],
         min_items=9,
         max_items=9,
     )
@@ -342,7 +338,7 @@ class Vec(BaseModel):
         description="This attribute specifies whether the vector shall be"
         + " considered as a descriptor of individual values or as a definition of a range.",
     )
-    val: list[Union[float, int, str]] = Field(
+    val: List[Union[float, int, str]] = Field(
         ..., description="The values of the vector (list)."
     )
     coordinate_system: Optional[str] = Field(
@@ -355,7 +351,7 @@ class Object(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    frame_intervals: Optional[list[FrameInterval]] = Field(
+    frame_intervals: Optional[List[FrameInterval]] = Field(
         None,
         description="The array of frame intervals where this object exists or is defined.",
     )
@@ -364,7 +360,7 @@ class Object(BaseModel):
         description="Name of the object. It is a friendly name and not used for indexing.",
     )
     object_data: ObjectData = Field(default_factory=dict)
-    object_data_pointers: dict[str, ElementDataPointer] = Field(default_factory=dict)
+    object_data_pointers: Dict[str, ElementDataPointer] = Field(default_factory=dict)
     type: str = Field(
         ...,
         description="The type of an object, defines the class the object corresponds to.",
@@ -375,16 +371,16 @@ class ObjectData(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    boolean: Optional[list[Boolean]] = Field(
+    boolean: Optional[List[Boolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
-    number: Optional[list[Number]] = Field(
+    number: Optional[List[Number]] = Field(
         None, description='List of "number" that describe this object.'
     )
-    text: Optional[list[Text]] = Field(
+    text: Optional[List[Text]] = Field(
         None, description='List of "text" that describe this object.'
     )
-    vec: Optional[list[Vec]] = Field(
+    vec: Optional[List[Vec]] = Field(
         None, description='List of "vec" that describe this object.'
     )
 
@@ -393,23 +389,23 @@ class FrameObjectData(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    bbox: Optional[list[Bbox]] = Field(
+    bbox: Optional[List[Bbox]] = Field(
         None, description='List of "bbox" that describe this object.'
     )
-    cuboid: Optional[list[Cuboid]] = Field(
+    cuboid: Optional[List[Cuboid]] = Field(
         None, description='List of "cuboid" that describe this object.'
     )
-    point2d: Optional[list[Point2D]] = Field(
+    point2d: Optional[List[Point2D]] = Field(
         None, description='List of "point2d" that describe this object.'
     )
-    poly2d: Optional[list[Poly2D]] = Field(
+    poly2d: Optional[List[Poly2D]] = Field(
         None, description='List of "poly2d" that describe this object.'
     )
-    text: Optional[list[ObjectDataTextElement]] = Field(
+    text: Optional[List[ObjectDataTextElement]] = Field(
         None,
         description='List of "path" that describe this object semantic path location.',
     )
-    mat: Optional[list[ObjectDataMatrixElement]] = Field(
+    mat: Optional[List[ObjectDataMatrixElement]] = Field(
         None,
         description='List of "matrix" that describe this object matrix information such as `confidence_score`.',
     )
@@ -420,13 +416,13 @@ class ElementDataPointer(BaseModel):
         use_enum_values = True
         extra = Extra.forbid
 
-    attributes: Optional[dict[str, TypeAttribute]] = Field(
+    attributes: Optional[Dict[str, TypeAttribute]] = Field(
         None,
         description="This is a JSON object which contains pointers to the attributes of"
         + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
         + " attribute of the element data this pointer points to.",
     )
-    frame_intervals: list[FrameInterval] = Field(
+    frame_intervals: List[FrameInterval] = Field(
         ...,
         description="List of frame intervals of the element data pointed by this pointer.",
     )
@@ -440,13 +436,13 @@ class ContextDataPointer(BaseModel):
         use_enum_values = True
         extra = Extra.forbid
 
-    attributes: Optional[dict[str, TypeAttribute]] = Field(
+    attributes: Optional[Dict[str, TypeAttribute]] = Field(
         None,
         description="This is a JSON object which contains pointers to the attributes of"
         + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
         + " attribute of the element data this pointer points to.",
     )
-    frame_intervals: list[FrameInterval] = Field(
+    frame_intervals: List[FrameInterval] = Field(
         ...,
         description="List of frame intervals of the element data pointed by this pointer.",
     )
@@ -486,7 +482,7 @@ class StreamInfo(BaseModel):
 
 
 class Stream(BaseModel):
-    __root__: dict[str, StreamInfo] = Field(
+    __root__: Dict[str, StreamInfo] = Field(
         default_factory=dict,
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
@@ -495,14 +491,14 @@ class Stream(BaseModel):
 class CoordinateSystemInfo(BaseModel):
     type: str
     parent: str = ""
-    children: list[str] = Field(default_factory=list)
+    children: List[str] = Field(default_factory=list)
 
     class Config:
         extra = Extra.allow
 
 
 class CoordinateSystem(BaseModel):
-    __root__: dict[str, CoordinateSystemInfo]
+    __root__: Dict[str, CoordinateSystemInfo]
 
 
 class ContextInFrame(BaseModel):
@@ -515,7 +511,7 @@ class ContextInfo(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    frame_intervals: list[FrameInterval] = Field(
+    frame_intervals: List[FrameInterval] = Field(
         ...,
         description="The array of frame intervals where this object exists or is defined.",
     )
@@ -524,7 +520,7 @@ class ContextInfo(BaseModel):
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
     context_data: ObjectData = Field(default_factory=dict)
-    context_data_pointers: dict[str, ContextDataPointer] = Field(default_factory=dict)
+    context_data_pointers: Dict[str, ContextDataPointer] = Field(default_factory=dict)
     type: str = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",
@@ -532,7 +528,7 @@ class ContextInfo(BaseModel):
 
 
 class Context(BaseModel):
-    __root__: dict[str, ContextInfo]
+    __root__: Dict[str, ContextInfo]
 
 
 class VisionAI(BaseModel):
@@ -545,15 +541,15 @@ class VisionAI(BaseModel):
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
 
-    frame_intervals: Optional[list[FrameInterval]] = Field(
+    frame_intervals: Optional[List[FrameInterval]] = Field(
         default_factory=list, description="This is an array of frame intervals."
     )
-    frames: Optional[dict[str, Frame]] = Field(
+    frames: Optional[Dict[str, Frame]] = Field(
         default_factory=dict,
         description="This is the JSON object of frames that contain the dynamic, timewise, annotations."
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
-    objects: Optional[dict[str, Object]] = Field(
+    objects: Optional[Dict[str, Object]] = Field(
         default_factory=dict,
         description="This is the JSON object of VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",

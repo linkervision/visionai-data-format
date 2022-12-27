@@ -75,8 +75,8 @@ class FrameSchema(BaseModel):
 
 class BDDSchema(BaseModel):
     bdd_version: str = BDD_VERSION
-    company_code: Optional[str]
-    inference_object: Optional[str] = "detection"
-    meta_ds: Optional[Dict] = {}
-    meta_se: Optional[Dict] = {}
+    company_code: Optional[str] = None
+    inference_object: str = "detection"
+    meta_ds: Dict = {}
+    meta_se: Dict = {}
     frame_list: List[FrameSchema]

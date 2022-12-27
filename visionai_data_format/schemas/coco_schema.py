@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 
@@ -13,7 +15,7 @@ class Annotation(BaseModel):
     id: int
     image_id: int
     category_id: int
-    bbox: list[float]
+    bbox: List[float]
     area: float
     iscrowd: int
 
@@ -34,7 +36,7 @@ class Info(BaseModel):
 
 class Coco(BaseModel):
     info: Info = Info()
-    licenses: list = []
-    categories: list[Category]
-    images: list[Image]
-    annotations: list[Annotation]
+    licenses: List = []
+    categories: List[Category]
+    images: List[Image]
+    annotations: List[Annotation]

@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import Optional, Union
+from typing import Union
 
 from schemas.bdd_schema import BDDSchema
 from schemas.visionai_schema import VisionAIModel
@@ -48,7 +48,7 @@ def attribute_generator(
     return new_attribute
 
 
-def save_as_json(data: dict, file_name: str, folder_name: Optional[str] = "") -> None:
+def save_as_json(data: dict, file_name: str, folder_name: str = "") -> None:
     try:
         if folder_name:
             os.makedirs(folder_name, exist_ok=True)
