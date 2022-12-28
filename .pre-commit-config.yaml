@@ -41,7 +41,7 @@ repos:
     rev: v2.37.3
     hooks:
       - id: pyupgrade
-        args: ["--py38-plus","--keep-runtime-typing"] # py39 will somehow break Pydantic
+        args: ["--py37-plus","--keep-runtime-typing"] # py39 will somehow break Pydantic
         exclude: (visionai_json_schema\.py)
 
   - repo: https://github.com/pycqa/flake8
