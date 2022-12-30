@@ -6,19 +6,17 @@ from collections import defaultdict
 from schemas.bdd_schema import AtrributeSchema
 from schemas.visionai_schema import (
     Bbox,
-    ElementDataPointer,
     Frame,
     FrameInterval,
-    FrameObjectData,
     FrameProperties,
-    FramePropertyInfo,
     FramePropertyStream,
     Object,
-    ObjectInFrame,
+    ObjectData,
+    ObjectDataPointer,
+    ObjectType,
+    ObjectUnderFrame,
     Stream,
-    StreamInfo,
-    TypeElement,
-    TypeStream,
+    StreamType,
 )
 
 from .calculation import xywh2xyxy, xyxy2xywh
@@ -112,11 +110,9 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
             frames: dict[str, Frame] = defaultdict(Frame)
             objects: dict[str, Object] = defaultdict(Object)
             frame_data: Frame = Frame(
-                objects=defaultdict(ObjectInFrame),
+                objects=defaultdict(ObjectData),
                 frame_properties=FrameProperties(
-                    streams=FramePropertyStream(
-                        __root__={sensor_name: FramePropertyInfo(uri=url)}
-                    )
+                    streams={sensor_name: FramePropertyStream(uri=url)}
                 ),
             )
             frame_intervals = [
@@ -131,19 +127,16 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
             for label in labels:
                 # TODO: mapping attributes to the VAI
                 attributes = label["attributes"]
-                attributes.pop("cameraIndex")
-                attributes.pop("INSTANCE_ID")
+                attributes.pop("cameraIndex", None)
+                attributes.pop("INSTANCE_ID", None)
 
                 category = label["category"]
                 obj_uuid = label["uuid"]
                 x, y, w, h = xyxy2xywh(label["box2d"])
-                confidence_score = (
-                    label["meta_ds"]["score"] if label["meta_ds"] is not None else None
-                )
-
+                confidence_score = label.get("meta_ds", {}).get("score", None)
                 object_under_frames = {
-                    obj_uuid: ObjectInFrame(
-                        object_data=FrameObjectData(
+                    obj_uuid: ObjectUnderFrame(
+                        object_data=ObjectData(
                             bbox=[
                                 Bbox(
                                     name="bbox_shape",
@@ -163,13 +156,13 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
                     type=category,
                     frame_intervals=frame_intervals,
                     object_data_pointers={
-                        "bbox_shape": ElementDataPointer(
-                            type=TypeElement.bbox, frame_intervals=frame_intervals
+                        "bbox_shape": ObjectDataPointer(
+                            type=ObjectType.bbox, frame_intervals=frame_intervals
                         )
                     },
                 )
             frames[frame_idx] = frame_data
-            streams = Stream(__root__={sensor_name: StreamInfo(type=TypeStream.camera)})
+            streams = {sensor_name: Stream(type=StreamType.camera)}
             coordinate_systems = {
                 sensor_name: {
                     "type": "sensor_cs",
