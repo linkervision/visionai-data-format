@@ -7,19 +7,19 @@ import uuid
 
 from schemas.visionai_schema import (
     Bbox,
-    ElementDataPointer,
     Frame,
     FrameInterval,
-    FrameObjectData,
     FrameProperties,
-    FramePropertyInfo,
     FramePropertyStream,
     Metadata,
     Object,
-    ObjectInFrame,
+    ObjectData,
+    ObjectDataPointer,
+    ObjectType,
+    ObjectUnderFrame,
     SchemaVersion,
     Stream,
-    TypeElement,
+    StreamType,
     VisionAI,
     VisionAIModel,
 )
@@ -46,11 +46,7 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
         # to vision_ai: frames
         frames[str(image_name)] = Frame(
             frame_properties=FrameProperties(
-                streams=FramePropertyStream(
-                    __root__={
-                        sensor_name: FramePropertyInfo(uri=image_info["coco_url"])
-                    }
-                )
+                streams={sensor_name: FramePropertyStream(uri=image_info["coco_url"])}
             ),
             objects={},
         )
@@ -78,8 +74,8 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
         # to vision_ai: frames
         # assume there is only one sensor, so image_index always is 0
         objects_under_frames = {
-            object_id: ObjectInFrame(
-                object_data=FrameObjectData(
+            object_id: ObjectUnderFrame(
+                object_data=ObjectData(
                     bbox=[
                         Bbox(
                             name=bbox_name,
@@ -104,8 +100,8 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
                     )
                 ],
                 object_data_pointers={
-                    bbox_name: ElementDataPointer(
-                        type=TypeElement.bbox,
+                    bbox_name: ObjectDataPointer(
+                        type=ObjectType.bbox,
                         frame_intervals=[
                             FrameInterval(
                                 frame_start=int(image_name),
@@ -122,6 +118,13 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
             "type": "camera",
             "description": "Frontal camera",
         },
+    }
+
+    streams = {
+        sensor_name: Stream(
+            type=StreamType.camera,
+            description="Frontal camera",
+        )
     }
     # to vision_ai:
     for image_name in image_name_list:
@@ -141,7 +144,7 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
                     frames={image_name: frames[image_name]},
                     objects=objects_per_image,
                     metadata=Metadata(schema_version=SchemaVersion.field_1_0_0),
-                    streams=Stream(__root__=streams),
+                    streams=streams,
                     coordinate_systems={
                         sensor_name: {
                             "type": "sensor_cs",
