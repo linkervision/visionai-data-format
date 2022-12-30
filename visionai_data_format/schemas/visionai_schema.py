@@ -10,8 +10,16 @@ try:
 except ImportError:
     from typing_extensions import Literal  #
 
-
-from pydantic import BaseModel, Extra, Field, conlist, validator
+from pydantic import (
+    BaseModel,
+    Extra,
+    Field,
+    StrictBool,
+    StrictInt,
+    StrictStr,
+    conlist,
+    validator,
+)
 
 
 class Type(str, Enum):
@@ -70,16 +78,16 @@ class Attributes(BaseModel):
 class ObjectDataElement(BaseModel):
 
     attributes: Attributes = Field(default_factory=dict)
-    name: str = Field(
+    name: StrictStr = Field(
         ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
     )
-    stream: str = Field(
+    stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
-    coordinate_system: Optional[str] = Field(
+    coordinate_system: Optional[StrictStr] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
@@ -92,17 +100,17 @@ class ObjectDataElement(BaseModel):
 
 class Matrix(ObjectDataElement):
 
-    height: int = Field(
+    height: StrictInt = Field(
         ..., description="This is the height (number of rows) of the matrix."
     )
-    width: int = Field(
+    width: StrictInt = Field(
         ..., description="This is the width (number of columns) of the matrix."
     )
-    channels: int = Field(
+    channels: StrictInt = Field(
         ..., description="This is the number of channels of the matrix."
     )
 
-    data_type: str = Field(
+    data_type: StrictStr = Field(
         ...,
         description="This is a string declares the type of values of the matrix."
         + " Only `float` or `int` allowed",
@@ -166,7 +174,7 @@ class Poly2D(ObjectDataElement):
         Union[float, int],
         min_items=2,
     )
-    closed: bool = Field(
+    closed: StrictBool = Field(
         ...,
         description="The boolean value to define whether current polygon is a polygon or a polyline",
     )
@@ -197,7 +205,7 @@ class Text(BaseModel):
         extra = Extra.allow
 
     attributes: Attributes = Field(default_factory=dict)
-    name: Optional[str] = Field(
+    name: Optional[StrictStr] = Field(
         None,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
@@ -207,8 +215,8 @@ class Text(BaseModel):
         description="This attribute specifies how the text shall be considered."
         + " The only possible option is as a value.",
     )
-    val: str = Field(..., description="The characters of the text.")
-    coordinate_system: Optional[str] = Field(
+    val: StrictStr = Field(..., description="The characters of the text.")
+    coordinate_system: Optional[StrictStr] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
@@ -216,7 +224,7 @@ class Text(BaseModel):
 
 class Vec(BaseModel):
     attributes: Attributes = Field(default_factory=dict)
-    name: str = Field(
+    name: StrictStr = Field(
         ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
@@ -229,7 +237,7 @@ class Vec(BaseModel):
     val: List[Union[float, int, str]] = Field(
         ..., description="The values of the vector (list)."
     )
-    coordinate_system: Optional[str] = Field(
+    coordinate_system: Optional[StrictStr] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
@@ -242,7 +250,7 @@ class Vec(BaseModel):
 class Boolean(BaseModel):
 
     attributes: Attributes = Field(default_factory=dict)
-    name: str = Field(
+    name: StrictStr = Field(
         ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
@@ -252,8 +260,8 @@ class Boolean(BaseModel):
         description="This attribute specifies how the boolean shall be considered."
         + " In this schema the only possible option is as a value.",
     )
-    val: bool = Field(..., description="The boolean value.")
-    coordinate_system: Optional[str] = Field(
+    val: StrictBool = Field(..., description="The boolean value.")
+    coordinate_system: Optional[StrictStr] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
@@ -269,7 +277,7 @@ class Number(BaseModel):
         extra = Extra.allow
 
     attributes: Attributes = Field(default_factory=dict)
-    name: str = Field(
+    name: StrictStr = Field(
         ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
@@ -282,7 +290,7 @@ class Number(BaseModel):
     val: Union[float, int] = Field(
         ..., description="The numerical value of the number."
     )
-    coordinate_system: Optional[str] = Field(
+    coordinate_system: Optional[StrictStr] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
     )
@@ -292,8 +300,12 @@ class FrameInterval(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    frame_start: int = Field(..., description="Initial frame number of the interval.")
-    frame_end: int = Field(..., description="Ending frame number of the interval.")
+    frame_start: StrictInt = Field(
+        ..., description="Initial frame number of the interval."
+    )
+    frame_end: StrictInt = Field(
+        ..., description="Ending frame number of the interval."
+    )
 
 
 class BaseElementData(BaseModel):
@@ -324,13 +336,15 @@ class Context(BaseModel):
         ...,
         description="The array of frame intervals where this object exists or is defined.",
     )
-    name: str = Field(
+    name: StrictStr = Field(
         ...,
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
     context_data: ContextData = Field(default_factory=dict)
-    context_data_pointers: Dict[str, ContextDataPointer] = Field(default_factory=dict)
-    type: str = Field(
+    context_data_pointers: Dict[StrictStr, ContextDataPointer] = Field(
+        default_factory=dict
+    )
+    type: StrictStr = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",
     )
@@ -343,8 +357,8 @@ class StreamProperties(BaseModel):
 
 class Stream(BaseModel):
     type: StreamType
-    uri: Optional[str] = ""
-    description: Optional[str] = ""
+    uri: Optional[StrictStr] = ""
+    description: Optional[StrictStr] = ""
     stream_properties: Optional[StreamProperties] = None
 
     class Config:
@@ -416,9 +430,9 @@ class StreamPropertyUnderFrameProperty(BaseModel):
 
 class FramePropertyStream(BaseModel):
     uri: str = Field(..., description="the urls of image")
-    stream_properties: Optional[Dict[str, StreamPropertyUnderFrameProperty]] = Field(
-        None, description="Additional properties of the stream"
-    )
+    stream_properties: Optional[
+        Dict[StrictStr, StreamPropertyUnderFrameProperty]
+    ] = Field(None, description="Additional properties of the stream")
 
     class Config:
         extra = Extra.allow
@@ -430,21 +444,21 @@ class FrameProperties(BaseModel):
         descriptions="A relative or absolute time reference that specifies "
         + "the time instant this frame corresponds to",
     )
-    streams: Dict[str, FramePropertyStream] = Field(default_factory=dict)
+    streams: Dict[StrictStr, FramePropertyStream] = Field(default_factory=dict)
 
 
 class Frame(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    objects: Dict[str, ObjectUnderFrame] = Field(
+    objects: Dict[StrictStr, ObjectUnderFrame] = Field(
         default_factory=dict,
         description="This is a JSON object that contains dynamic information on VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs."
         + ' Object values may contain an "object_data" JSON object.',
     )
 
-    contexts: Dict[str, ContextUnderFrame] = Field(
+    contexts: Dict[StrictStr, ContextUnderFrame] = Field(
         default_factory=dict,
         description="This is a JSON object that contains dynamic information on VisionAI contexts."
         + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
@@ -459,7 +473,7 @@ class Frame(BaseModel):
 
 class ElementDataPointer(BaseModel):
 
-    attributes: Optional[Dict[str, AttributeType]] = Field(
+    attributes: Optional[Dict[StrictStr, AttributeType]] = Field(
         None,
         description="This is a JSON object which contains pointers to the attributes of"
         + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
@@ -499,22 +513,24 @@ class Object(BaseModel):
         None,
         description="The array of frame intervals where this object exists or is defined.",
     )
-    name: str = Field(
+    name: StrictStr = Field(
         ...,
         description="Name of the object. It is a friendly name and not used for indexing.",
     )
     object_data: ObjectData = Field(default_factory=dict)
-    object_data_pointers: Dict[str, ObjectDataPointer] = Field(default_factory=dict)
-    type: str = Field(
+    object_data_pointers: Dict[StrictStr, ObjectDataPointer] = Field(
+        default_factory=dict
+    )
+    type: StrictStr = Field(
         ...,
         description="The type of an object, defines the class the object corresponds to.",
     )
 
 
 class CoordinateSystem(BaseModel):
-    type: str
-    parent: str = ""
-    children: List[str] = Field(default_factory=list)
+    type: StrictStr
+    parent: StrictStr = ""
+    children: List[StrictStr] = Field(default_factory=list)
 
     class Config:
         extra = Extra.allow
@@ -524,7 +540,7 @@ class VisionAI(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    contexts: Dict[str, Context] = Field(
+    contexts: Dict[StrictStr, Context] = Field(
         default_factory=dict,
         description="This is the JSON object of VisionAI classified class context."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
@@ -533,23 +549,23 @@ class VisionAI(BaseModel):
     frame_intervals: List[FrameInterval] = Field(
         default_factory=list, description="This is an array of frame intervals."
     )
-    frames: Dict[str, Frame] = Field(
+    frames: Dict[StrictStr, Frame] = Field(
         default_factory=dict,
         description="This is the JSON object of frames that contain the dynamic, timewise, annotations."
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
-    objects: Dict[str, Object] = Field(
+    objects: Dict[StrictStr, Object] = Field(
         default_factory=dict,
         description="This is the JSON object of VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
-    coordinate_systems: Dict[str, CoordinateSystem] = Field(
+    coordinate_systems: Dict[StrictStr, CoordinateSystem] = Field(
         default_factory=dict,
         description="This is the JSON object of coordinate system. Object keys are strings."
         + " Values are dictionary containing information of current key device.",
     )
 
-    streams: Dict[str, Stream] = Field(
+    streams: Dict[StrictStr, Stream] = Field(
         default_factory=dict,
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
