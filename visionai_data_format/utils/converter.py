@@ -17,6 +17,7 @@ from schemas.visionai_schema import (
     ObjectUnderFrame,
     Stream,
     StreamType,
+    VisionAI,
 )
 
 from .calculation import xywh2xyxy, xyxy2xywh
@@ -39,54 +40,65 @@ def convert_vai_to_bdd(
         logger.info("[convert_vai_to_bdd] Convert started")
 
     frame_list = list()
-
     for file_name in sorted(os.listdir(folder_name)):
         raw_data = open(os.path.join(folder_name, file_name)).read()
         json_format = json.loads(raw_data)
         vai_data = validate_vai(json_format).visionai
-
-        cur_data = {}
-        cur_data["name"] = file_name
-        cur_data["sequence"] = sequence_name
-        cur_data["storage"] = storage_name
-        cur_data["dataset"] = container_name
-
-        labels = []
-        idx = 0
-        for frame_data in vai_data.frames.values():
-            for obj_id, obj_data in frame_data.objects.items():
-                classes = vai_data.objects.get(obj_id).type.upper()
-                bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
-                for bbox in bboxes:
-                    geometry = bbox.val
-
-                    label = dict()
-                    label["category"] = classes
-
-                    x1, y1, x2, y2 = xywh2xyxy(geometry)
-                    box2d = {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
-
-                    label["box2d"] = box2d
-
-                    object_id = {
-                        "project": "General",
-                        "function": "General",
-                        "object": classes,
-                        "version": VERSION,
-                    }
-                    label["objectId"] = object_id
-                    label["attributes"] = AtrributeSchema(INSTANCE_ID=idx).dict()
-                    labels.append(label)
-                    idx += 1
-
-        cur_data["labels"] = labels
-        frame_list.append(cur_data)
+        cur_frame_list = convert_vai_to_bdd_single(
+            vai_data, sequence_name, storage_name, container_name
+        )
+        frame_list += cur_frame_list
 
     data = {"frame_list": frame_list, "company_code": company_code}
     logger.info("[convert_vai_to_bdd] Convert finished")
     if not frame_list:
         logger.info("[convert_vai_to_bdd] frame_list is empty")
     return data
+
+
+def convert_vai_to_bdd_single(
+    vai_data: VisionAI, sequence_name: str, storage_name: str, container_name: str
+) -> list:
+    cur_data = {}
+    cur_data["sequence"] = sequence_name
+    cur_data["storage"] = storage_name
+    cur_data["dataset"] = container_name
+
+    frame_list = list()
+    for frame_key, frame_data in vai_data.frames.items():
+        cur_data["name"] = frame_key + ".jpg"
+        labels = []
+        idx = 0
+        for obj_id, obj_data in frame_data.objects.items():
+            classes = vai_data.objects.get(obj_id).type
+            bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
+            for bbox in bboxes:
+                geometry = bbox.val
+
+                label = dict()
+                label["category"] = classes
+                label["meta_ds"] = {}
+                label["meta_se"] = {}
+                x1, y1, x2, y2 = xywh2xyxy(geometry)
+                box2d = {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
+                if bbox.confidence_score is not None:
+                    label["meta_ds"]["score"] = bbox.confidence_score
+                label["box2d"] = box2d
+
+                object_id = {
+                    "project": "General",
+                    "function": "General",
+                    "object": classes,
+                    "version": VERSION,
+                }
+                label["objectId"] = object_id
+                label["attributes"] = AtrributeSchema(INSTANCE_ID=idx).dict()
+                labels.append(label)
+                idx += 1
+
+        cur_data["labels"] = labels
+        frame_list.append(cur_data)
+    return frame_list
 
 
 def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -> None:
