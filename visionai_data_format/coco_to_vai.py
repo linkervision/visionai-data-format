@@ -2,7 +2,6 @@ import argparse
 import json
 import logging
 import os
-import shutil
 import uuid
 
 from schemas.visionai_schema import (
@@ -23,38 +22,60 @@ from schemas.visionai_schema import (
     VisionAI,
     VisionAIModel,
 )
-from utils.common import ANNOT_PATH
+from utils.common import (
+    ANNOT_PATH,
+    BBOX_NAME,
+    GROUND_TRUTH_FOLDER,
+    IMAGE_EXT,
+    LOGGING_DATEFMT,
+    LOGGING_FORMAT,
+)
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format=LOGGING_FORMAT,
+    level=logging.DEBUG,
+    datefmt=LOGGING_DATEFMT,
+)
 
 
-def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
-    vision_ai_list = []
-
+def _coco_to_vision_ai(coco_dict: dict, sensor_name: str, dest_folder: str) -> dict:
+    vision_ai_data_dict = {}
     frames = {}
     objects = {}
 
     # parse coco: images
     image_id_name_dict = {}
     image_name_list = []
+    frame_idx = f"{0:012d}"  # only generate one frame per sequential
+    frame_num = int(frame_idx)
     for image_info in coco_dict["images"]:
         image_name = image_info["file_name"].split("/")[-1].split(".")[0]
         image_id = image_info["id"]
         image_id_name_dict.update({str(image_id): str(image_name)})
         image_name_list.append(str(image_name))
+        new_image_name = f"{int(image_name):012d}"
+        uri = (
+            os.path.join(
+                dest_folder, new_image_name, "data", sensor_name, frame_idx + IMAGE_EXT
+            )
+            if not image_info.get("coco_url")
+            else image_info["coco_url"]
+        )
 
         # to vision_ai: frames
-        frames[str(image_name)] = Frame(
+        frames[image_name] = Frame(
             frame_properties=FrameProperties(
-                streams={sensor_name: FramePropertyStream(uri=image_info["coco_url"])}
+                streams={sensor_name: FramePropertyStream(uri=uri)}
             ),
             objects={},
         )
 
     # parse coco: categories
-    class_id_name_dict = {}
-    for class_info in coco_dict["categories"]:
-        class_id_name_dict.update({str(class_info["id"]): class_info["name"]})
+    class_id_name_dict = {
+        str(class_info["id"]): class_info["name"]
+        for class_info in coco_dict["categories"]
+    }
 
     # parse coco: annotations
     for anno in coco_dict["annotations"]:
@@ -68,7 +89,6 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
             width,
             height,
         ]
-        bbox_name = "2d_shape"
         image_name = image_id_name_dict[str(anno["image_id"])]
 
         # to vision_ai: frames
@@ -78,7 +98,7 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
                 object_data=ObjectData(
                     bbox=[
                         Bbox(
-                            name=bbox_name,
+                            name=BBOX_NAME,
                             val=bbox,
                             stream=sensor_name,
                             coordinate_system=sensor_name,
@@ -95,17 +115,15 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
                 name=class_id_name_dict[str(anno["category_id"])],
                 type=class_id_name_dict[str(anno["category_id"])],
                 frame_intervals=[
-                    FrameInterval(
-                        frame_start=int(image_name), frame_end=int(image_name)
-                    )
+                    FrameInterval(frame_start=frame_num, frame_end=frame_num)
                 ],
                 object_data_pointers={
-                    bbox_name: ObjectDataPointer(
+                    BBOX_NAME: ObjectDataPointer(
                         type=ObjectType.bbox,
                         frame_intervals=[
                             FrameInterval(
-                                frame_start=int(image_name),
-                                frame_end=int(image_name),
+                                frame_start=frame_num,
+                                frame_end=frame_num,
                             )
                         ],
                     )
@@ -122,41 +140,38 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str):
 
     streams = {
         sensor_name: Stream(
+            uri=uri,
             type=StreamType.camera,
             description="Frontal camera",
         )
     }
     # to vision_ai:
-    for image_name in image_name_list:
+    for image_name, frame_obj in frames.items():
 
-        objects_per_image = {}
-        for object_id in frames[image_name].objects:
-            objects_per_image.update({object_id: objects[object_id]})
+        objects_per_image = {
+            object_id: objects[object_id] for object_id in frame_obj.objects
+        }
 
-        vision_ai_list.append(
-            VisionAIModel(
-                visionai=VisionAI(
-                    frame_intervals=[
-                        FrameInterval(
-                            frame_start=int(image_name), frame_end=int(image_name)
-                        )
-                    ],
-                    frames={image_name: frames[image_name]},
-                    objects=objects_per_image,
-                    metadata=Metadata(schema_version=SchemaVersion.field_1_0_0),
-                    streams=streams,
-                    coordinate_systems={
-                        sensor_name: {
-                            "type": "sensor_cs",
-                            "parent": "vehicle-iso8855",
-                            "children": [],
-                        }
-                    },
-                )
+        new_image_name = f"{int(image_name):012d}"
+        vision_ai_data_dict[new_image_name] = VisionAIModel(
+            visionai=VisionAI(
+                frame_intervals=[
+                    FrameInterval(frame_start=frame_num, frame_end=frame_num)
+                ],
+                frames={frame_idx: frame_obj},
+                objects=objects_per_image,
+                metadata=Metadata(schema_version=SchemaVersion.field_1_0_0),
+                streams=streams,
+                coordinate_systems={
+                    sensor_name: {
+                        "type": "sensor_cs",
+                        "parent": "vehicle-iso8855",
+                        "children": [],
+                    }
+                },
             )
         )
-
-    return vision_ai_list
+    return vision_ai_data_dict
 
 
 def coco_to_vision_ai(
@@ -169,32 +184,29 @@ def coco_to_vision_ai(
         src (str): [Path of coco dataset containing 'data' and 'annotations' subfolder, i.e : ~/dataset/coco/]
         dst (str): [Destination path, i.e : ~/vision_ai/]
     """
-    logger.info(f"coco to vision_ai from [{src}] to [{dst}]")
+    logger.info(f"Convert coco to vision_ai from {src} to {dst} started...")
 
-    # generate annotation json in vision_ai format #
     src_annot_path = os.path.join(src, ANNOT_PATH)
-    src_annotations_list = os.listdir(src_annot_path)
 
-    dest_annot_path = os.path.join(dst, ANNOT_PATH)
+    # only take one file from annotations folder
+    anno_file_name = os.listdir(src_annot_path)[0]
 
-    for anno_file_name in src_annotations_list:
-        with open(f"{src_annot_path}/{anno_file_name}") as f:
-            coco_dict = json.load(f)
+    with open(os.path.join(src_annot_path, anno_file_name)) as f:
+        coco_dict = json.load(f)
 
-        vision_ai_list = _coco_to_vision_ai(coco_dict, sensor)
+    vision_ai_dict = _coco_to_vision_ai(coco_dict, sensor, dst)
+    for seq_num, vision_ai in vision_ai_dict.items():
+        dest_annot_path = os.path.join(dst, seq_num, GROUND_TRUTH_FOLDER)
 
         os.makedirs(f"{dest_annot_path}", exist_ok=True)
-        for vision_ai in vision_ai_list:
-            image_name = list(vision_ai.visionai.frames.keys())[0]
-            anno_json = f"{image_name}.json"
-            with open(f"{dest_annot_path}/{anno_json}", "w+") as f:
-                json.dump(vision_ai.dict(exclude_none=True), f, indent=4)
+        image_name = list(vision_ai.visionai.frames.keys())[0]
+        anno_json = f"{int(image_name):012d}.json"
+        logger.info(f"Saving data to {os.path.join(dest_annot_path,anno_json)}")
+        with open(os.path.join(dest_annot_path, anno_json), "w+") as f:
+            json.dump(vision_ai.dict(exclude_none=True), f, indent=4)
+        logger.info("Save finished")
 
-    # copy ./data #
-
-    shutil.copytree(
-        os.path.join(src, "data"), os.path.join(dst, "data"), dirs_exist_ok=True
-    )
+    logger.info("Convert finished")
 
 
 def make_parser():
