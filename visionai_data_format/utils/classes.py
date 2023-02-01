@@ -26,6 +26,8 @@
 
 
 def gen_ontology_classes_dict(ontology_classes):
+    if not ontology_classes:
+        return {}
     # string to list
     ontology_classes = ontology_classes.split(",")
     # Mapping ontology classes to (name, id)
