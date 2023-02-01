@@ -44,9 +44,9 @@ def convert_vai_to_bdd(
         raw_data = open(os.path.join(folder_name, file_name)).read()
         json_format = json.loads(raw_data)
         vai_data = validate_vai(json_format).visionai
-        cur_frame_list = convert_vai_to_bdd_single(vai_data, sequence_name,
-                                                   storage_name,
-                                                   container_name)
+        cur_frame_list = convert_vai_to_bdd_single(
+            vai_data, sequence_name, storage_name, container_name
+        )
         frame_list += cur_frame_list
 
     data = {"frame_list": frame_list, "company_code": company_code}
@@ -56,18 +56,19 @@ def convert_vai_to_bdd(
     return data
 
 
-def convert_vai_to_bdd_single(vai_data: VisionAI, sequence_name: str,
-                              storage_name: str, container_name: str) -> list:
+def convert_vai_to_bdd_single(
+    vai_data: VisionAI, sequence_name: str, storage_name: str, container_name: str
+) -> list:
     cur_data = {}
     cur_data["sequence"] = sequence_name
     cur_data["storage"] = storage_name
     cur_data["dataset"] = container_name
 
-    idx = 0
     frame_list = list()
     for frame_key, frame_data in vai_data.frames.items():
-        cur_data["name"] = frame_key + '.jpg'
+        cur_data["name"] = frame_key + ".jpg"
         labels = []
+        idx = 0
         for obj_id, obj_data in frame_data.objects.items():
             classes = vai_data.objects.get(obj_id).type
             bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
@@ -76,12 +77,12 @@ def convert_vai_to_bdd_single(vai_data: VisionAI, sequence_name: str,
 
                 label = dict()
                 label["category"] = classes
-                label['meta_ds'] = {}
-                label['meta_se'] = {}
+                label["meta_ds"] = {}
+                label["meta_se"] = {}
                 x1, y1, x2, y2 = xywh2xyxy(geometry)
                 box2d = {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
                 if bbox.confidence_score is not None:
-                    label['meta_ds']['score'] = bbox.confidence_score
+                    label["meta_ds"]["score"] = bbox.confidence_score
                 label["box2d"] = box2d
 
                 object_id = {
@@ -100,8 +101,7 @@ def convert_vai_to_bdd_single(vai_data: VisionAI, sequence_name: str,
     return frame_list
 
 
-def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str,
-                       sensor_name: str) -> None:
+def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -> None:
     frame_list = bdd_data.get("frame_list", None)
 
     if not frame_list:
@@ -124,7 +124,8 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str,
             frame_data: Frame = Frame(
                 objects=defaultdict(ObjectData),
                 frame_properties=FrameProperties(
-                    streams={sensor_name: FramePropertyStream(uri=url)}),
+                    streams={sensor_name: FramePropertyStream(uri=url)}
+                ),
             )
             frame_intervals = [
                 FrameInterval(frame_end=frame_idx, frame_start=frame_idx)
@@ -146,16 +147,19 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str,
                 x, y, w, h = xyxy2xywh(label["box2d"])
                 confidence_score = label.get("meta_ds", {}).get("score", None)
                 object_under_frames = {
-                    obj_uuid:
-                    ObjectUnderFrame(object_data=ObjectData(bbox=[
-                        Bbox(
-                            name="bbox_shape",
-                            val=[x, y, w, h],
-                            stream=sensor_name,
-                            coordinate_system=sensor_name,
-                            confidence_score=confidence_score,
+                    obj_uuid: ObjectUnderFrame(
+                        object_data=ObjectData(
+                            bbox=[
+                                Bbox(
+                                    name="bbox_shape",
+                                    val=[x, y, w, h],
+                                    stream=sensor_name,
+                                    coordinate_system=sensor_name,
+                                    confidence_score=confidence_score,
+                                )
+                            ]
                         )
-                    ]))
+                    )
                 }
                 frame_data.objects.update(object_under_frames)
 
@@ -164,9 +168,9 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str,
                     type=category,
                     frame_intervals=frame_intervals,
                     object_data_pointers={
-                        "bbox_shape":
-                        ObjectDataPointer(type=ObjectType.bbox,
-                                          frame_intervals=frame_intervals)
+                        "bbox_shape": ObjectDataPointer(
+                            type=ObjectType.bbox, frame_intervals=frame_intervals
+                        )
                     },
                 )
             frames[frame_idx] = frame_data
@@ -184,9 +188,7 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str,
                     "objects": objects,
                     "frames": frames,
                     "streams": streams,
-                    "metadata": {
-                        "schema_version": "1.0.0"
-                    },
+                    "metadata": {"schema_version": "1.0.0"},
                     "coordinate_systems": coordinate_systems,
                 }
             }
