@@ -63,6 +63,10 @@ class CategorySchema(BaseModel):
     uuid: str = Field(default_factory=gen_uuid)
     objectId: Optional[ObjectIdSchema]
 
+    def dict(self, *args, **kwargs) -> Dict:
+        kwargs.pop("exclude_none")
+        return super().dict(*args, exclude_none=True, **kwargs)
+
 
 class FrameSchema(BaseModel):
     name: str
