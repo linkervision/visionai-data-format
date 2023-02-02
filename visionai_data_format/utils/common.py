@@ -7,3 +7,4 @@ COCO_LABEL_FILE = "labels.json"
 
 LOGGING_FORMAT = "%(asctime)s[%(process)d][%(levelname)s] %(name)-16s : %(message)s"
 LOGGING_DATEFMT = "[%d-%m-%Y %H:%M:%S]"
+VISIONAI_OBJECT_JSON = "objects.json"

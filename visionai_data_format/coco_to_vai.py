@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import shutil
 import uuid
 
 from schemas.visionai_schema import (
@@ -25,10 +26,12 @@ from schemas.visionai_schema import (
 from utils.common import (
     ANNOT_PATH,
     BBOX_NAME,
+    DATA_PATH,
     GROUND_TRUTH_FOLDER,
     IMAGE_EXT,
     LOGGING_DATEFMT,
     LOGGING_FORMAT,
+    VISIONAI_OBJECT_JSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,7 +42,9 @@ logging.basicConfig(
 )
 
 
-def _coco_to_vision_ai(coco_dict: dict, sensor_name: str, dest_folder: str) -> dict:
+def _coco_to_vision_ai(
+    coco_dict: dict, sensor_name: str, dest_folder: str, src_image_path: str
+) -> dict:
     vision_ai_data_dict = {}
     frames = {}
     objects = {}
@@ -55,12 +60,21 @@ def _coco_to_vision_ai(coco_dict: dict, sensor_name: str, dest_folder: str) -> d
         image_id_name_dict.update({str(image_id): str(image_name)})
         image_name_list.append(str(image_name))
         new_image_name = f"{int(image_name):012d}"
-        uri = (
-            os.path.join(
-                dest_folder, new_image_name, "data", sensor_name, frame_idx + IMAGE_EXT
+
+        dest_image_folder = os.path.join(
+            dest_folder, new_image_name, "data", sensor_name
+        )
+        coco_url = image_info.get("coco_url")
+        if not (coco_url) and src_image_path:
+            os.makedirs(dest_image_folder, exist_ok=True)
+            shutil.copy(
+                os.path.join(src_image_path, image_info["file_name"]),
+                os.path.join(dest_image_folder, frame_idx + IMAGE_EXT),
             )
-            if not image_info.get("coco_url")
-            else image_info["coco_url"]
+        uri = (
+            os.path.join(dest_image_folder, frame_idx + IMAGE_EXT)
+            if not coco_url
+            else coco_url
         )
 
         # to vision_ai: frames
@@ -178,6 +192,7 @@ def coco_to_vision_ai(
     src: str,
     dst: str,
     sensor: str,
+    copy_image: bool,
 ):
     """
     Args:
@@ -187,6 +202,7 @@ def coco_to_vision_ai(
     logger.info(f"Convert coco to vision_ai from {src} to {dst} started...")
 
     src_annot_path = os.path.join(src, ANNOT_PATH)
+    src_image_path = os.path.join(src, DATA_PATH) if copy_image else None
 
     # only take one file from annotations folder
     anno_file_name = os.listdir(src_annot_path)[0]
@@ -194,15 +210,16 @@ def coco_to_vision_ai(
     with open(os.path.join(src_annot_path, anno_file_name)) as f:
         coco_dict = json.load(f)
 
-    vision_ai_dict = _coco_to_vision_ai(coco_dict, sensor, dst)
+    vision_ai_dict = _coco_to_vision_ai(coco_dict, sensor, dst, src_image_path)
     for seq_num, vision_ai in vision_ai_dict.items():
         dest_annot_path = os.path.join(dst, seq_num, GROUND_TRUTH_FOLDER)
 
         os.makedirs(f"{dest_annot_path}", exist_ok=True)
-        image_name = list(vision_ai.visionai.frames.keys())[0]
-        anno_json = f"{int(image_name):012d}.json"
-        logger.info(f"Saving data to {os.path.join(dest_annot_path,anno_json)}")
-        with open(os.path.join(dest_annot_path, anno_json), "w+") as f:
+
+        logger.info(
+            f"Saving data to {os.path.join(dest_annot_path,VISIONAI_OBJECT_JSON)}"
+        )
+        with open(os.path.join(dest_annot_path, VISIONAI_OBJECT_JSON), "w+") as f:
             json.dump(vision_ai.dict(exclude_none=True), f, indent=4)
         logger.info("Save finished")
 
@@ -229,10 +246,12 @@ def make_parser():
         "--sensor", type=str, help="Sensor name, i.e : `camera1`", default="camera1"
     )
 
+    parser.add_argument("-copy_image", action="store_true", help="enable to copy image")
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = make_parser()
 
-    coco_to_vision_ai(args.src, args.dst, args.sensor)
+    coco_to_vision_ai(args.src, args.dst, args.sensor, args.copy_image)
