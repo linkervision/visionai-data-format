@@ -40,7 +40,7 @@ def make_parser():
     )
     parser.add_argument(
         "-oc",
-        "--ontology_classes",
+        "--ontology-classes",
         type=str,
         default="",  # ex: 'cat,dog,horse'
         help="labels (or categories) of the training data",

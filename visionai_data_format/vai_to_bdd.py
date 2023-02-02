@@ -1,30 +1,42 @@
 import argparse
 import logging
+import os
 
+from utils.common import LOGGING_DATEFMT, LOGGING_FORMAT
 from utils.converter import convert_vai_to_bdd
 from utils.validator import save_as_json, validate_bdd
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(
+    format=LOGGING_FORMAT,
+    level=logging.DEBUG,
+    datefmt=LOGGING_DATEFMT,
+)
+
 
 def vai_to_bdd(
     vai_src_folder: str,
-    bdd_dest_file: str,
+    bdd_dest: str,
     company_code: int,
-    sequence_name: str,
     storage_name: str,
     container_name: str,
+    copy_image: bool,
 ) -> None:
+
     try:
+        os.makedirs(bdd_dest, exist_ok=True)
         bdd_data = convert_vai_to_bdd(
-            folder_name=vai_src_folder,
+            root_folder=vai_src_folder,
             company_code=company_code,
-            sequence_name=sequence_name,
             storage_name=storage_name,
             container_name=container_name,
+            bdd_dest=bdd_dest if copy_image else None,
         )
         bdd = validate_bdd(data=bdd_data)
-        save_as_json(bdd.dict(), file_name=bdd_dest_file)
+        bdd_json_file = os.path.join(bdd_dest, "labels.json")
+        save_as_json(bdd.dict(), file_name=bdd_json_file)
+
     except Exception as e:
         logger.error("Convert vai to bdd format failed : " + str(e))
 
@@ -32,58 +44,48 @@ def vai_to_bdd(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-vai_src_folder",
+        "-s",
+        "--src",
         type=str,
         required=True,
-        help="VisionAI format source folder path",
+        help="Path of vision_ai dataset containing 'data' and 'annotation' subfolder, i.e : ~/vision_ai/train/",
     )
+
     parser.add_argument(
-        "-bdd_dest_file",
+        "-d",
+        "--dst",
         type=str,
         required=True,
-        help="BDD+ format destination file name (i.e : bdd_dest.json)",
+        help="BDD+ format destination folder",
     )
     parser.add_argument(
-        "-company_code",
+        "--company-code",
         type=int,
         required=True,
         help="Company code information for BDD+",
     )
     parser.add_argument(
-        "-sequence_name",
-        type=str,
-        required=True,
-        help="Company code information for BDD+",
-    )
-    parser.add_argument(
-        "-storage_name",
+        "--storage-name",
         type=str,
         required=True,
         help="Storage name information for BDD+",
     )
     parser.add_argument(
-        "-container_name",
+        "--container-name",
         type=str,
         required=True,
         help="Container name information for BDD+",
     )
 
-    FORMAT = "%(asctime)s[%(process)d][%(levelname)s] %(name)-16s : %(message)s"
-    DATEFMT = "[%d-%m-%Y %H:%M:%S]"
-
-    logging.basicConfig(
-        format=FORMAT,
-        level=logging.DEBUG,
-        datefmt=DATEFMT,
-    )
+    parser.add_argument("--copy-image", action="store_true")
 
     args = parser.parse_args()
 
     vai_to_bdd(
-        args.vai_src_folder,
-        args.bdd_dest_file,
+        args.src,
+        args.dst,
         args.company_code,
-        args.sequence_name,
         args.storage_name,
         args.container_name,
+        args.copy_image,
     )
