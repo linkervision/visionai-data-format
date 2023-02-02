@@ -246,7 +246,9 @@ def make_parser():
         "--sensor", type=str, help="Sensor name, i.e : `camera1`", default="camera1"
     )
 
-    parser.add_argument("-copy_image", action="store_true", help="enable to copy image")
+    parser.add_argument(
+        "--copy-image", action="store_true", help="enable to copy image"
+    )
 
     return parser.parse_args()
 

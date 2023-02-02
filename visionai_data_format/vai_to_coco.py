@@ -46,7 +46,9 @@ def make_parser():
         help="labels (or categories) of the training data",
     )
 
-    parser.add_argument("-copy_image", action="store_true", help="enable to copy image")
+    parser.add_argument(
+        "--copy-image", action="store_true", help="enable to copy image"
+    )
     return parser.parse_args()
 
 
