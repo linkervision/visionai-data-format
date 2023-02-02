@@ -32,19 +32,21 @@ Arguments :
 ### VAI to COCO
 
 i.e :
-`python vai_to_coco.py -s ./test_data/vai_data/ -d ./test_data/coco_data/ -oc "class1,class2,class3" `
+`python vai_to_coco.py -s ./test_data/vai_data/ -d ./test_data/coco_data/ -oc "class1,class2,class3" --copy-image`
 
 Arguments :
 - `-s` : Folder contains VAI format json file
 - `-d`  : COCO format save destination
 - `-oc`  : Labels (or categories) of the training data
+- `--copy-image` : Optional, enable to copy image
 
 ### COCO to VAI
 
 i.e :
-`python coco_to_vai.py -s ./test_data/vai_data/ -d ./test_data/vai_data/ --sensor camera1 `
+`python coco_to_vai.py -s ./test_data/vai_data/ -d ./test_data/vai_data/ --sensor camera1 --copy-image`
 
 Arguments :
 - `-s` : Path of COCO dataset containing 'data' and 'annotations' subfolder
 - `-d`  : VAI format save destination
 - `--sensor` : Sensor name ( i.e : `camera1`)
+- `--copy-image` : Optional, enable to copy image

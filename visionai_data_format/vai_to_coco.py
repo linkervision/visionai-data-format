@@ -15,6 +15,7 @@ from utils.common import (
     IMAGE_EXT,
     LOGGING_DATEFMT,
     LOGGING_FORMAT,
+    VISIONAI_OBJECT_JSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,9 @@ def make_parser():
         help="labels (or categories) of the training data",
     )
 
+    parser.add_argument(
+        "--copy-image", action="store_true", help="enable to copy image"
+    )
     return parser.parse_args()
 
 
@@ -52,6 +56,7 @@ def _vision_ai_to_coco(
     dest_img_folder: str,
     vision_ai_dict_list: list[dict],
     classes_dict: dict,
+    copy_image: bool,
 ):
     images = []
     annotations = []
@@ -73,14 +78,15 @@ def _vision_ai_to_coco(
                 ]:
                     img_url = p_v[sensor]["uri"]
             dest_coco_url = os.path.join(dest_img_folder, f"{image_id:012d}{IMAGE_EXT}")
-            shutil.copy(img_url, dest_coco_url)
+            if copy_image:
+                shutil.copy(img_url, dest_coco_url)
             img = PILImage.open(img_url)
             img_width, image_height = img.size
             image = Image(
                 id=image_id,
                 width=img_width,
                 height=image_height,
-                file_name=f"{image_id:012d}.{IMAGE_EXT}",
+                file_name=f"{image_id:012d}{IMAGE_EXT}",
                 coco_url=dest_coco_url
                 # assume there is only one sensor, so there is only one img url per frame
             )
@@ -139,7 +145,7 @@ def _vision_ai_to_coco(
     return coco
 
 
-def vision_ai_to_coco(src: str, dst: str, ontology_classes: str):
+def vision_ai_to_coco(src: str, dst: str, ontology_classes: str, copy_image: bool):
     """
     Args:
         src (str): [Path of vision_ai dataset containing 'data' and 'annotation' subfolder, i.e : ~/vision_ai/train/]
@@ -155,28 +161,30 @@ def vision_ai_to_coco(src: str, dst: str, ontology_classes: str):
     vision_ai_dict_list = []
     logger.info("retrieve visionai annotations started")
     for sequence in sequence_folder_list:
-        ground_truth_path = os.path.join(src, sequence, GROUND_TRUTH_FOLDER)
-        json_file = os.listdir(ground_truth_path)[0]
-        json_path = os.path.join(ground_truth_path, json_file)
-        logger.info(f"retrieve annotation from {json_path}")
-        with open(json_path) as f:
+        ground_truth_path = os.path.join(
+            src, sequence, GROUND_TRUTH_FOLDER, VISIONAI_OBJECT_JSON
+        )
+        logger.info(f"retrieve annotation from {ground_truth_path}")
+        with open(ground_truth_path) as f:
             vision_ai_dict_list.append(json.load(f))
     logger.info("retrieve visionai annotations finished")
 
     dest_img_folder = os.path.join(dst, DATA_PATH)
     dest_json_folder = os.path.join(dst, ANNOT_PATH)
-    # create {dest}/data folder #
-    os.makedirs(dest_img_folder, exist_ok=True)
+    if copy_image:
+        # create {dest}/data folder #
+        os.makedirs(dest_img_folder, exist_ok=True)
     # create {dest}/annotations folder #
     os.makedirs(dest_json_folder, exist_ok=True)
 
-    logger.info("convert retrieved visionai to coco format started")
+    logger.info("convert visionai to coco format started")
     coco = _vision_ai_to_coco(
         dest_img_folder,
         vision_ai_dict_list,  # list of vision_ai dicts
         classes_dict,
+        copy_image,
     )
-    logger.info("convert retrieved visionai to coco format finished")
+    logger.info("convert visionai to coco format finished")
 
     with open(os.path.join(dest_json_folder, COCO_LABEL_FILE), "w+") as f:
         json.dump(coco.dict(), f, indent=4)
@@ -185,4 +193,4 @@ def vision_ai_to_coco(src: str, dst: str, ontology_classes: str):
 if __name__ == "__main__":
     args = make_parser()
 
-    vision_ai_to_coco(args.src, args.dst, args.ontology_classes)
+    vision_ai_to_coco(args.src, args.dst, args.ontology_classes, args.copy_image)
