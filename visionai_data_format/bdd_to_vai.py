@@ -2,8 +2,8 @@ import argparse
 import json
 import logging
 
-from utils.converter import convert_bdd_to_vai
-from utils.validator import validate_bdd
+from visionai_data_format.utils.converter import convert_bdd_to_vai
+from visionai_data_format.utils.validator import validate_bdd
 
 logger = logging.getLogger(__name__)
 

@@ -3,8 +3,8 @@ import logging
 import os
 from typing import Union
 
-from schemas.bdd_schema import BDDSchema
-from schemas.visionai_schema import VisionAIModel
+from visionai_data_format.schemas.bdd_schema import BDDSchema
+from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
 logger = logging.getLogger(__name__)
 

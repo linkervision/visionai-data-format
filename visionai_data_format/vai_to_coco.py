@@ -5,9 +5,10 @@ import os
 import shutil
 
 from PIL import Image as PILImage
-from schemas.coco_schema import Annotation, Category, Coco, Image
-from utils.classes import gen_ontology_classes_dict
-from utils.common import (
+
+from visionai_data_format.schemas.coco_schema import Annotation, Category, Coco, Image
+from visionai_data_format.utils.classes import gen_ontology_classes_dict
+from visionai_data_format.utils.common import (
     ANNOT_PATH,
     COCO_LABEL_FILE,
     DATA_PATH,

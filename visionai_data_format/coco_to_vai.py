@@ -5,7 +5,7 @@ import os
 import shutil
 import uuid
 
-from schemas.visionai_schema import (
+from visionai_data_format.schemas.visionai_schema import (
     Bbox,
     Frame,
     FrameInterval,
@@ -23,7 +23,7 @@ from schemas.visionai_schema import (
     VisionAI,
     VisionAIModel,
 )
-from utils.common import (
+from visionai_data_format.utils.common import (
     ANNOT_PATH,
     BBOX_NAME,
     DATA_PATH,

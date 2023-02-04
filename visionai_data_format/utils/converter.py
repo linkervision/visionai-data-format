@@ -3,8 +3,8 @@ import logging
 import os
 from collections import defaultdict
 
-from schemas.bdd_schema import AtrributeSchema
-from schemas.visionai_schema import (
+from visionai_data_format.schemas.bdd_schema import AtrributeSchema
+from visionai_data_format.schemas.visionai_schema import (
     Bbox,
     Frame,
     FrameInterval,
