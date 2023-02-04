@@ -6,26 +6,25 @@
 ### VAI to BDD+
 
 i.e :
-`python vai_to_bdd.py -vai_src_folder ./test_data/vai_from_bdd -bdd_dest_file ./test_data/bdd_converted_2.json -company_code 101 -sequence_name test -storage_name storage_test -container_name container_test`
+`python vai_to_bdd.py --source ./test_data/vai_from_bdd --dst ./test_data/ --company-code 101 --storage-name storage_test --container-name container_test`
 
 Arguments :
-- `-vai_src_folder` : folder contains VAI format json file
-- `-bdd_dest_file`  : BDD+ format file save destination
-- `-company_code`  : company code
-- `-sequence_name`  : sequence name
-- `-storage_name`  : storage name
-- `-container_name`  : container name
+- `--src` : folder contains VAI format json file
+- `--dst`  : BDD+ format file save destination
+- `--company-code`  : company code
+- `--storage-name`  : storage name
+- `--container-name`  : container name
 
 
 ### BDD+ to VAI
 
 i.e :
-`python bdd_to_vai.py -bdd_src_file ./test_data/bdd_converted.json -vai_dest_folder ./test_data/vai_from_bdd`
+`python bdd_to_vai.py --src ./test_data/ --dst ./test_data/vai_from_bdd`
 
 Arguments :
-- `-bdd_src_file`  : path of file with BDD+ format
-- `-vai_dest_folder` : folder destination to saves VAI format files
-- `-sensor` : name of current sensor , optional, default : `camera1`
+- `--src`  : path of file with BDD+ format
+- `--dst` : folder destination to saves VAI format files
+- `--sensor` : name of current sensor , optional, default : `camera1`
 
 ## COCO
 
