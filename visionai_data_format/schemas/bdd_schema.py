@@ -52,6 +52,11 @@ class PolygonSchema(BaseModel):
     __root__: List[PolyInfo]
 
 
+class FrameLabelSchema(BaseModel):
+    category: str
+    attributes: Optional[AtrributeSchema] = AtrributeSchema().dict()
+
+
 class CategorySchema(BaseModel):
     category: str
     attributes: Optional[AtrributeSchema] = AtrributeSchema().dict()
@@ -74,6 +79,7 @@ class FrameSchema(BaseModel):
     dataset: str
     sequence: str
     labels: List[CategorySchema]
+    frameLabels: Optional[List[FrameLabelSchema]] = None
     meta_ds: Optional[MetaDsSchema] = None
 
 
