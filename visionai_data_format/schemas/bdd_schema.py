@@ -79,7 +79,7 @@ class FrameSchema(BaseModel):
     dataset: str
     sequence: str
     labels: List[CategorySchema]
-    frameLabels: Optional[List[FrameLabelSchema]] = None
+    frameLabels: Optional[List[FrameLabelSchema]] = []
     meta_ds: Optional[MetaDsSchema] = None
 
 
