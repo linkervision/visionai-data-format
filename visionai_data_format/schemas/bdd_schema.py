@@ -63,8 +63,8 @@ class CategorySchema(BaseModel):
     box2d: Optional[Box2dSchema] = None
     poly2d: Optional[PolygonSchema] = None
     point2d: Optional[PolygonSchema] = None
-    meta_ds: Optional[MetaDsSchema] = None
-    meta_se: Optional[MetaSeSchema] = None
+    meta_ds: Optional[MetaDsSchema] = {}
+    meta_se: Optional[MetaSeSchema] = {}
     uuid: str = Field(default_factory=gen_uuid)
     objectId: Optional[ObjectIdSchema]
 
@@ -80,7 +80,7 @@ class FrameSchema(BaseModel):
     sequence: str
     labels: List[CategorySchema]
     frameLabels: Optional[List[FrameLabelSchema]] = []
-    meta_ds: Optional[MetaDsSchema] = None
+    meta_ds: Optional[MetaDsSchema] = {}
 
 
 class BDDSchema(BaseModel):
