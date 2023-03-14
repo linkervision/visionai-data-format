@@ -568,7 +568,7 @@ class CoordinateSystem(BaseModel):
 
 
 class TagData(BaseModel):
-    vec: List[VecBase] = Field(default_factory=list)
+    vec: List[VecBase] = Field(...)
 
 
 class Tag(BaseModel):
