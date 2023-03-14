@@ -37,6 +37,7 @@ class ObjectType(str, Enum):
     number = "number"
     vec = "vec"
     text = "text"
+    binary = "binary"
 
 
 class TypeMinMax(str, Enum):
@@ -144,6 +145,25 @@ class Matrix(ObjectDataElement):
         return value
 
 
+class Binary(ObjectDataElement):
+    encoding: Literal["rle"] = Field(
+        ..., description="The encoding method. It only supports “rle“ value."
+    )
+    data_type: Literal[""] = Field(
+        ...,
+        description="This is a string declares the type of values of the binary."
+        + " Only empty string "
+        " value allowed",
+    )
+    val: StrictStr = Field(...)
+
+    @validator("name")
+    def validate_name_field(cls, value):
+        if value != "semantic_mask":
+            raise ValueError("Name value must be `semantic_mask`")
+        return value
+
+
 class Bbox(ObjectDataElement):
     class Config:
         extra = Extra.allow
@@ -222,13 +242,8 @@ class Text(BaseModel):
     )
 
 
-class Vec(BaseModel):
+class VecBase(BaseModel):
     attributes: Attributes = Field(default_factory=dict)
-    name: StrictStr = Field(
-        ...,
-        description="This is a string encoding the name of this object data."
-        + " It is used as index inside the corresponding object data pointers.",
-    )
     type: Optional[TypeRange] = Field(
         None,
         description="This attribute specifies whether the vector shall be"
@@ -240,6 +255,18 @@ class Vec(BaseModel):
     coordinate_system: Optional[StrictStr] = Field(
         None,
         description="Name of the coordinate system in respect of which this object data is expressed.",
+    )
+
+    class Config:
+        use_enum_values = True
+        extra = Extra.allow
+
+
+class Vec(VecBase):
+    name: StrictStr = Field(
+        ...,
+        description="This is a string encoding the name of this object data."
+        + " It is used as index inside the corresponding object data pointers.",
     )
 
     class Config:
@@ -400,6 +427,10 @@ class ObjectData(BaseElementData):
         None,
         description='List of "matrix" that describe this object matrix information such as `confidence_score`.',
     )
+    binary: Optional[List[Binary]] = Field(
+        None,
+        description='List of "binary" that describe this object semantic mask info.',
+    )
 
 
 class ObjectUnderFrame(BaseModel):
@@ -536,6 +567,16 @@ class CoordinateSystem(BaseModel):
         extra = Extra.allow
 
 
+class TagData(BaseModel):
+    vec: List[VecBase] = Field(...)
+
+
+class Tag(BaseModel):
+    ontology_uid: StrictStr = Field(...)
+    type: StrictStr = Field(...)
+    tag_data: TagData = Field(...)
+
+
 class VisionAI(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -571,6 +612,12 @@ class VisionAI(BaseModel):
     )
 
     metadata: Metadata = Field(default_factory=Metadata)
+
+    tags: Dict[StrictStr, Tag] = Field(
+        default_factory=dict,
+        description="This is the JSON object of tags. Object keys are strings."
+        + " Values are dictionary containing information of current sequence.",
+    )
 
 
 class VisionAIModel(BaseModel):
