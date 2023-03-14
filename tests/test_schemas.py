@@ -47,6 +47,7 @@ def test_visionai_model():
             "objects": {},
             "coordinate_systems": {},
             "streams": {},
+            "tags": {},
             "metadata": {"schema_version": "1.0.0"},
         }
     }
@@ -62,6 +63,7 @@ def test_visionai():
         "objects": {},
         "coordinate_systems": {},
         "streams": {},
+        "tags": {},
     }
     generated_data = {
         "contexts": {},
@@ -70,6 +72,7 @@ def test_visionai():
         "objects": {},
         "coordinate_systems": {},
         "streams": {},
+        "tags": {},
         "metadata": {"schema_version": "1.0.0"},
     }
 
