@@ -56,7 +56,7 @@ def save_as_json(data: dict, file_name: str, folder_name: str = "") -> None:
         logger.info(
             f"[save_as_json] Save file to {os.path.join(folder_name,file_name)} started "
         )
-        json.dump(data, file, indent=4)
+        json.dump(data, file)
         logger.info(
             f"[save_as_json] Save file to {os.path.join(folder_name,file_name)} success"
         )
