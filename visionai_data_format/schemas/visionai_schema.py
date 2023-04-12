@@ -489,9 +489,6 @@ class TimeStampElement(BaseModel):
 class StreamPropertyUnderFrameProperty(BaseModel):
     sync: TimeStampElement
 
-    class Config:
-        extra = Extra.allow
-
 
 class FramePropertyStream(BaseModel):
     uri: str = Field(..., description="the urls of image")
@@ -659,6 +656,16 @@ class VisionAI(BaseModel):
         description="This is the JSON object of frames that contain the dynamic, time-wise, annotations."
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
+
+    @validator("frames")
+    def validate_frames(cls, value):
+        frame_keys = list(value.keys())
+
+        assert all(
+            len(key) == 12 and key.isdigit() for key in frame_keys
+        ), "Key must be a digit with 12 characters length"
+
+        return value
 
     objects: Optional[Dict[StrictStr, Object]] = Field(
         default=None,

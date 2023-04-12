@@ -1,6 +1,8 @@
+import pytest
+
 from visionai_data_format.schemas.bdd_schema import BDDSchema
 from visionai_data_format.schemas.coco_schema import Coco
-from visionai_data_format.schemas.visionai_schema import VisionAI, VisionAIModel
+from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
 
 def test_coco():
@@ -51,32 +53,26 @@ def test_visionai_model():
             "metadata": {"schema_version": "1.0.0"},
         }
     }
+    with pytest.raises(Exception):
+        assert VisionAIModel(**input_data).dict() == generated_data
 
-    assert VisionAIModel(**input_data).dict() == generated_data
 
+def test_visionai(
+    fake_raw_visionai_data,
+    fake_generated_raw_visionai_data,
+    fake_objects_visionai_data,
+    fake_generated_objects_visionai_data,
+):
 
-def test_visionai():
-    input_data = {
-        "contexts": {},
-        "frame_intervals": [],
-        "frames": {},
-        "objects": {},
-        "coordinate_systems": {},
-        "streams": {},
-        "tags": {},
-    }
-    generated_data = {
-        "contexts": {},
-        "frame_intervals": [],
-        "frames": {},
-        "objects": {},
-        "coordinate_systems": {},
-        "streams": {},
-        "tags": {},
-        "metadata": {"schema_version": "1.0.0"},
-    }
+    assert (
+        VisionAIModel(**fake_raw_visionai_data).dict(exclude_unset=True)
+        == fake_generated_raw_visionai_data
+    )
 
-    assert VisionAI(**input_data).dict() == generated_data
+    assert (
+        VisionAIModel(**fake_objects_visionai_data).dict(exclude_unset=True)
+        == fake_generated_objects_visionai_data
+    )
 
 
 def test_bdd():
