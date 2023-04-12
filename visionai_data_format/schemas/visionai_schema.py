@@ -430,7 +430,7 @@ class Metadata(BaseModel):
         extra = Extra.allow
 
     schema_version: SchemaVersion = Field(
-        default=SchemaVersion.field_1_0_0,
+        default=...,
         description="Version number of the VisionAI schema this annotation JSON object follows.",
     )
 
@@ -694,7 +694,7 @@ class VisionAI(BaseModel):
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
 
-    metadata: Optional[Metadata] = Field(default_factory=Metadata)
+    metadata: Metadata = Field(default=...)
 
     tags: Optional[Dict[StrictStr, Tag]] = Field(
         default=None,
