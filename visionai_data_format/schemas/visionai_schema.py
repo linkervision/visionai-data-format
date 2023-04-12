@@ -85,14 +85,12 @@ class Attributes(BaseModel):
 
 class ObjectDataElement(BaseModel):
 
-    attributes: Optional[Attributes] = Field(default=None)
+    attributes: Attributes = Field(default_factory=dict)
     name: StrictStr = Field(
-        ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
     )
     stream: StrictStr = Field(
-        ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
     coordinate_system: Optional[StrictStr] = Field(
@@ -109,23 +107,22 @@ class ObjectDataElement(BaseModel):
 class Matrix(ObjectDataElement):
 
     height: StrictInt = Field(
-        ..., description="This is the height (number of rows) of the matrix."
+        description="This is the height (number of rows) of the matrix."
     )
     width: StrictInt = Field(
-        ..., description="This is the width (number of columns) of the matrix."
+        description="This is the width (number of columns) of the matrix."
     )
     channels: StrictInt = Field(
-        ..., description="This is the number of channels of the matrix."
+        description="This is the number of channels of the matrix."
     )
 
     data_type: StrictStr = Field(
-        ...,
         description="This is a string declares the type of values of the matrix."
         + " Only `float` or `int` allowed",
     )
 
     val: List[Union[float, int]] = Field(
-        ..., description="This is a list of flattened values of the matrix."
+        description="This is a list of flattened values of the matrix."
     )
 
     class Config:
@@ -396,18 +393,27 @@ class Context(BaseModel):
     )
 
 
-class StreamProperties(BaseModel):
+class IntrinsicsPinhole(BaseModel):
     camera_matrix_3x4: List[float]
     distortion_coeffs_1xN: Optional[List[Union[float, int]]] = None
     height_px: int
-    weight_px: int
+    width_px: int
+
+    @validator("distortion_coeffs_1xN")
+    def validate_distortion_coeffs_1xN(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
 
     @validator("camera_matrix_3x4")
     def validate_camera_matrix_3x4(cls, value):
         assert (
-            len(value) == 16
-        ), f"Value {value} with length {len(value)} is not allowed"
+            value and len(value) == 12
+        ), f"Value {value} is not allowed, must be a list of 12 float values"
         return value
+
+
+class StreamProperties(BaseModel):
+    intrinsics_pinhole: IntrinsicsPinhole
 
 
 class Stream(BaseModel):
@@ -418,6 +424,11 @@ class Stream(BaseModel):
 
     class Config:
         use_enum_values = True
+
+    @validator("stream_properties")
+    def validate_stream_properties(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
 
 
 class SchemaVersion(str, Enum):
@@ -430,7 +441,6 @@ class Metadata(BaseModel):
         extra = Extra.allow
 
     schema_version: SchemaVersion = Field(
-        default=...,
         description="Version number of the VisionAI schema this annotation JSON object follows.",
     )
 
@@ -491,13 +501,18 @@ class StreamPropertyUnderFrameProperty(BaseModel):
 
 
 class FramePropertyStream(BaseModel):
-    uri: str = Field(..., description="the urls of image")
+    uri: str = Field(description="the urls of image")
     stream_properties: Optional[StreamPropertyUnderFrameProperty] = Field(
         None, description="Additional properties of the stream"
     )
 
     class Config:
         extra = Extra.allow
+
+    @validator("stream_properties")
+    def validate_stream_properties(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
 
 
 class FrameProperties(BaseModel):
@@ -506,7 +521,7 @@ class FrameProperties(BaseModel):
         descriptions="A relative or absolute time reference that specifies "
         + "the time instant this frame corresponds to",
     )
-    streams: Dict[StrictStr, FramePropertyStream] = Field(default=...)
+    streams: Dict[StrictStr, FramePropertyStream]
 
 
 class Frame(BaseModel):
@@ -528,7 +543,6 @@ class Frame(BaseModel):
     )
 
     frame_properties: FrameProperties = Field(
-        default=...,
         description="This is a JSON object which contains information about this frame.",
     )
 
@@ -542,7 +556,6 @@ class ElementDataPointer(BaseModel):
         + " attribute of the element data this pointer points to.",
     )
     frame_intervals: List[FrameInterval] = Field(
-        ...,
         description="List of frame intervals of the element data pointed by this pointer.",
     )
 
@@ -603,17 +616,17 @@ class CoordinateSystemWRTParent(BaseModel):
 class CoordinateSystem(BaseModel):
     type: CoordinateSystemType
     parent: StrictStr
-    children: List[StrictStr] = Field(...)
+    children: List[StrictStr]
     pose_wrt_parent: Optional[CoordinateSystemWRTParent] = Field(default=None)
+
+    class Config:
+        extra = Extra.forbid
+        use_enum_values = True
 
     @validator("pose_wrt_parent")
     def validate_pose_wrt_parent(cls, value):
         assert value, f"Value {value} is not allowed"
         return value
-
-    class Config:
-        extra = Extra.forbid
-        use_enum_values = True
 
 
 class TagData(BaseModel):
@@ -621,7 +634,7 @@ class TagData(BaseModel):
 
     @validator("vec")
     def validate_vec(cls, values):
-        assert len(values) == 1, "Only allow one data in list"
+        assert len(values) == 1, "Only allow one data inside list"
         value = values[0]
         assert value.type == "values", "Value {} is not allowed"
         return values
@@ -649,10 +662,10 @@ class VisionAI(BaseModel):
         return value
 
     frame_intervals: List[FrameInterval] = Field(
-        default=..., description="This is an array of frame intervals."
+        description="This is an array of frame intervals."
     )
+
     frames: Dict[StrictStr, Frame] = Field(
-        default=...,
         description="This is the JSON object of frames that contain the dynamic, time-wise, annotations."
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
@@ -687,14 +700,19 @@ class VisionAI(BaseModel):
     @validator("coordinate_systems")
     def validate_coordinate_systems(cls, value):
         assert value, f" Value {value} is not allowed"
+
+        for k, v in value.items():
+            if v.type == "local_cs" and "iso8855" not in k:
+                raise ValueError(
+                    f"Can't assign coordinate system {k} with local_cs type"
+                )
         return value
 
     streams: Dict[StrictStr, Stream] = Field(
-        default=...,
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
 
-    metadata: Metadata = Field(default=...)
+    metadata: Metadata
 
     tags: Optional[Dict[StrictStr, Tag]] = Field(
         default=None,
