@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
@@ -18,8 +19,14 @@ from pydantic import (
     StrictInt,
     StrictStr,
     conlist,
+    root_validator,
     validator,
 )
+
+
+class CoordinateSystemType(str, Enum):
+    sensor_cs = "sensor_cs"
+    local_cs = "local_cs"
 
 
 class Type(str, Enum):
@@ -80,12 +87,10 @@ class ObjectDataElement(BaseModel):
 
     attributes: Attributes = Field(default_factory=dict)
     name: StrictStr = Field(
-        ...,
         description="This is a string encoding the name of this object data."
         + " It is used as index inside the corresponding object data pointers.",
     )
     stream: StrictStr = Field(
-        ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
     coordinate_system: Optional[StrictStr] = Field(
@@ -102,23 +107,22 @@ class ObjectDataElement(BaseModel):
 class Matrix(ObjectDataElement):
 
     height: StrictInt = Field(
-        ..., description="This is the height (number of rows) of the matrix."
+        description="This is the height (number of rows) of the matrix."
     )
     width: StrictInt = Field(
-        ..., description="This is the width (number of columns) of the matrix."
+        description="This is the width (number of columns) of the matrix."
     )
     channels: StrictInt = Field(
-        ..., description="This is the number of channels of the matrix."
+        description="This is the number of channels of the matrix."
     )
 
     data_type: StrictStr = Field(
-        ...,
         description="This is a string declares the type of values of the matrix."
         + " Only `float` or `int` allowed",
     )
 
     val: List[Union[float, int]] = Field(
-        ..., description="This is a list of flattened values of the matrix."
+        description="This is a list of flattened values of the matrix."
     )
 
     class Config:
@@ -334,6 +338,18 @@ class FrameInterval(BaseModel):
         ..., description="Ending frame number of the interval."
     )
 
+    @root_validator
+    def validate_frame_range(cls, values):
+        frame_start = values.get("frame_start")
+        frame_end = values.get("frame_end")
+
+        if frame_start > frame_end:
+            raise ValueError(
+                "Range is not accepted,"
+                + f" frame start : {frame_start} , frame end : {frame_end}"
+            )
+        return values
+
 
 class BaseElementData(BaseModel):
     boolean: Optional[List[Boolean]] = Field(
@@ -377,9 +393,27 @@ class Context(BaseModel):
     )
 
 
+class IntrinsicsPinhole(BaseModel):
+    camera_matrix_3x4: List[float]
+    distortion_coeffs_1xN: Optional[List[Union[float, int]]] = None
+    height_px: int
+    width_px: int
+
+    @validator("distortion_coeffs_1xN")
+    def validate_distortion_coeffs_1xN(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
+
+    @validator("camera_matrix_3x4")
+    def validate_camera_matrix_3x4(cls, value):
+        assert (
+            value and len(value) == 12
+        ), f"Value {value} is not allowed, must be a list of 12 float values"
+        return value
+
+
 class StreamProperties(BaseModel):
-    class Config:
-        extra = Extra.allow
+    intrinsics_pinhole: IntrinsicsPinhole
 
 
 class Stream(BaseModel):
@@ -390,6 +424,11 @@ class Stream(BaseModel):
 
     class Config:
         use_enum_values = True
+
+    @validator("stream_properties")
+    def validate_stream_properties(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
 
 
 class SchemaVersion(str, Enum):
@@ -402,7 +441,6 @@ class Metadata(BaseModel):
         extra = Extra.allow
 
     schema_version: SchemaVersion = Field(
-        default=SchemaVersion.field_1_0_0,
         description="Version number of the VisionAI schema this annotation JSON object follows.",
     )
 
@@ -451,22 +489,30 @@ class TimeStampElement(BaseModel):
     class Config:
         extra = Extra.forbid
 
+    @validator("timestamp")
+    def validate_timestamp(cls, value):
+        iso_time_regex = r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.\d{3})(Z|[+-]((\d{2}:\d{2})|(\d{4})))$"
+        assert re.match(iso_time_regex, value), f"Wrong timestamp format : {value}"
+        return value
+
 
 class StreamPropertyUnderFrameProperty(BaseModel):
     sync: TimeStampElement
 
-    class Config:
-        extra = Extra.allow
-
 
 class FramePropertyStream(BaseModel):
-    uri: str = Field(..., description="the urls of image")
-    stream_properties: Optional[
-        Dict[StrictStr, StreamPropertyUnderFrameProperty]
-    ] = Field(None, description="Additional properties of the stream")
+    uri: str = Field(description="the urls of image")
+    stream_properties: Optional[StreamPropertyUnderFrameProperty] = Field(
+        None, description="Additional properties of the stream"
+    )
 
     class Config:
         extra = Extra.allow
+
+    @validator("stream_properties")
+    def validate_stream_properties(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
 
 
 class FrameProperties(BaseModel):
@@ -475,29 +521,28 @@ class FrameProperties(BaseModel):
         descriptions="A relative or absolute time reference that specifies "
         + "the time instant this frame corresponds to",
     )
-    streams: Dict[StrictStr, FramePropertyStream] = Field(default_factory=dict)
+    streams: Dict[StrictStr, FramePropertyStream]
 
 
 class Frame(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    objects: Dict[StrictStr, ObjectUnderFrame] = Field(
-        default_factory=dict,
+    objects: Optional[Dict[StrictStr, ObjectUnderFrame]] = Field(
+        default=None,
         description="This is a JSON object that contains dynamic information on VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs."
         + ' Object values may contain an "object_data" JSON object.',
     )
 
-    contexts: Dict[StrictStr, ContextUnderFrame] = Field(
-        default_factory=dict,
+    contexts: Optional[Dict[StrictStr, ContextUnderFrame]] = Field(
+        default=None,
         description="This is a JSON object that contains dynamic information on VisionAI contexts."
         + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
         + ' Context values may contain an "context_data" JSON object.',
     )
 
     frame_properties: FrameProperties = Field(
-        default_factory=dict,
         description="This is a JSON object which contains information about this frame.",
     )
 
@@ -511,7 +556,6 @@ class ElementDataPointer(BaseModel):
         + " attribute of the element data this pointer points to.",
     )
     frame_intervals: List[FrameInterval] = Field(
-        ...,
         description="List of frame intervals of the element data pointed by this pointer.",
     )
 
@@ -558,17 +602,42 @@ class Object(BaseModel):
     )
 
 
+class CoordinateSystemWRTParent(BaseModel):
+    matrix4x4: List[Union[float, int]]
+
+    @validator("matrix4x4")
+    def validate_matrix4x4(cls, value):
+        assert (
+            len(value) == 16
+        ), f"Value {value} with length {len(value)} is not allowed"
+        return value
+
+
 class CoordinateSystem(BaseModel):
-    type: StrictStr
-    parent: StrictStr = ""
-    children: List[StrictStr] = Field(default_factory=list)
+    type: CoordinateSystemType
+    parent: StrictStr
+    children: List[StrictStr]
+    pose_wrt_parent: Optional[CoordinateSystemWRTParent] = Field(default=None)
 
     class Config:
-        extra = Extra.allow
+        extra = Extra.forbid
+        use_enum_values = True
+
+    @validator("pose_wrt_parent")
+    def validate_pose_wrt_parent(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
 
 
 class TagData(BaseModel):
     vec: List[VecBase] = Field(...)
+
+    @validator("vec")
+    def validate_vec(cls, values):
+        assert len(values) == 1, "Only allow one data inside list"
+        value = values[0]
+        assert value.type == "values", "Value {} is not allowed"
+        return values
 
 
 class Tag(BaseModel):
@@ -581,43 +650,80 @@ class VisionAI(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    contexts: Dict[StrictStr, Context] = Field(
-        default_factory=dict,
+    contexts: Optional[Dict[StrictStr, Context]] = Field(
+        default=None,
         description="This is the JSON object of VisionAI classified class context."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
 
+    @validator("contexts")
+    def validate_contexts(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
+
     frame_intervals: List[FrameInterval] = Field(
-        default_factory=list, description="This is an array of frame intervals."
+        description="This is an array of frame intervals."
     )
+
     frames: Dict[StrictStr, Frame] = Field(
-        default_factory=dict,
-        description="This is the JSON object of frames that contain the dynamic, timewise, annotations."
+        description="This is the JSON object of frames that contain the dynamic, time-wise, annotations."
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
-    objects: Dict[StrictStr, Object] = Field(
-        default_factory=dict,
+
+    @validator("frames")
+    def validate_frames(cls, value):
+        frame_keys = list(value.keys())
+
+        assert all(
+            len(key) == 12 and key.isdigit() for key in frame_keys
+        ), "Key must be a digit with 12 characters length"
+
+        return value
+
+    objects: Optional[Dict[StrictStr, Object]] = Field(
+        default=None,
         description="This is the JSON object of VisionAI objects."
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
-    coordinate_systems: Dict[StrictStr, CoordinateSystem] = Field(
-        default_factory=dict,
+
+    @validator("objects")
+    def validate_objects(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
+
+    coordinate_systems: Optional[Dict[StrictStr, CoordinateSystem]] = Field(
+        default=None,
         description="This is the JSON object of coordinate system. Object keys are strings."
         + " Values are dictionary containing information of current key device.",
     )
 
+    @validator("coordinate_systems")
+    def validate_coordinate_systems(cls, value):
+        assert value, f" Value {value} is not allowed"
+
+        for k, v in value.items():
+            if v.type == "local_cs" and "iso8855" not in k:
+                raise ValueError(
+                    f"Can't assign coordinate system {k} with local_cs type"
+                )
+        return value
+
     streams: Dict[StrictStr, Stream] = Field(
-        default_factory=dict,
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
 
-    metadata: Metadata = Field(default_factory=Metadata)
+    metadata: Metadata
 
-    tags: Dict[StrictStr, Tag] = Field(
-        default_factory=dict,
+    tags: Optional[Dict[StrictStr, Tag]] = Field(
+        default=None,
         description="This is the JSON object of tags. Object keys are strings."
         + " Values are dictionary containing information of current sequence.",
     )
+
+    @validator("tags")
+    def validate_tags(cls, value):
+        assert value, f" Value {value} is not allowed"
+        return value
 
 
 class VisionAIModel(BaseModel):
