@@ -398,42 +398,34 @@ class Context(BaseModel):
 
     @root_validator
     def validate_context_data_relations(cls, values):
-        context_data_pointer = values.get("context_data_pointers")
+        context_data_pointers = values.get("context_data_pointers")
         context_data = values.get("context_data", {})
-        if context_data and not context_data_pointer:
+        if context_data and not context_data_pointers:
             raise ValueError(
-                "context data pointers can't be empty with context data exists"
+                "context data pointers can't be empty with contexts data exists"
             )
 
-        if not context_data or not context_data_pointer:
+        if not context_data or not context_data_pointers:
             return values
 
-        static_context_data_name_type_map = {}
-        context_data = dict(context_data)
-        for obj_type, obj_info_list in context_data.items():
+        static_contexts_data_name_type_map = {}
+        for obj_type, obj_info_list in context_data:
             if not obj_info_list:
                 continue
             for obj_info in obj_info_list:
-                static_context_data_name_type_map.update({obj_info.name: obj_type})
-        for obj_name, obj_type in static_context_data_name_type_map.items():
-            # dynamic attribute context data pointers must contain frame intervals
-            obj_data_dict = dict(context_data_pointer.get(obj_name, {}))
+                static_contexts_data_name_type_map.update({obj_info.name: obj_type})
+        for obj_name, obj_type in static_contexts_data_name_type_map.items():
+            obj_data_dict = context_data_pointers.get(obj_name, {})
             if not obj_data_dict:
                 raise ValueError(
-                    f"Static context data {obj_name}:{obj_type} doesn't found under context data pointer"
+                    f"Static contexts data {obj_name}:{obj_type} doesn't found under context data pointer"
                 )
-            if not obj_data_dict.get("frame_intervals"):
+            obj_data_pointer_type = getattr(obj_data_dict, "type", "")
+            if obj_type != obj_data_pointer_type:
                 raise ValueError(
-                    f"Static context data pointer {obj_name}"
-                    + " missing frame intervals"
+                    f"Static contexts data {obj_name}:{obj_type} doesn't match"
+                    + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
                 )
-            obj_data_pointer_type = obj_data_dict.get("type")
-            if obj_type == obj_data_pointer_type:
-                continue
-            raise ValueError(
-                f"Static context data {obj_name}:{obj_type} doesn't match"
-                + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
-            )
 
         return values
 
@@ -660,42 +652,34 @@ class Object(BaseModel):
 
     @root_validator
     def validate_object_data_relations(cls, values):
-        object_data_pointer = values.get("object_data_pointers")
+        object_data_pointers = values.get("object_data_pointers")
         object_data = values.get("object_data", {})
-        if object_data and not object_data_pointer:
+        if object_data and not object_data_pointers:
             raise ValueError(
-                "object data pointers can't be empty with object data exists"
+                "object data pointers can't be empty with objects data exists"
             )
 
-        if not object_data or not object_data_pointer:
+        if not object_data or not object_data_pointers:
             return values
 
-        static_object_data_name_type_map = {}
-        object_data = dict(object_data)
-        for obj_type, obj_info_list in object_data.items():
+        static_objects_data_name_type_map = {}
+        for obj_type, obj_info_list in object_data:
             if not obj_info_list:
                 continue
             for obj_info in obj_info_list:
-                static_object_data_name_type_map.update({obj_info.name: obj_type})
-        for obj_name, obj_type in static_object_data_name_type_map.items():
-            # dynamic attribute object data pointers must contain frame intervals
-            obj_data_dict = dict(object_data_pointer.get(obj_name, {}))
+                static_objects_data_name_type_map.update({obj_info.name: obj_type})
+        for obj_name, obj_type in static_objects_data_name_type_map.items():
+            obj_data_dict = object_data_pointers.get(obj_name, {})
             if not obj_data_dict:
                 raise ValueError(
-                    f"Static object data {obj_name}:{obj_type} doesn't found under object data pointer"
+                    f"Static object data {obj_name}:{obj_type} doesn't found under objects data pointer"
                 )
-            if not obj_data_dict.get("frame_intervals"):
+            obj_data_pointer_type = getattr(obj_data_dict, "type", "")
+            if obj_type != obj_data_pointer_type:
                 raise ValueError(
-                    f"Static object data pointer {obj_name}"
-                    + " missing frame intervals"
+                    f"Static object data {obj_name}:{obj_type} doesn't match"
+                    + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
                 )
-            obj_data_pointer_type = obj_data_dict.get("type")
-            if obj_type == obj_data_pointer_type:
-                continue
-            raise ValueError(
-                f"Static object data {obj_name}:{obj_type} doesn't match"
-                + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
-            )
 
         return values
 
