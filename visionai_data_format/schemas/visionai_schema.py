@@ -383,14 +383,53 @@ class Context(BaseModel):
         ...,
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
-    context_data: ContextData = Field(default_factory=dict)
-    context_data_pointers: Dict[StrictStr, ContextDataPointer] = Field(
-        default_factory=dict
-    )
+    context_data: Optional[ContextData] = None
+    context_data_pointers: Optional[Dict[StrictStr, ContextDataPointer]] = None
     type: StrictStr = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",
     )
+
+    @validator("context_data", pre=True)
+    def validate_context_data(cls, value):
+        assert isinstance(value, dict) and value, f"Value {value} is not allowed"
+        return value
+
+    @validator("context_data_pointers", pre=True)
+    def pre_validate_context_data_pointers(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
+
+    @validator("context_data_pointers")
+    def post_validate_context_data_pointers(cls, value, values):
+        object_data = values.get("context_data")
+        if not object_data:
+            return value
+
+        static_object_data_name_type_map = {
+            obj_info["name"]: obj_type for obj_type, obj_info in object_data.items()
+        }
+
+        for obj_name, obj_type in static_object_data_name_type_map.items():
+            # dynamic attribute object data pointers must contain frame intervals
+            if not value.get(obj_name):
+                raise ValueError(
+                    f"Static context data {obj_name}:{obj_type} doesn't found under context data pointer"
+                )
+            if not value.get(obj_name, {}).get("frame_intervals"):
+                raise ValueError(
+                    f"Static context data pointer {obj_name}"
+                    + " missing frame intervals"
+                )
+            obj_data_pointer_type = value[obj_name]["type"]
+            if obj_type == obj_data_pointer_type:
+                continue
+            raise ValueError(
+                f"Static context data {obj_name}:{obj_type} doesn't match"
+                + f" with data pointer {obj_name}:{obj_data_pointer_type}"
+            )
+
+        return value
 
 
 class IntrinsicsPinhole(BaseModel):
@@ -445,7 +484,12 @@ class Metadata(BaseModel):
     )
 
 
-class ObjectData(BaseElementData):
+class ObjectDataStatic(BaseElementData):
+    class Config:
+        extra = Extra.forbid
+
+
+class ObjectDataDynamic(BaseElementData):
     class Config:
         extra = Extra.forbid
 
@@ -472,9 +516,7 @@ class ObjectData(BaseElementData):
 
 
 class ObjectUnderFrame(BaseModel):
-    object_data: ObjectData = Field(
-        default_factory=dict,
-    )
+    object_data: ObjectDataDynamic
 
 
 class ContextUnderFrame(BaseModel):
@@ -497,7 +539,7 @@ class TimeStampElement(BaseModel):
 
 
 class StreamPropertyUnderFrameProperty(BaseModel):
-    sync: TimeStampElement
+    sync: Optional[TimeStampElement] = None
 
 
 class FramePropertyStream(BaseModel):
@@ -555,7 +597,8 @@ class ElementDataPointer(BaseModel):
         + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
         + " attribute of the element data this pointer points to.",
     )
-    frame_intervals: List[FrameInterval] = Field(
+    frame_intervals: Optional[List[FrameInterval]] = Field(
+        default=None,
         description="List of frame intervals of the element data pointed by this pointer.",
     )
 
@@ -584,22 +627,61 @@ class Object(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    frame_intervals: Optional[List[FrameInterval]] = Field(
-        None,
+    frame_intervals: List[FrameInterval] = Field(
+        ...,
         description="The array of frame intervals where this object exists or is defined.",
     )
-    name: StrictStr = Field(
-        ...,
+    name: Optional[StrictStr] = Field(
+        default=None,
         description="Name of the object. It is a friendly name and not used for indexing.",
     )
-    object_data: ObjectData = Field(default_factory=dict)
-    object_data_pointers: Dict[StrictStr, ObjectDataPointer] = Field(
-        default_factory=dict
-    )
+    object_data: Optional[ObjectDataStatic] = None
+    object_data_pointers: Optional[Dict[StrictStr, ObjectDataPointer]] = None
     type: StrictStr = Field(
         ...,
         description="The type of an object, defines the class the object corresponds to.",
     )
+
+    @validator("object_data", pre=True)
+    def validate_object_data(cls, value):
+        assert isinstance(value, dict) and value, f"Value {value} is not allowed"
+        return value
+
+    @validator("object_data_pointers", pre=True)
+    def pre_validate_object_data_pointers(cls, value):
+        assert value, f"Value {value} is not allowed"
+        return value
+
+    @validator("object_data_pointers")
+    def post_validate_object_data_pointers(cls, value, values):
+        object_data = values.get("object_data")
+        if not object_data:
+            return value
+
+        static_object_data_name_type_map = {
+            obj_info["name"]: obj_type for obj_type, obj_info in object_data.items()
+        }
+
+        for obj_name, obj_type in static_object_data_name_type_map.items():
+            # dynamic attribute object data pointers must contain frame intervals
+            if not value.get(obj_name):
+                raise ValueError(
+                    f"Static object data {obj_name}:{obj_type} doesn't found under object data pointer"
+                )
+            if not value.get(obj_name, {}).get("frame_intervals"):
+                raise ValueError(
+                    f"Static object data pointer {obj_name}"
+                    + " missing frame intervals"
+                )
+            obj_data_pointer_type = value[obj_name]["type"]
+            if obj_type == obj_data_pointer_type:
+                continue
+            raise ValueError(
+                f"Static object data {obj_name}:{obj_type} doesn't match"
+                + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
+            )
+
+        return value
 
 
 class CoordinateSystemWRTParent(BaseModel):
@@ -739,6 +821,6 @@ ContextDataPointer.update_forward_refs()
 ContextUnderFrame.update_forward_refs()
 Frame.update_forward_refs()
 Object.update_forward_refs()
-ObjectData.update_forward_refs()
+ObjectDataDynamic.update_forward_refs()
 ObjectUnderFrame.update_forward_refs()
 VisionAI.update_forward_refs()
