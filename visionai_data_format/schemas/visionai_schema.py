@@ -392,44 +392,55 @@ class Context(BaseModel):
 
     @validator("context_data", pre=True)
     def validate_context_data(cls, value):
-        assert isinstance(value, dict) and value, f"Value {value} is not allowed"
+        assert isinstance(value, dict) and value, f"value {value} is not allowed"
         return value
 
     @validator("context_data_pointers", pre=True)
     def pre_validate_context_data_pointers(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
-    @validator("context_data_pointers")
-    def post_validate_context_data_pointers(cls, value, values):
-        object_data = values.get("context_data")
-        if not object_data:
-            return value
+    @root_validator
+    def validate_context_data_relations(cls, values):
+        print(values)
+        context_data_pointer = values.get("context_data_pointers")
+        context_data = values.get("context_data", {})
+        if context_data and not context_data_pointer:
+            raise ValueError(
+                "context data pointers can't be empty with context data exists"
+            )
 
-        static_object_data_name_type_map = {
-            obj_info["name"]: obj_type for obj_type, obj_info in object_data.items()
-        }
+        if not context_data or not context_data_pointer:
+            return values
 
-        for obj_name, obj_type in static_object_data_name_type_map.items():
-            # dynamic attribute object data pointers must contain frame intervals
-            if not value.get(obj_name):
+        static_context_data_name_type_map = {}
+        context_data = dict(context_data)
+        for obj_type, obj_info_list in context_data.items():
+            if not obj_info_list:
+                continue
+            for obj_info in obj_info_list:
+                static_context_data_name_type_map.update({obj_info.name: obj_type})
+        for obj_name, obj_type in static_context_data_name_type_map.items():
+            # dynamic attribute context data pointers must contain frame intervals
+            obj_data_dict = dict(context_data_pointer.get(obj_name, {}))
+            if not obj_data_dict:
                 raise ValueError(
                     f"Static context data {obj_name}:{obj_type} doesn't found under context data pointer"
                 )
-            if not value.get(obj_name, {}).get("frame_intervals"):
+            if not obj_data_dict.get("frame_intervals"):
                 raise ValueError(
                     f"Static context data pointer {obj_name}"
                     + " missing frame intervals"
                 )
-            obj_data_pointer_type = value[obj_name]["type"]
+            obj_data_pointer_type = obj_data_dict.get("type")
             if obj_type == obj_data_pointer_type:
                 continue
             raise ValueError(
                 f"Static context data {obj_name}:{obj_type} doesn't match"
-                + f" with data pointer {obj_name}:{obj_data_pointer_type}"
+                + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
             )
 
-        return value
+        return values
 
 
 class IntrinsicsPinhole(BaseModel):
@@ -440,14 +451,14 @@ class IntrinsicsPinhole(BaseModel):
 
     @validator("distortion_coeffs_1xN")
     def validate_distortion_coeffs_1xN(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
     @validator("camera_matrix_3x4")
     def validate_camera_matrix_3x4(cls, value):
         assert (
             value and len(value) == 12
-        ), f"Value {value} is not allowed, must be a list of 12 float values"
+        ), f"value {value} is not allowed, must be a list of 12 float values"
         return value
 
 
@@ -466,7 +477,7 @@ class Stream(BaseModel):
 
     @validator("stream_properties")
     def validate_stream_properties(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
 
@@ -553,7 +564,7 @@ class FramePropertyStream(BaseModel):
 
     @validator("stream_properties")
     def validate_stream_properties(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
 
@@ -644,36 +655,46 @@ class Object(BaseModel):
 
     @validator("object_data", pre=True)
     def validate_object_data(cls, value):
-        assert isinstance(value, dict) and value, f"Value {value} is not allowed"
+        assert isinstance(value, dict) and value, f"value {value} is not allowed"
         return value
 
     @validator("object_data_pointers", pre=True)
     def pre_validate_object_data_pointers(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
-    @validator("object_data_pointers")
-    def post_validate_object_data_pointers(cls, value, values):
-        object_data = values.get("object_data")
-        if not object_data:
-            return value
+    @root_validator
+    def validate_object_data_relations(cls, values):
+        object_data_pointer = values.get("object_data_pointers")
+        object_data = values.get("object_data", {})
+        if object_data and not object_data_pointer:
+            raise ValueError(
+                "object data pointers can't be empty with object data exists"
+            )
 
-        static_object_data_name_type_map = {
-            obj_info["name"]: obj_type for obj_type, obj_info in object_data.items()
-        }
+        if not object_data or not object_data_pointer:
+            return values
 
+        static_object_data_name_type_map = {}
+        object_data = dict(object_data)
+        for obj_type, obj_info_list in object_data.items():
+            if not obj_info_list:
+                continue
+            for obj_info in obj_info_list:
+                static_object_data_name_type_map.update({obj_info.name: obj_type})
         for obj_name, obj_type in static_object_data_name_type_map.items():
             # dynamic attribute object data pointers must contain frame intervals
-            if not value.get(obj_name):
+            obj_data_dict = dict(object_data_pointer.get(obj_name, {}))
+            if not obj_data_dict:
                 raise ValueError(
                     f"Static object data {obj_name}:{obj_type} doesn't found under object data pointer"
                 )
-            if not value.get(obj_name, {}).get("frame_intervals"):
+            if not obj_data_dict.get("frame_intervals"):
                 raise ValueError(
                     f"Static object data pointer {obj_name}"
                     + " missing frame intervals"
                 )
-            obj_data_pointer_type = value[obj_name]["type"]
+            obj_data_pointer_type = obj_data_dict.get("type")
             if obj_type == obj_data_pointer_type:
                 continue
             raise ValueError(
@@ -681,7 +702,7 @@ class Object(BaseModel):
                 + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
             )
 
-        return value
+        return values
 
 
 class CoordinateSystemWRTParent(BaseModel):
@@ -691,7 +712,7 @@ class CoordinateSystemWRTParent(BaseModel):
     def validate_matrix4x4(cls, value):
         assert (
             len(value) == 16
-        ), f"Value {value} with length {len(value)} is not allowed"
+        ), f"value {value} with length {len(value)} is not allowed"
         return value
 
 
@@ -707,7 +728,7 @@ class CoordinateSystem(BaseModel):
 
     @validator("pose_wrt_parent")
     def validate_pose_wrt_parent(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
 
@@ -740,7 +761,7 @@ class VisionAI(BaseModel):
 
     @validator("contexts")
     def validate_contexts(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
     frame_intervals: List[FrameInterval] = Field(
@@ -770,7 +791,7 @@ class VisionAI(BaseModel):
 
     @validator("objects")
     def validate_objects(cls, value):
-        assert value, f"Value {value} is not allowed"
+        assert value, f"value {value} is not allowed"
         return value
 
     coordinate_systems: Optional[Dict[StrictStr, CoordinateSystem]] = Field(
