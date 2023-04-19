@@ -93,10 +93,6 @@ class ObjectDataElement(BaseModel):
     stream: StrictStr = Field(
         description="Name of the stream in respect of which this object data is expressed.",
     )
-    coordinate_system: Optional[StrictStr] = Field(
-        None,
-        description="Name of the coordinate system in respect of which this object data is expressed.",
-    )
     confidence_score: Optional[float] = Field(
         None,
         description="The confidence score of model prediction of this object."
