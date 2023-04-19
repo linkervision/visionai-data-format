@@ -384,7 +384,7 @@ class Context(BaseModel):
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
     context_data: Optional[ContextData] = None
-    context_data_pointers: Optional[Dict[StrictStr, ContextDataPointer]] = None
+    context_data_pointers: Dict[StrictStr, ContextDataPointer]
     type: StrictStr = Field(
         ...,
         description="The type of a context, defines the class the context corresponds to.",
@@ -647,7 +647,7 @@ class Object(BaseModel):
         description="Name of the object. It is a friendly name and not used for indexing.",
     )
     object_data: Optional[ObjectDataStatic] = None
-    object_data_pointers: Optional[Dict[StrictStr, ObjectDataPointer]] = None
+    object_data_pointers: Dict[StrictStr, ObjectDataPointer]
     type: StrictStr = Field(
         ...,
         description="The type of an object, defines the class the object corresponds to.",
