@@ -402,7 +402,6 @@ class Context(BaseModel):
 
     @root_validator
     def validate_context_data_relations(cls, values):
-        print(values)
         context_data_pointer = values.get("context_data_pointers")
         context_data = values.get("context_data", {})
         if context_data and not context_data_pointer:
