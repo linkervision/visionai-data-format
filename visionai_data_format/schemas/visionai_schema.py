@@ -405,15 +405,14 @@ class Context(BaseModel):
                 "context data pointers can't be empty with contexts data exists"
             )
 
-        if not context_data or not context_data_pointers:
-            return values
-
         static_contexts_data_name_type_map = {}
-        for obj_type, obj_info_list in context_data:
-            if not obj_info_list:
-                continue
-            for obj_info in obj_info_list:
-                static_contexts_data_name_type_map.update({obj_info.name: obj_type})
+
+        if context_data:
+            for obj_type, obj_info_list in context_data:
+                if not obj_info_list:
+                    continue
+                for obj_info in obj_info_list:
+                    static_contexts_data_name_type_map.update({obj_info.name: obj_type})
         for obj_name, obj_type in static_contexts_data_name_type_map.items():
             obj_data_dict = context_data_pointers.get(obj_name, {})
             if not obj_data_dict:
@@ -427,6 +426,20 @@ class Context(BaseModel):
                     + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
                 )
 
+        static_context_data_name_set = set(static_contexts_data_name_type_map.keys())
+        error_name_list = []
+
+        for obj_name, obj_info in context_data_pointers.items():
+            if obj_name not in static_context_data_name_set and not getattr(
+                obj_info, "frame_intervals", None
+            ):
+                error_name_list.append(f"{obj_name}:{obj_info.type}")
+
+        if error_name_list:
+            raise ValueError(
+                f"Dynamic context data pointer {error_name_list}"
+                + " missing frame intervals"
+            )
         return values
 
 
@@ -659,28 +672,41 @@ class Object(BaseModel):
                 "object data pointers can't be empty with objects data exists"
             )
 
-        if not object_data or not object_data_pointers:
-            return values
-
         static_objects_data_name_type_map = {}
-        for obj_type, obj_info_list in object_data:
-            if not obj_info_list:
-                continue
-            for obj_info in obj_info_list:
-                static_objects_data_name_type_map.update({obj_info.name: obj_type})
+
+        if object_data:
+            for obj_type, obj_info_list in object_data:
+                if not obj_info_list:
+                    continue
+                for obj_info in obj_info_list:
+                    static_objects_data_name_type_map.update({obj_info.name: obj_type})
         for obj_name, obj_type in static_objects_data_name_type_map.items():
             obj_data_dict = object_data_pointers.get(obj_name, {})
             if not obj_data_dict:
                 raise ValueError(
-                    f"Static object data {obj_name}:{obj_type} doesn't found under objects data pointer"
+                    f"Static objects data {obj_name}:{obj_type} doesn't found under object data pointer"
                 )
             obj_data_pointer_type = getattr(obj_data_dict, "type", "")
             if obj_type != obj_data_pointer_type:
                 raise ValueError(
-                    f"Static object data {obj_name}:{obj_type} doesn't match"
+                    f"Static objects data {obj_name}:{obj_type} doesn't match"
                     + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
                 )
 
+        static_object_data_name_set = set(static_objects_data_name_type_map.keys())
+        error_name_list = []
+
+        for obj_name, obj_info in object_data_pointers.items():
+            if obj_name not in static_object_data_name_set and not getattr(
+                obj_info, "frame_intervals", None
+            ):
+                error_name_list.append(f"{obj_name}:{obj_info.type}")
+
+        if error_name_list:
+            raise ValueError(
+                f"Dynamic object data pointer {error_name_list}"
+                + " missing frame intervals"
+            )
         return values
 
 
