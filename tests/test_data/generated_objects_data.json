@@ -77,7 +77,6 @@
                     }
                 ],
                 "name": "pedestrian",
-                "object_data": {},
                 "object_data_pointers": {
                     "bbox_shape": {
                         "frame_intervals": [
