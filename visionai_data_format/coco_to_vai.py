@@ -7,13 +7,13 @@ import uuid
 
 from visionai_data_format.schemas.visionai_schema import (
     Bbox,
+    DynamicObjectData,
     Frame,
     FrameInterval,
     FrameProperties,
     FramePropertyStream,
     Metadata,
     Object,
-    ObjectDataDynamic,
     ObjectDataPointer,
     ObjectType,
     ObjectUnderFrame,
@@ -109,7 +109,7 @@ def _coco_to_vision_ai(
         # assume there is only one sensor, so image_index always is 0
         objects_under_frames = {
             object_id: ObjectUnderFrame(
-                object_data=ObjectDataDynamic(
+                object_data=DynamicObjectData(
                     bbox=[
                         Bbox(
                             name=BBOX_NAME,

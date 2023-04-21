@@ -6,12 +6,12 @@ from collections import defaultdict
 from visionai_data_format.schemas.bdd_schema import AtrributeSchema
 from visionai_data_format.schemas.visionai_schema import (
     Bbox,
+    DynamicObjectData,
     Frame,
     FrameInterval,
     FrameProperties,
     FramePropertyStream,
     Object,
-    ObjectDataDynamic,
     ObjectDataPointer,
     ObjectType,
     ObjectUnderFrame,
@@ -122,7 +122,7 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
             frames: dict[str, Frame] = defaultdict(Frame)
             objects: dict[str, Object] = defaultdict(Object)
             frame_data: Frame = Frame(
-                objects=defaultdict(ObjectDataDynamic),
+                objects=defaultdict(DynamicObjectData),
                 frame_properties=FrameProperties(
                     streams={sensor_name: FramePropertyStream(uri=url)}
                 ),
@@ -148,7 +148,7 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
                 confidence_score = label.get("meta_ds", {}).get("score", None)
                 object_under_frames = {
                     obj_uuid: ObjectUnderFrame(
-                        object_data=ObjectDataDynamic(
+                        object_data=DynamicObjectData(
                             bbox=[
                                 Bbox(
                                     name="bbox_shape",

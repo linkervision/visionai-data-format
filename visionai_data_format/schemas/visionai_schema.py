@@ -80,10 +80,10 @@ class Attributes(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    boolean: List[BooleanStatic] = Field(default_factory=list)
-    num: List[NumStatic] = Field(default_factory=list)
-    text: List[TextStatic] = Field(default_factory=list)
-    vec: List[VecStatic] = Field(default_factory=list)
+    boolean: List[StaticBoolean] = Field(default_factory=list)
+    num: List[StaticNum] = Field(default_factory=list)
+    text: List[StaticText] = Field(default_factory=list)
+    vec: List[StaticVec] = Field(default_factory=list)
 
 
 class CoordinateSystemWRTParent(BaseModel):
@@ -166,7 +166,7 @@ class Metadata(BaseModel):
     )
 
 
-class BooleanStatic(BaseModel):
+class StaticBoolean(BaseModel):
 
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
@@ -186,14 +186,14 @@ class BooleanStatic(BaseModel):
         extra = Extra.forbid
 
 
-class BooleanDynamic(BooleanStatic):
+class DynamicBoolean(StaticBoolean):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
 
 
-class NumStatic(BaseModel):
+class StaticNum(BaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.forbid
@@ -214,14 +214,14 @@ class NumStatic(BaseModel):
     )
 
 
-class NumDynamic(NumStatic):
+class DynamicNum(StaticNum):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
 
 
-class TextStatic(BaseModel):
+class StaticText(BaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.forbid
@@ -240,7 +240,7 @@ class TextStatic(BaseModel):
     val: StrictStr = Field(..., description="The characters of the text.")
 
 
-class TextDynamic(TextStatic):
+class DynamicText(StaticText):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
@@ -263,7 +263,7 @@ class VecBaseNoName(BaseModel):
         extra = Extra.forbid
 
 
-class VecStatic(VecBaseNoName):
+class StaticVec(VecBaseNoName):
     name: StrictStr = Field(
         ...,
         description="This is a string encoding the name of this object data."
@@ -271,7 +271,7 @@ class VecStatic(VecBaseNoName):
     )
 
 
-class VecDynamic(VecStatic):
+class DynamicVec(StaticVec):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
@@ -280,32 +280,32 @@ class VecDynamic(VecStatic):
 
 class BaseStaticElementData(BaseModel):
 
-    boolean: Optional[List[BooleanStatic]] = Field(
+    boolean: Optional[List[StaticBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
-    num: Optional[List[NumStatic]] = Field(
+    num: Optional[List[StaticNum]] = Field(
         None, description='List of "number" that describe this object.'
     )
-    text: Optional[List[TextStatic]] = Field(
+    text: Optional[List[StaticText]] = Field(
         None, description='List of "text" that describe this object.'
     )
-    vec: Optional[List[VecStatic]] = Field(
+    vec: Optional[List[StaticVec]] = Field(
         None, description='List of "vec" that describe this object.'
     )
 
 
 class BaseDynamicElementData(BaseModel):
 
-    boolean: Optional[List[BooleanDynamic]] = Field(
+    boolean: Optional[List[DynamicBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
-    num: Optional[List[NumDynamic]] = Field(
+    num: Optional[List[DynamicNum]] = Field(
         None, description='List of "number" that describe this object.'
     )
-    text: Optional[List[TextDynamic]] = Field(
+    text: Optional[List[DynamicText]] = Field(
         None, description='List of "text" that describe this object.'
     )
-    vec: Optional[List[VecDynamic]] = Field(
+    vec: Optional[List[DynamicVec]] = Field(
         None, description='List of "vec" that describe this object.'
     )
 
@@ -329,7 +329,7 @@ class ContextDataStatic(BaseStaticElementData):
         extra = Extra.forbid
 
 
-class ContextDataDynamic(BaseDynamicElementData):
+class DynamicContextData(BaseDynamicElementData):
     class Config:
         extra = Extra.forbid
 
@@ -515,7 +515,7 @@ class StreamProperties(BaseModel):
 
 
 class TagData(BaseModel):
-    vec: List[VecStatic] = Field(...)
+    vec: List[StaticVec] = Field(...)
 
     @validator("vec")
     def validate_vec(cls, values):
@@ -678,7 +678,7 @@ class Binary(ObjectDataElement):
         return value
 
 
-class ObjectDataDynamic(BaseModel):
+class DynamicObjectData(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -701,11 +701,11 @@ class ObjectDataDynamic(BaseModel):
 
 
 class ObjectUnderFrame(BaseModel):
-    object_data: ObjectDataDynamic
+    object_data: DynamicObjectData
 
 
 class ContextUnderFrame(BaseModel):
-    context_data: ContextDataDynamic
+    context_data: DynamicContextData
 
 
 class Frame(BaseModel):
@@ -824,6 +824,6 @@ ContextDataPointer.update_forward_refs()
 ContextUnderFrame.update_forward_refs()
 Frame.update_forward_refs()
 Object.update_forward_refs()
-ObjectDataDynamic.update_forward_refs()
+DynamicObjectData.update_forward_refs()
 ObjectUnderFrame.update_forward_refs()
 VisionAI.update_forward_refs()
