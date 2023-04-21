@@ -1,9 +1,8 @@
 from enum import Enum
 from typing import List, Optional, Union
 
+from common import OntologyImageType, OntologyPcdType, SensorType
 from pydantic import BaseModel, validator
-
-from .common import OntologyImageType, OntologyPcdType, SensorType
 
 
 class AttributeType(str, Enum):
