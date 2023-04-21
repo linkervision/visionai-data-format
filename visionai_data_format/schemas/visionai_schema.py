@@ -24,6 +24,10 @@ from pydantic import (
 )
 
 
+class SchemaVersion(str, Enum):
+    field_1_0_0 = "1.0.0"
+
+
 class CoordinateSystemType(str, Enum):
     sensor_cs = "sensor_cs"
     local_cs = "local_cs"
@@ -39,9 +43,8 @@ class ObjectType(str, Enum):
     point2d = "point2d"
     poly2d = "poly2d"
     image = "image"
-    mat = "mat"
     boolean = "boolean"
-    number = "number"
+    num = "num"
     vec = "vec"
     text = "text"
     binary = "binary"
@@ -60,7 +63,7 @@ class TypeRange(str, Enum):
 
 class AttributeType(str, Enum):
     boolean = "boolean"
-    number = "number"
+    num = "num"
     vec = "vec"
     text = "text"
 
@@ -77,250 +80,37 @@ class Attributes(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    boolean: List[Boolean] = Field(default_factory=list)
-    number: List[Number] = Field(default_factory=list)
-    text: List[Text] = Field(default_factory=list)
-    vec: List[Vec] = Field(default_factory=list)
+    boolean: List[BooleanBase] = Field(default_factory=list)
+    num: List[NumBase] = Field(default_factory=list)
+    text: List[TextBase] = Field(default_factory=list)
+    vec: List[VecBase] = Field(default_factory=list)
 
 
-class ObjectDataElement(BaseModel):
+class CoordinateSystemWRTParent(BaseModel):
+    matrix4x4: List[Union[float, int]]
 
-    attributes: Attributes = Field(default_factory=dict)
-    name: StrictStr = Field(
-        description="This is a string encoding the name of this object data."
-        + " It is used as index inside the corresponding object data pointers.",
-    )
-    stream: StrictStr = Field(
-        description="Name of the stream in respect of which this object data is expressed.",
-    )
-    confidence_score: Optional[float] = Field(
-        None,
-        description="The confidence score of model prediction of this object."
-        + " Ground truth does not have this attribute.",
-    )
-
-
-class Matrix(ObjectDataElement):
-
-    height: StrictInt = Field(
-        description="This is the height (number of rows) of the matrix."
-    )
-    width: StrictInt = Field(
-        description="This is the width (number of columns) of the matrix."
-    )
-    channels: StrictInt = Field(
-        description="This is the number of channels of the matrix."
-    )
-
-    data_type: StrictStr = Field(
-        description="This is a string declares the type of values of the matrix."
-        + " Only `float` or `int` allowed",
-    )
-
-    val: List[Union[float, int]] = Field(
-        description="This is a list of flattened values of the matrix."
-    )
-
-    class Config:
-        extra = Extra.allow
-
-    @validator("data_type")
-    def validate_data_type_data(cls, value):
-        allowed_type = {"float", "int"}
-        if value not in allowed_type:
-            raise ValueError("only `float` or `int` allowed for `data_type` field")
-        return value
-
-    @validator("val")
-    def validate_val_data(cls, value, values):
-        allowed_type = {"float": float, "int": int}
-        data_type = values.get("data_type")
-        if not (data_type):
-            raise ValueError("Need to define the `data_type`")
-
-        cur_type = allowed_type.get(data_type)
-        if not all(type(n) is cur_type for n in value):
-            raise ValueError("Val contains not allowed value")
-
+    @validator("matrix4x4")
+    def validate_matrix4x4(cls, value):
+        assert (
+            len(value) == 16
+        ), f"value {value} with length {len(value)} is not allowed"
         return value
 
 
-class Binary(ObjectDataElement):
-    encoding: Literal["rle"] = Field(
-        ..., description="The encoding method. It only supports “rle“ value."
-    )
-    data_type: Literal[""] = Field(
-        ...,
-        description="This is a string declares the type of values of the binary."
-        + " Only empty string "
-        " value allowed",
-    )
-    val: StrictStr = Field(...)
+class CoordinateSystem(BaseModel):
+    type: CoordinateSystemType
+    parent: StrictStr
+    children: List[StrictStr]
+    pose_wrt_parent: Optional[CoordinateSystemWRTParent] = Field(default=None)
 
-    @validator("name")
-    def validate_name_field(cls, value):
-        if value != "semantic_mask":
-            raise ValueError("Name value must be `semantic_mask`")
+    class Config:
+        extra = Extra.forbid
+        use_enum_values = True
+
+    @validator("pose_wrt_parent")
+    def validate_pose_wrt_parent(cls, value):
+        assert value, f"value {value} is not allowed"
         return value
-
-
-class Bbox(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
-
-    val: conlist(
-        Union[float, int],
-        max_items=4,
-        min_items=4,
-    )
-
-
-class Point2D(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
-
-    val: conlist(
-        Union[float, int],
-        max_items=2,
-        min_items=2,
-    )
-
-
-class Poly2D(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
-
-    val: conlist(
-        Union[float, int],
-        min_items=2,
-    )
-    closed: StrictBool = Field(
-        ...,
-        description="The boolean value to define whether current polygon is a polygon or a polyline",
-    )
-
-    mode: Literal["MODE_POLY2D_ABSOLUTE"] = "MODE_POLY2D_ABSOLUTE"
-
-    @validator("val")
-    def val_length_must_be_even(cls, v):
-        if len(v) % 2 != 0:
-            raise ValueError("Array length must be even number")
-        return v
-
-
-class Cuboid(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
-
-    val: conlist(
-        Union[float, int],
-        min_items=9,
-        max_items=9,
-    )
-
-
-class Text(BaseModel):
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
-
-    attributes: Attributes = Field(default_factory=dict)
-    name: Optional[StrictStr] = Field(
-        None,
-        description="This is a string encoding the name of this object data."
-        + " It is used as index inside the corresponding object data pointers.",
-    )
-    type: Optional[Type] = Field(
-        None,
-        description="This attribute specifies how the text shall be considered."
-        + " The only possible option is as a value.",
-    )
-    val: StrictStr = Field(..., description="The characters of the text.")
-    coordinate_system: Optional[StrictStr] = Field(
-        None,
-        description="Name of the coordinate system in respect of which this object data is expressed.",
-    )
-
-
-class VecBase(BaseModel):
-    attributes: Attributes = Field(default_factory=dict)
-    type: Optional[TypeRange] = Field(
-        None,
-        description="This attribute specifies whether the vector shall be"
-        + " considered as a descriptor of individual values or as a definition of a range.",
-    )
-    val: List[Union[float, int, str]] = Field(
-        ..., description="The values of the vector (list)."
-    )
-    coordinate_system: Optional[StrictStr] = Field(
-        None,
-        description="Name of the coordinate system in respect of which this object data is expressed.",
-    )
-
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
-
-
-class Vec(VecBase):
-    name: StrictStr = Field(
-        ...,
-        description="This is a string encoding the name of this object data."
-        + " It is used as index inside the corresponding object data pointers.",
-    )
-
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
-
-
-class Boolean(BaseModel):
-
-    attributes: Attributes = Field(default_factory=dict)
-    name: StrictStr = Field(
-        ...,
-        description="This is a string encoding the name of this object data."
-        + " It is used as index inside the corresponding object data pointers.",
-    )
-    type: Optional[Type] = Field(
-        None,
-        description="This attribute specifies how the boolean shall be considered."
-        + " In this schema the only possible option is as a value.",
-    )
-    val: StrictBool = Field(..., description="The boolean value.")
-    coordinate_system: Optional[StrictStr] = Field(
-        None,
-        description="Name of the coordinate system in respect of which this object data is expressed.",
-    )
-
-    class Config:
-        extra = Extra.allow
-        use_enum_values = True
-
-
-class Number(BaseModel):
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
-
-    attributes: Attributes = Field(default_factory=dict)
-    name: StrictStr = Field(
-        ...,
-        description="This is a string encoding the name of this object data."
-        + " It is used as index inside the corresponding object data pointers.",
-    )
-    type: Optional[TypeMinMax] = Field(
-        None,
-        description="This attribute specifies whether the number shall be considered "
-        + "as a value, a minimum, or a maximum in its context.",
-    )
-    val: Union[float, int] = Field(
-        ..., description="The numerical value of the number."
-    )
-    coordinate_system: Optional[StrictStr] = Field(
-        None,
-        description="Name of the coordinate system in respect of which this object data is expressed.",
-    )
 
 
 class FrameInterval(BaseModel):
@@ -347,24 +137,227 @@ class FrameInterval(BaseModel):
         return values
 
 
-class BaseElementData(BaseModel):
-    boolean: Optional[List[Boolean]] = Field(
+class IntrinsicsPinhole(BaseModel):
+    camera_matrix_3x4: List[float]
+    distortion_coeffs_1xN: Optional[List[Union[float, int]]] = None
+    height_px: int
+    width_px: int
+
+    @validator("distortion_coeffs_1xN")
+    def validate_distortion_coeffs_1xN(cls, value):
+        assert value, f"value {value} is not allowed"
+        return value
+
+    @validator("camera_matrix_3x4")
+    def validate_camera_matrix_3x4(cls, value):
+        assert (
+            value and len(value) == 12
+        ), f"value {value} is not allowed, must be a list of 12 float values"
+        return value
+
+
+class Metadata(BaseModel):
+    class Config:
+        use_enum_values = True
+        extra = Extra.allow
+
+    schema_version: SchemaVersion = Field(
+        description="Version number of the VisionAI schema this annotation JSON object follows.",
+    )
+
+
+class BooleanBase(BaseModel):
+
+    attributes: Optional[Attributes] = None
+    name: StrictStr = Field(
+        ...,
+        description="This is a string encoding the name of this object data."
+        + " It is used as index inside the corresponding object data pointers.",
+    )
+    type: Optional[Type] = Field(
+        None,
+        description="This attribute specifies how the boolean shall be considered."
+        + " In this schema the only possible option is as a value.",
+    )
+    val: StrictBool = Field(..., description="The boolean value.")
+
+    class Config:
+        use_enum_values = True
+        extra = Extra.forbid
+
+
+class BooleanStaticAttr(BooleanBase):
+    pass
+
+
+class BooleanDynamicAttr(BooleanBase):
+    stream: StrictStr = Field(
+        ...,
+        description="Name of the stream in respect of which this object data is expressed.",
+    )
+
+
+class NumBase(BaseModel):
+    class Config:
+        use_enum_values = True
+        extra = Extra.forbid
+
+    attributes: Optional[Attributes] = None
+    name: StrictStr = Field(
+        ...,
+        description="This is a string encoding the name of this object data."
+        + " It is used as index inside the corresponding object data pointers.",
+    )
+    type: Optional[TypeMinMax] = Field(
+        None,
+        description="This attribute specifies whether the number shall be considered "
+        + "as a value, a minimum, or a maximum in its context.",
+    )
+    val: Union[float, int] = Field(
+        ..., description="The numerical value of the number."
+    )
+
+
+class NumStaticAttr(NumBase):
+    pass
+
+
+class NumDynamicAttr(NumBase):
+    stream: StrictStr = Field(
+        ...,
+        description="Name of the stream in respect of which this object data is expressed.",
+    )
+
+
+class TextBase(BaseModel):
+    class Config:
+        use_enum_values = True
+        extra = Extra.forbid
+
+    attributes: Optional[Attributes] = None
+    name: Optional[StrictStr] = Field(
+        None,
+        description="This is a string encoding the name of this object data."
+        + " It is used as index inside the corresponding object data pointers.",
+    )
+    type: Optional[Type] = Field(
+        None,
+        description="This attribute specifies how the text shall be considered."
+        + " The only possible option is as a value.",
+    )
+    val: StrictStr = Field(..., description="The characters of the text.")
+
+
+class TextStaticAttr(TextBase):
+    pass
+
+
+class TextDynamicAttr(TextBase):
+    stream: StrictStr = Field(
+        ...,
+        description="Name of the stream in respect of which this object data is expressed.",
+    )
+
+
+class VecBaseNoName(BaseModel):
+    attributes: Optional[Attributes] = None
+    type: Optional[TypeRange] = Field(
+        None,
+        description="This attribute specifies whether the vector shall be"
+        + " considered as a descriptor of individual values or as a definition of a range.",
+    )
+    val: List[Union[float, int, str]] = Field(
+        ..., description="The values of the vector (list)."
+    )
+
+    class Config:
+        use_enum_values = True
+        extra = Extra.forbid
+
+
+class VecBase(VecBaseNoName):
+    name: StrictStr = Field(
+        ...,
+        description="This is a string encoding the name of this object data."
+        + " It is used as index inside the corresponding object data pointers.",
+    )
+
+
+class VecStaticAttr(VecBase):
+    pass
+
+
+class VecDynamicAttr(VecBase):
+    stream: StrictStr = Field(
+        ...,
+        description="Name of the stream in respect of which this object data is expressed.",
+    )
+
+
+class BaseStaticElementData(BaseModel):
+
+    boolean: Optional[List[BooleanStaticAttr]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
-    number: Optional[List[Number]] = Field(
+    num: Optional[List[NumStaticAttr]] = Field(
         None, description='List of "number" that describe this object.'
     )
-    text: Optional[List[Text]] = Field(
+    text: Optional[List[TextStaticAttr]] = Field(
         None, description='List of "text" that describe this object.'
     )
-    vec: Optional[List[Vec]] = Field(
+    vec: Optional[List[VecStaticAttr]] = Field(
         None, description='List of "vec" that describe this object.'
     )
 
 
-class ContextData(BaseElementData):
+class BaseDynamicElementData(BaseModel):
+
+    boolean: Optional[List[BooleanDynamicAttr]] = Field(
+        None, description='List of "boolean" that describe this object.'
+    )
+    num: Optional[List[NumDynamicAttr]] = Field(
+        None, description='List of "number" that describe this object.'
+    )
+    text: Optional[List[TextDynamicAttr]] = Field(
+        None, description='List of "text" that describe this object.'
+    )
+    vec: Optional[List[VecDynamicAttr]] = Field(
+        None, description='List of "vec" that describe this object.'
+    )
+
+
+class ElementDataPointer(BaseModel):
+
+    attributes: Optional[Dict[StrictStr, AttributeType]] = Field(
+        None,
+        description="This is a JSON object which contains pointers to the attributes of"
+        + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
+        + " attribute of the element data this pointer points to.",
+    )
+    frame_intervals: Optional[List[FrameInterval]] = Field(
+        default=None,
+        description="List of frame intervals of the element data pointed by this pointer.",
+    )
+
+
+class ContextDataStatic(BaseStaticElementData):
     class Config:
         extra = Extra.forbid
+
+
+class ContextDataDynamic(BaseDynamicElementData):
+    class Config:
+        extra = Extra.forbid
+
+
+class ContextDataPointer(ElementDataPointer):
+    class Config:
+        use_enum_values = True
+        extra = Extra.forbid
+
+    type: AttributeType = Field(
+        ..., description="Type of the element data pointed by this pointer."
+    )
 
 
 class Context(BaseModel):
@@ -379,7 +372,7 @@ class Context(BaseModel):
         ...,
         description="Name of the context. It is a friendly name and not used for indexing.",
     )
-    context_data: Optional[ContextData] = None
+    context_data: Optional[ContextDataStatic] = None
     context_data_pointers: Dict[StrictStr, ContextDataPointer]
     type: StrictStr = Field(
         ...,
@@ -443,187 +436,6 @@ class Context(BaseModel):
         return values
 
 
-class IntrinsicsPinhole(BaseModel):
-    camera_matrix_3x4: List[float]
-    distortion_coeffs_1xN: Optional[List[Union[float, int]]] = None
-    height_px: int
-    width_px: int
-
-    @validator("distortion_coeffs_1xN")
-    def validate_distortion_coeffs_1xN(cls, value):
-        assert value, f"value {value} is not allowed"
-        return value
-
-    @validator("camera_matrix_3x4")
-    def validate_camera_matrix_3x4(cls, value):
-        assert (
-            value and len(value) == 12
-        ), f"value {value} is not allowed, must be a list of 12 float values"
-        return value
-
-
-class StreamProperties(BaseModel):
-    intrinsics_pinhole: IntrinsicsPinhole
-
-
-class Stream(BaseModel):
-    type: StreamType
-    uri: Optional[StrictStr] = ""
-    description: Optional[StrictStr] = ""
-    stream_properties: Optional[StreamProperties] = None
-
-    class Config:
-        use_enum_values = True
-
-    @validator("stream_properties")
-    def validate_stream_properties(cls, value):
-        assert value, f"value {value} is not allowed"
-        return value
-
-
-class SchemaVersion(str, Enum):
-    field_1_0_0 = "1.0.0"
-
-
-class Metadata(BaseModel):
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
-
-    schema_version: SchemaVersion = Field(
-        description="Version number of the VisionAI schema this annotation JSON object follows.",
-    )
-
-
-class ObjectDataStatic(BaseElementData):
-    class Config:
-        extra = Extra.forbid
-
-
-class ObjectDataDynamic(BaseElementData):
-    class Config:
-        extra = Extra.forbid
-
-    bbox: Optional[List[Bbox]] = Field(
-        None, description='List of "bbox" that describe this object.'
-    )
-    cuboid: Optional[List[Cuboid]] = Field(
-        None, description='List of "cuboid" that describe this object.'
-    )
-    point2d: Optional[List[Point2D]] = Field(
-        None, description='List of "point2d" that describe this object.'
-    )
-    poly2d: Optional[List[Poly2D]] = Field(
-        None, description='List of "poly2d" that describe this object.'
-    )
-    mat: Optional[List[Matrix]] = Field(
-        None,
-        description='List of "matrix" that describe this object matrix information such as `confidence_score`.',
-    )
-    binary: Optional[List[Binary]] = Field(
-        None,
-        description='List of "binary" that describe this object semantic mask info.',
-    )
-
-
-class ObjectUnderFrame(BaseModel):
-    object_data: ObjectDataDynamic
-
-
-class ContextUnderFrame(BaseModel):
-    context_data: ContextData = Field(
-        default_factory=dict,
-    )
-
-
-class TimeStampElement(BaseModel):
-    timestamp: str
-
-    class Config:
-        extra = Extra.forbid
-
-    @validator("timestamp")
-    def validate_timestamp(cls, value):
-        iso_time_regex = r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.\d{3})(Z|[+-]((\d{2}:\d{2})|(\d{4})))$"
-        assert re.match(iso_time_regex, value), f"Wrong timestamp format : {value}"
-        return value
-
-
-class StreamPropertyUnderFrameProperty(BaseModel):
-    sync: Optional[TimeStampElement] = None
-
-
-class FramePropertyStream(BaseModel):
-    uri: str = Field(description="the urls of image")
-    stream_properties: Optional[StreamPropertyUnderFrameProperty] = Field(
-        None, description="Additional properties of the stream"
-    )
-
-    class Config:
-        extra = Extra.allow
-
-    @validator("stream_properties")
-    def validate_stream_properties(cls, value):
-        assert value, f"value {value} is not allowed"
-        return value
-
-
-class FrameProperties(BaseModel):
-    timestamp: Optional[str] = Field(
-        None,
-        descriptions="A relative or absolute time reference that specifies "
-        + "the time instant this frame corresponds to",
-    )
-    streams: Dict[StrictStr, FramePropertyStream]
-
-
-class Frame(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    objects: Optional[Dict[StrictStr, ObjectUnderFrame]] = Field(
-        default=None,
-        description="This is a JSON object that contains dynamic information on VisionAI objects."
-        + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs."
-        + ' Object values may contain an "object_data" JSON object.',
-    )
-
-    contexts: Optional[Dict[StrictStr, ContextUnderFrame]] = Field(
-        default=None,
-        description="This is a JSON object that contains dynamic information on VisionAI contexts."
-        + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
-        + ' Context values may contain an "context_data" JSON object.',
-    )
-
-    frame_properties: FrameProperties = Field(
-        description="This is a JSON object which contains information about this frame.",
-    )
-
-
-class ElementDataPointer(BaseModel):
-
-    attributes: Optional[Dict[StrictStr, AttributeType]] = Field(
-        None,
-        description="This is a JSON object which contains pointers to the attributes of"
-        + ' the element data pointed by this pointer. The attributes pointer keys shall be the "name" of the'
-        + " attribute of the element data this pointer points to.",
-    )
-    frame_intervals: Optional[List[FrameInterval]] = Field(
-        default=None,
-        description="List of frame intervals of the element data pointed by this pointer.",
-    )
-
-
-class ContextDataPointer(ElementDataPointer):
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
-
-    type: AttributeType = Field(
-        ..., description="Type of the element data pointed by this pointer."
-    )
-
-
 class ObjectDataPointer(ElementDataPointer):
     class Config:
         use_enum_values = True
@@ -632,6 +444,11 @@ class ObjectDataPointer(ElementDataPointer):
     type: ObjectType = Field(
         ..., description="Type of the element data pointed by this pointer."
     )
+
+
+class ObjectDataStatic(BaseStaticElementData):
+    class Config:
+        extra = Extra.forbid
 
 
 class Object(BaseModel):
@@ -695,7 +512,6 @@ class Object(BaseModel):
 
         static_object_data_name_set = set(static_objects_data_name_type_map.keys())
         error_name_list = []
-
         for obj_name, obj_info in object_data_pointers.items():
             if obj_name not in static_object_data_name_set and not getattr(
                 obj_info, "frame_intervals", None
@@ -710,31 +526,8 @@ class Object(BaseModel):
         return values
 
 
-class CoordinateSystemWRTParent(BaseModel):
-    matrix4x4: List[Union[float, int]]
-
-    @validator("matrix4x4")
-    def validate_matrix4x4(cls, value):
-        assert (
-            len(value) == 16
-        ), f"value {value} with length {len(value)} is not allowed"
-        return value
-
-
-class CoordinateSystem(BaseModel):
-    type: CoordinateSystemType
-    parent: StrictStr
-    children: List[StrictStr]
-    pose_wrt_parent: Optional[CoordinateSystemWRTParent] = Field(default=None)
-
-    class Config:
-        extra = Extra.forbid
-        use_enum_values = True
-
-    @validator("pose_wrt_parent")
-    def validate_pose_wrt_parent(cls, value):
-        assert value, f"value {value} is not allowed"
-        return value
+class StreamProperties(BaseModel):
+    intrinsics_pinhole: IntrinsicsPinhole
 
 
 class TagData(BaseModel):
@@ -748,10 +541,210 @@ class TagData(BaseModel):
         return values
 
 
+class Stream(BaseModel):
+    type: StreamType
+    uri: Optional[StrictStr] = ""
+    description: Optional[StrictStr] = ""
+    stream_properties: Optional[StreamProperties] = None
+
+    class Config:
+        use_enum_values = True
+
+    @validator("stream_properties")
+    def validate_stream_properties(cls, value):
+        assert value, f"value {value} is not allowed"
+        return value
+
+
 class Tag(BaseModel):
-    ontology_uid: StrictStr = Field(...)
-    type: StrictStr = Field(...)
-    tag_data: TagData = Field(...)
+    ontology_uid: StrictStr
+    type: StrictStr
+    tag_data: TagData
+
+
+class TimeStampElement(BaseModel):
+    timestamp: str
+
+    class Config:
+        extra = Extra.forbid
+
+    @validator("timestamp")
+    def validate_timestamp(cls, value):
+        iso_time_regex = r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.\d{3})(Z|[+-]((\d{2}:\d{2})|(\d{4})))$"
+        assert re.match(iso_time_regex, value), f"Wrong timestamp format : {value}"
+        return value
+
+
+class StreamPropertyUnderFrameProperty(BaseModel):
+    sync: Optional[TimeStampElement] = None
+
+
+class FramePropertyStream(BaseModel):
+    uri: str = Field(description="the urls of image")
+    stream_properties: Optional[StreamPropertyUnderFrameProperty] = Field(
+        None, description="Additional properties of the stream"
+    )
+
+    class Config:
+        extra = Extra.allow
+
+    @validator("stream_properties")
+    def validate_stream_properties(cls, value):
+        assert value, f"value {value} is not allowed"
+        return value
+
+
+class FrameProperties(BaseModel):
+    timestamp: Optional[str] = Field(
+        None,
+        descriptions="A relative or absolute time reference that specifies "
+        + "the time instant this frame corresponds to",
+    )
+    streams: Dict[StrictStr, FramePropertyStream]
+
+
+class ObjectDataElement(BaseModel):
+
+    attributes: Optional[Attributes] = None
+    name: StrictStr = Field(
+        description="This is a string encoding the name of this object data."
+        + " It is used as index inside the corresponding object data pointers.",
+    )
+    stream: StrictStr = Field(
+        description="Name of the stream in respect of which this object data is expressed.",
+    )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
+
+
+class Bbox(ObjectDataElement):
+    class Config:
+        extra = Extra.allow
+
+    val: conlist(
+        Union[float, int],
+        max_items=4,
+        min_items=4,
+    )
+
+
+class Cuboid(ObjectDataElement):
+    class Config:
+        extra = Extra.allow
+
+    val: conlist(
+        Union[float, int],
+        min_items=9,
+        max_items=9,
+    )
+
+
+class Poly2D(ObjectDataElement):
+    class Config:
+        extra = Extra.allow
+
+    val: conlist(
+        Union[float, int],
+        min_items=2,
+    )
+    closed: StrictBool = Field(
+        ...,
+        description="The boolean value to define whether current polygon is a polygon or a polyline",
+    )
+
+    mode: Literal["MODE_POLY2D_ABSOLUTE"] = "MODE_POLY2D_ABSOLUTE"
+
+    @validator("val")
+    def val_length_must_be_even(cls, v):
+        if len(v) % 2 != 0:
+            raise ValueError("Array length must be even number")
+        return v
+
+
+class Point2D(ObjectDataElement):
+    class Config:
+        extra = Extra.allow
+
+    val: conlist(
+        Union[float, int],
+        max_items=2,
+        min_items=2,
+    )
+
+
+class Binary(ObjectDataElement):
+    encoding: Literal["rle"] = Field(
+        ..., description="The encoding method. It only supports “rle“ value."
+    )
+    data_type: Literal[""] = Field(
+        ...,
+        description="This is a string declares the type of values of the binary."
+        + " Only empty string "
+        " value allowed",
+    )
+    val: StrictStr = Field(...)
+
+    @validator("name")
+    def validate_name_field(cls, value):
+        if value != "semantic_mask":
+            raise ValueError("Name value must be `semantic_mask`")
+        return value
+
+
+class ObjectDataDynamic(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    bbox: Optional[List[Bbox]] = Field(
+        None, description='List of "bbox" that describe this object.'
+    )
+    cuboid: Optional[List[Cuboid]] = Field(
+        None, description='List of "cuboid" that describe this object.'
+    )
+    point2d: Optional[List[Point2D]] = Field(
+        None, description='List of "point2d" that describe this object.'
+    )
+    poly2d: Optional[List[Poly2D]] = Field(
+        None, description='List of "poly2d" that describe this object.'
+    )
+    binary: Optional[List[Binary]] = Field(
+        None,
+        description='List of "binary" that describe this object semantic mask info.',
+    )
+
+
+class ObjectUnderFrame(BaseModel):
+    object_data: ObjectDataDynamic
+
+
+class ContextUnderFrame(BaseModel):
+    context_data: ContextDataDynamic
+
+
+class Frame(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    objects: Optional[Dict[StrictStr, ObjectUnderFrame]] = Field(
+        default=None,
+        description="This is a JSON object that contains dynamic information on VisionAI objects."
+        + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs."
+        + ' Object values may contain an "object_data" JSON object.',
+    )
+
+    contexts: Optional[Dict[StrictStr, ContextUnderFrame]] = Field(
+        default=None,
+        description="This is a JSON object that contains dynamic information on VisionAI contexts."
+        + " Context keys are strings containing numerical UIDs or 32 bytes UUIDs."
+        + ' Context values may contain an "context_data" JSON object.',
+    )
+
+    frame_properties: FrameProperties = Field(
+        description="This is a JSON object which contains information about this frame.",
+    )
 
 
 class VisionAI(BaseModel):
