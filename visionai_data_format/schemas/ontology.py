@@ -1,12 +1,23 @@
+from enum import Enum
 from typing import Dict, List, Optional, Union
 
 from common import SensorType
 from pydantic import BaseModel, StrictStr
 
 
+class AttributeType(str, Enum):
+    BOOLEAN = "boolean"
+    NUM = "num"
+    VEC = "vec"
+    TEXT = "text"
+
+
 class Attribute(BaseModel):
-    type: str
+    type: AttributeType
     value: Optional[List[Union[float, str, int]]] = None
+
+    class Config:
+        use_enum_values = True
 
 
 class ElementData(BaseModel):
