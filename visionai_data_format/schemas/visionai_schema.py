@@ -80,10 +80,10 @@ class Attributes(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    boolean: List[BooleanBase] = Field(default_factory=list)
-    num: List[NumBase] = Field(default_factory=list)
-    text: List[TextBase] = Field(default_factory=list)
-    vec: List[VecBase] = Field(default_factory=list)
+    boolean: List[BooleanStatic] = Field(default_factory=list)
+    num: List[NumStatic] = Field(default_factory=list)
+    text: List[TextStatic] = Field(default_factory=list)
+    vec: List[VecStatic] = Field(default_factory=list)
 
 
 class CoordinateSystemWRTParent(BaseModel):
@@ -166,7 +166,7 @@ class Metadata(BaseModel):
     )
 
 
-class BooleanBase(BaseModel):
+class BooleanStatic(BaseModel):
 
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
@@ -186,18 +186,14 @@ class BooleanBase(BaseModel):
         extra = Extra.forbid
 
 
-class BooleanStaticAttr(BooleanBase):
-    pass
-
-
-class BooleanDynamicAttr(BooleanBase):
+class BooleanDynamic(BooleanStatic):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
 
 
-class NumBase(BaseModel):
+class NumStatic(BaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.forbid
@@ -218,18 +214,14 @@ class NumBase(BaseModel):
     )
 
 
-class NumStaticAttr(NumBase):
-    pass
-
-
-class NumDynamicAttr(NumBase):
+class NumDynamic(NumStatic):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
 
 
-class TextBase(BaseModel):
+class TextStatic(BaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.forbid
@@ -248,11 +240,7 @@ class TextBase(BaseModel):
     val: StrictStr = Field(..., description="The characters of the text.")
 
 
-class TextStaticAttr(TextBase):
-    pass
-
-
-class TextDynamicAttr(TextBase):
+class TextDynamic(TextStatic):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
@@ -275,7 +263,7 @@ class VecBaseNoName(BaseModel):
         extra = Extra.forbid
 
 
-class VecBase(VecBaseNoName):
+class VecStatic(VecBaseNoName):
     name: StrictStr = Field(
         ...,
         description="This is a string encoding the name of this object data."
@@ -283,11 +271,7 @@ class VecBase(VecBaseNoName):
     )
 
 
-class VecStaticAttr(VecBase):
-    pass
-
-
-class VecDynamicAttr(VecBase):
+class VecDynamic(VecStatic):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
@@ -296,32 +280,32 @@ class VecDynamicAttr(VecBase):
 
 class BaseStaticElementData(BaseModel):
 
-    boolean: Optional[List[BooleanStaticAttr]] = Field(
+    boolean: Optional[List[BooleanStatic]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
-    num: Optional[List[NumStaticAttr]] = Field(
+    num: Optional[List[NumStatic]] = Field(
         None, description='List of "number" that describe this object.'
     )
-    text: Optional[List[TextStaticAttr]] = Field(
+    text: Optional[List[TextStatic]] = Field(
         None, description='List of "text" that describe this object.'
     )
-    vec: Optional[List[VecStaticAttr]] = Field(
+    vec: Optional[List[VecStatic]] = Field(
         None, description='List of "vec" that describe this object.'
     )
 
 
 class BaseDynamicElementData(BaseModel):
 
-    boolean: Optional[List[BooleanDynamicAttr]] = Field(
+    boolean: Optional[List[BooleanDynamic]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
-    num: Optional[List[NumDynamicAttr]] = Field(
+    num: Optional[List[NumDynamic]] = Field(
         None, description='List of "number" that describe this object.'
     )
-    text: Optional[List[TextDynamicAttr]] = Field(
+    text: Optional[List[TextDynamic]] = Field(
         None, description='List of "text" that describe this object.'
     )
-    vec: Optional[List[VecDynamicAttr]] = Field(
+    vec: Optional[List[VecDynamic]] = Field(
         None, description='List of "vec" that describe this object.'
     )
 
@@ -531,7 +515,7 @@ class StreamProperties(BaseModel):
 
 
 class TagData(BaseModel):
-    vec: List[VecBase] = Field(...)
+    vec: List[VecStatic] = Field(...)
 
     @validator("vec")
     def validate_vec(cls, values):
