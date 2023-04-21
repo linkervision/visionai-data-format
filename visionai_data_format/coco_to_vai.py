@@ -13,7 +13,7 @@ from visionai_data_format.schemas.visionai_schema import (
     FramePropertyStream,
     Metadata,
     Object,
-    ObjectData,
+    ObjectDataDynamic,
     ObjectDataPointer,
     ObjectType,
     ObjectUnderFrame,
@@ -109,13 +109,12 @@ def _coco_to_vision_ai(
         # assume there is only one sensor, so image_index always is 0
         objects_under_frames = {
             object_id: ObjectUnderFrame(
-                object_data=ObjectData(
+                object_data=ObjectDataDynamic(
                     bbox=[
                         Bbox(
                             name=BBOX_NAME,
                             val=bbox,
                             stream=sensor_name,
-                            coordinate_system=sensor_name,
                         )
                     ]
                 )

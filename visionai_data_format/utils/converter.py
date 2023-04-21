@@ -11,7 +11,7 @@ from visionai_data_format.schemas.visionai_schema import (
     FrameProperties,
     FramePropertyStream,
     Object,
-    ObjectData,
+    ObjectDataDynamic,
     ObjectDataPointer,
     ObjectType,
     ObjectUnderFrame,
@@ -122,7 +122,7 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
             frames: dict[str, Frame] = defaultdict(Frame)
             objects: dict[str, Object] = defaultdict(Object)
             frame_data: Frame = Frame(
-                objects=defaultdict(ObjectData),
+                objects=defaultdict(ObjectDataDynamic),
                 frame_properties=FrameProperties(
                     streams={sensor_name: FramePropertyStream(uri=url)}
                 ),
@@ -148,13 +148,12 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
                 confidence_score = label.get("meta_ds", {}).get("score", None)
                 object_under_frames = {
                     obj_uuid: ObjectUnderFrame(
-                        object_data=ObjectData(
+                        object_data=ObjectDataDynamic(
                             bbox=[
                                 Bbox(
                                     name="bbox_shape",
                                     val=[x, y, w, h],
                                     stream=sensor_name,
-                                    coordinate_system=sensor_name,
                                     confidence_score=confidence_score,
                                 )
                             ]
@@ -175,13 +174,6 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
                 )
             frames[frame_idx] = frame_data
             streams = {sensor_name: Stream(type=StreamType.camera)}
-            coordinate_systems = {
-                sensor_name: {
-                    "type": "sensor_cs",
-                    "parent": "vehicle-iso8855",
-                    "children": [],
-                }
-            }
             vai_data = {
                 "visionai": {
                     "frame_intervals": frame_intervals,
@@ -189,7 +181,6 @@ def convert_bdd_to_vai(bdd_data: dict, vai_dest_folder: str, sensor_name: str) -
                     "frames": frames,
                     "streams": streams,
                     "metadata": {"schema_version": "1.0.0"},
-                    "coordinate_systems": coordinate_systems,
                 }
             }
             vai_data = validate_vai(vai_data).dict(exclude_none=True)

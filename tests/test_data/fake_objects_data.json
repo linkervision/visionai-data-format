@@ -15,7 +15,6 @@
                                 {
                                     "name": "bbox_shape",
                                     "stream": "camera1",
-                                    "coordinate_system": "camera1",
                                     "val": [
                                         761.565,
                                         225.46,
@@ -28,7 +27,6 @@
                                 {
                                     "name": "cuboid_shape",
                                     "stream": "lidar1",
-                                    "coordinate_system": "lidar1",
                                     "val": [
                                         8.727633224700037,
                                         -1.8557590122690717,
