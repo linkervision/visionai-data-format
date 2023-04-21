@@ -1,9 +1,17 @@
+from enum import Enum
 from typing import List, Optional, Union
 
 from pydantic import BaseModel, validator
 
-from .common import OntologyImageType, OntologyPcdType
-from .visionai_schema import AttributeType
+from .common import OntologyImageType, OntologyPcdType, SensorType
+
+
+class AttributeType(str, Enum):
+    BOOLEAN = "boolean"
+    NUM = "num"
+    NUMBER = "number"  # TODO: remove this when BE is read
+    OPTION = "option"
+    TEXT = "text"
 
 
 class AttributeOption(BaseModel):
@@ -40,3 +48,24 @@ class Ontology(BaseModel):
 
     class Config:
         use_enum_values = True
+
+
+class ProjectTag(BaseModel):
+    attributes: Optional[list[Attribute]] = None
+
+    class Config:
+        use_enum_values = True
+
+
+class Sensor(BaseModel):
+    name: str
+    type: SensorType
+
+    class Config:
+        use_enum_values = True
+
+
+class Project(BaseModel):
+    ontology: Ontology
+    sensors: list[Sensor]
+    project_tag: Optional[ProjectTag] = None
