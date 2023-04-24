@@ -31,13 +31,9 @@ class Stream(BaseModel):
         use_enum_values = True
 
 
-class Tag(BaseModel):
-    classes: List[str]
-
-
 class Ontology(BaseModel):
     contexts: Optional[Dict[StrictStr, ElementData]] = None
     objects: Optional[Dict[StrictStr, ElementData]] = None
     taggings: Optional[Dict[StrictStr, ElementData]] = None
     streams: Dict[StrictStr, Stream]
-    tags: Optional[Tag] = None
+    tags: Optional[Dict[StrictStr, ElementData]] = None
