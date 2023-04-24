@@ -25,55 +25,55 @@ from pydantic import (
 
 
 class SchemaVersion(str, Enum):
-    field_1_0_0 = "1.0.0"
+    FIELD_1_0_0 = "1.0.0"
 
 
 class CoordinateSystemType(str, Enum):
-    sensor_cs = "sensor_cs"
-    local_cs = "local_cs"
+    SENSOR_CS = "sensor_cs"
+    LOCAL_CS = "local_cs"
 
 
 class Type(str, Enum):
-    value = "value"
+    VALUE = "value"
 
 
 class ObjectType(str, Enum):
-    bbox = "bbox"
-    cuboid = "cuboid"
-    point2d = "point2d"
-    poly2d = "poly2d"
-    image = "image"
-    boolean = "boolean"
-    num = "num"
-    vec = "vec"
-    text = "text"
-    binary = "binary"
+    BBOX = "bbox"
+    CUBOID = "cuboid"
+    POINT2D = "point2d"
+    POLY2D = "poly2d"
+    IMAGE = "image"
+    BOOLEAN = "boolean"
+    NUM = "num"
+    VEC = "vec"
+    TEXT = "text"
+    BINARY = "binary"
 
 
 class TypeMinMax(str, Enum):
-    value = "value"
-    min = "min"
-    max = "max"
+    VALUE = "value"
+    MIN = "min"
+    MAX = "max"
 
 
 class TypeRange(str, Enum):
-    values = "values"
-    range = "range"
+    VALUES = "values"
+    RANGE = "range"
 
 
 class AttributeType(str, Enum):
-    boolean = "boolean"
-    num = "num"
-    vec = "vec"
-    text = "text"
+    BOOLEAN = "boolean"
+    NUM = "num"
+    VEC = "vec"
+    TEXT = "text"
 
 
 class StreamType(str, Enum):
-    camera = "camera"
-    lidar = "lidar"
-    radar = "radar"
-    gps_imu = "gps_imu"
-    other = "other"
+    CAMERA = "camera"
+    LIDAR = "lidar"
+    RADAR = "radar"
+    GPS_IMU = "gps_imu"
+    OTHER = "other"
 
 
 class Attributes(BaseModel):
