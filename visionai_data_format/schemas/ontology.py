@@ -20,7 +20,7 @@ class Attribute(BaseModel):
         use_enum_values = True
 
 
-class ElementData(BaseModel):
+class OntologyInfo(BaseModel):
     attributes: Dict[StrictStr, Attribute] = None
 
 
@@ -32,8 +32,8 @@ class Stream(BaseModel):
 
 
 class Ontology(BaseModel):
-    contexts: Optional[Dict[StrictStr, ElementData]] = None
-    objects: Optional[Dict[StrictStr, ElementData]] = None
-    taggings: Optional[Dict[StrictStr, ElementData]] = None
+    contexts: Optional[Dict[StrictStr, OntologyInfo]] = None
+    objects: Optional[Dict[StrictStr, OntologyInfo]] = None
+    taggings: Optional[Dict[StrictStr, OntologyInfo]] = None
     streams: Dict[StrictStr, Stream]
-    tags: Optional[Dict[StrictStr, ElementData]] = None
+    tags: Optional[Dict[StrictStr, OntologyInfo]] = None
