@@ -34,10 +34,12 @@ class VisionAIValidator:
                 for attr_name, attr_info in _class_data.get("attributes", {}).items():
                     # validate class and attribute name with uppercase
                     key = f"{attr_name.upper()}:{attr_info['type']}"
-                    options = {
-                        val.upper() if isinstance(val, str) else val
-                        for val in attr_info["value"]
-                    }
+                    options = {}
+                    if attr_info.get("value"):
+                        options = {
+                            val.upper() if isinstance(val, str) else val
+                            for val in attr_info["value"]
+                        }
                     attributes[_class_name][key].update(options)
         self._attributes = attributes
 
@@ -58,7 +60,6 @@ class VisionAIValidator:
         root_key: str,
         data_key_map: Dict,
         sensor_info: Dict,
-        required_data_type: List[str],
         has_lidar_sensor: bool,
         has_multi_sensor: bool,
         tags_count: int = -1,
@@ -97,7 +98,6 @@ class VisionAIValidator:
             has_lidar_sensor=has_lidar_sensor,
             has_multi_sensor=has_multi_sensor,
             sensor_name_set=sensor_name_set,
-            required_data_type=required_data_type,
         )
 
         if error_msg:
@@ -133,7 +133,6 @@ class VisionAIValidator:
         has_lidar_sensor: bool,
         has_multi_sensor: bool,
         sensor_info: Dict,
-        required_data_type: List[str],
         tags_count: int = -1,
         *args,
         **kwargs,
@@ -150,7 +149,6 @@ class VisionAIValidator:
             root_key=root_key,
             data_key_map=data_key_map,
             sensor_info=sensor_info,
-            required_data_type=required_data_type,
             has_lidar_sensor=has_lidar_sensor,
             has_multi_sensor=has_multi_sensor,
             tags_count=tags_count,
@@ -164,7 +162,6 @@ class VisionAIValidator:
         has_lidar_sensor: bool,
         has_multi_sensor: bool,
         sensor_info: Dict,
-        required_data_type: List[str],
         *args,
         **kwargs,
     ):
@@ -186,7 +183,6 @@ class VisionAIValidator:
             root_key=root_key,
             data_key_map=data_key_map,
             sensor_info=sensor_info,
-            required_data_type=required_data_type,
             has_lidar_sensor=has_lidar_sensor,
             has_multi_sensor=has_multi_sensor,
             tags_count=tags_count,
@@ -235,56 +231,42 @@ class VisionAIValidator:
         ):
             return "streams error"
         project_sensors_name_set = set(sensor_info.keys())
-        if (
-            has_multi_sensor
-            and has_lidar_sensor
-            and not validate_coor_system_obj(
+        if has_multi_sensor and has_lidar_sensor:
+            error = validate_coor_system_obj(
                 coord_systems_data=visionai.get("coordinate_systems"),
                 project_sensors_name_set=project_sensors_name_set,
             )
-        ):
-            return "coordinate systems error"
+            if error:
+                return f"coordinate systems error : {error}"
 
-    def _gen_validation_required_data_type(self, has_lidar_sensor: bool) -> List[str]:
-        dataset_type_label_map = {
-            "point": ["point2d_shape"],
-            "polyline": ["poly2d_shape"],
-            "polygon": ["poly2d_shape"],
-            "2d_bounding_box": ["bbox_shape"],
-            "semantic_segmentation": ["semantic_mask"],
-            "classification": [],
-        }
-        return dataset_type_label_map.get(self._ontology["type"], []) + (
-            ["cuboid_shape"] if has_lidar_sensor else []
-        )
-
-    def validate(self, visionai: Dict) -> List[str]:
+    @classmethod
+    def validate(cls, ontology: Ontology, visionai: Dict) -> List[str]:
         """
         visionai validator
 
         Parameters
         ----------
+        ontology: Ontology
+            ontology data
         visionai : Dict
             visionai data
-        required_data_type : list[str]
-            required data type such as point2d_shape, poly2d_shape, polygon, bbox_shape, and semantic_mask
-
         Returns
         -------
         List[str]
             list of validation error message
         """
+        ontology = cls(ontology=ontology)
 
         validator_map = {
-            "streams": self._validate_streams,
-            "contexts": self._validate_contexts,
-            "objects": self._validate_objects,
-            "taggings": self._validate_taggings,
+            "streams": ontology._validate_streams,
+            "contexts": ontology._validate_contexts,
+            "objects": ontology._validate_objects,
+            "taggings": ontology._validate_taggings,
         }
 
         errors: List[str] = []
 
-        tags = self._ontology.get("tags", {})
+        tags = ontology._ontology.get("tags", {})
 
         is_semantic = True if tags else False
 
@@ -292,7 +274,7 @@ class VisionAIValidator:
         if not visionai.get("streams"):
             raise ValueError("VisionAI missing streams data")
 
-        streams_data = self._ontology["streams"]
+        streams_data = ontology._ontology["streams"]
         has_multi_sensor: bool = len(streams_data) > 1
 
         sensor_info: Set[str, str] = {
@@ -303,10 +285,7 @@ class VisionAIValidator:
             sensor_type == "lidar" for sensor_type in sensor_info.values()
         )
 
-        required_data_type: List[str] = self._gen_validation_required_data_type(
-            has_lidar_sensor=has_lidar_sensor
-        )
-        for ontology_type, ontology_data in self._ontology.items():
+        for ontology_type, ontology_data in ontology._ontology.items():
             if not ontology_data or ontology_type not in validator_map:
                 continue
             err = validator_map[ontology_type](
@@ -314,7 +293,6 @@ class VisionAIValidator:
                 data_info=ontology_data,
                 is_semantic=is_semantic,
                 tags=tags,
-                required_data_type=required_data_type,
                 sensor_info=sensor_info,
                 has_multi_sensor=has_multi_sensor,
                 has_lidar_sensor=has_lidar_sensor,

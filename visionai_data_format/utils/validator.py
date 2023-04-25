@@ -791,7 +791,7 @@ def validate_streams_obj(
 
 def validate_coor_system_obj(
     coord_systems_data: Dict[str, CoordinateSystem], project_sensors_name_set: Set[str]
-) -> bool:
+) -> str:
 
     if not coord_systems_data:
         return False
@@ -802,8 +802,8 @@ def validate_coor_system_obj(
     }
     extra_sensors = data_sensors - project_sensors_name_set
     if len(extra_sensors) != 0:
-        return False
-    return True
+        return f"Contains extra sensor : {extra_sensors} from project sensor : {project_sensors_name_set}"
+    return ""
 
 
 def validate_attribute(
@@ -856,7 +856,6 @@ def validate_frame_object_data(
     has_lidar_sensor: bool,
     has_multi_sensor: bool,
     sensor_name_set: Set[str],
-    required_data_type: Optional[List[str]] = None,
 ) -> Optional[str]:
 
     for frame_id, frame_obj in frames.items():
@@ -885,13 +884,6 @@ def validate_frame_object_data(
         extra = cur_obj_coor_sensor - sensor_name_set
         if has_lidar_sensor and extra:
             return f"current frame coordinate system sensor(s) {extra} are not in project sensor {sensor_name_set}"
-
-        extra = cur_obj_data_type - set(required_data_type)
-        if required_data_type and (extra):
-            return (
-                f"current project required object data type : {set(required_data_type)},"
-                + f" data type {extra} are not found in current frame"
-            )
 
 
 def get_frame_object_attr_type(

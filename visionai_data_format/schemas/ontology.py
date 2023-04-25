@@ -7,19 +7,16 @@ from visionai_data_format.schemas.common import SensorType
 
 
 class AttributeType(str, Enum):
+    BBOX = "bbox"
+    CUBOID = "cuboid"
+    POINT2D = "point2d"
+    POLY2D = "poly2d"
+    IMAGE = "image"
     BOOLEAN = "boolean"
     NUM = "num"
     VEC = "vec"
     TEXT = "text"
-
-
-class OntologyType(str, Enum):
-    POINT = "point"
-    POLYLINE = "polyline"
-    POLYGON = "polygon"
-    BOUNDING_BOX = "2d_bounding_box"
-    SEMANTIC_SEGMENTATION = "semantic_segmentation"
-    CLASSIFICATION = "classification"
+    BINARY = "binary"
 
 
 class Attribute(BaseModel):
@@ -47,4 +44,3 @@ class Ontology(BaseModel):
     taggings: Optional[Dict[StrictStr, Attribute]] = None
     streams: Dict[StrictStr, Stream]
     tags: Optional[Dict[StrictStr, OntologyInfo]] = None
-    type: OntologyType
