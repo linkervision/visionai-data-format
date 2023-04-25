@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from visionai_data_format.schemas.ontology import Ontology
 from visionai_data_format.utils.validator import (
@@ -43,7 +43,7 @@ class VisionAIValidator:
 
     def _validate_tags(
         self, visionai: Dict, tags: Dict, *args, **kwargs
-    ) -> tuple[str, int]:
+    ) -> Tuple[str, int]:
 
         ontology_classes: Set[str] = set(tags.keys())
 
@@ -139,7 +139,7 @@ class VisionAIValidator:
         **kwargs,
     ):
         root_key = "contexts"
-        data_key_map: dict[str, str] = {
+        data_key_map: Dict[str, str] = {
             "sub_root_key": "context_data",
             "pointer_type": "context_data_pointers",
         }
@@ -169,7 +169,7 @@ class VisionAIValidator:
         **kwargs,
     ):
         root_key = "objects"
-        data_key_map: dict[str, str] = {
+        data_key_map: Dict[str, str] = {
             "sub_root_key": "object_data",
             "pointer_type": "object_data_pointers",
         }

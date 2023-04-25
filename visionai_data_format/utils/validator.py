@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from collections import defaultdict
-from typing import Dict, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from visionai_data_format.schemas.bdd_schema import BDDSchema
 from visionai_data_format.schemas.visionai_schema import (
@@ -18,7 +18,7 @@ from visionai_data_format.schemas.visionai_schema import (
 logger = logging.getLogger(__name__)
 
 
-def validate_vai(data: dict) -> Union[VisionAIModel, None]:
+def validate_vai(data: Dict) -> Union[VisionAIModel, None]:
     try:
         vai = VisionAIModel(**data)
         logger.info("[validated_vai] Validate success")
@@ -28,7 +28,7 @@ def validate_vai(data: dict) -> Union[VisionAIModel, None]:
         return None
 
 
-def validate_bdd(data: dict) -> Union[BDDSchema, None]:
+def validate_bdd(data: Dict) -> Union[BDDSchema, None]:
     try:
         bdd = BDDSchema(**data)
         logger.info("[validate_bdd] Validation success")
@@ -39,8 +39,8 @@ def validate_bdd(data: dict) -> Union[BDDSchema, None]:
 
 
 def attribute_generator(
-    category: str, attribute: dict, ontology_class_attrs: dict
-) -> dict:
+    category: str, attribute: Dict, ontology_class_attrs: Dict
+) -> Dict:
 
     if not attribute:
         return dict()
@@ -57,7 +57,7 @@ def attribute_generator(
     return new_attribute
 
 
-def save_as_json(data: dict, file_name: str, folder_name: str = "") -> None:
+def save_as_json(data: Dict, file_name: str, folder_name: str = "") -> None:
     try:
         if folder_name:
             os.makedirs(folder_name, exist_ok=True)
@@ -74,7 +74,7 @@ def save_as_json(data: dict, file_name: str, folder_name: str = "") -> None:
         logger.error("[save_as_json] Save file failed : " + str(e))
 
 
-def get_all_attrs_type(attributes: Attributes, all_attributes: Dict[str, set]) -> None:
+def get_all_attrs_type(attributes: Attributes, all_attributes: Dict[str, Set]) -> None:
     """get attributes and convert to upper case to compare"""
     if not attributes:
         return
@@ -132,8 +132,8 @@ def get_all_attrs_type(attributes: Attributes, all_attributes: Dict[str, set]) -
 
 
 def parse_visionai_child_type(
-    child_data: Dict[str, Union[Object, Context]], label_attributes: dict, data_key: str
-) -> set:
+    child_data: Dict[str, Union[Object, Context]], label_attributes: Dict, data_key: str
+) -> Set:
     if not child_data or not data_key:
         return set()
     all_types = set()
@@ -148,18 +148,18 @@ def parse_visionai_child_type(
 
 
 def validate_classes(
-    visionai: dict,
+    visionai: Dict,
     root_key: str,
     sub_root_key: str,
-    ontology_classes: set[str],
-    label_attributes: dict,
+    ontology_classes: Set[str],
+    label_attributes: Dict,
     is_semantic: bool = False,
-) -> set:
+) -> Set[str]:
 
     if not visionai:
         return False
 
-    label_classes: set[str] = parse_visionai_child_type(
+    label_classes: Set[str] = parse_visionai_child_type(
         child_data=visionai.get(root_key, {}),
         label_attributes=label_attributes,
         data_key=sub_root_key,
@@ -174,16 +174,16 @@ def validate_classes(
 
 
 def validate_tags_classes(
-    tags: dict,
-    ontology_classes: set[str],
-) -> tuple[str, int]:
+    tags: Dict,
+    ontology_classes: Set[str],
+) -> Tuple[str, int]:
     """verify tags under visionai data
 
     Parameters
     ----------
-    tags : dict
+    tags : Dict
         tags under visionai data
-    ontology_classes : set[str]
+    ontology_classes : Set[str]
         current ontology classes
 
     Returns
@@ -196,7 +196,7 @@ def validate_tags_classes(
     if not tags:
         return 0
 
-    tag_segmentation_data: dict = {}
+    tag_segmentation_data: Dict = {}
     for tag_data in tags.values():
         if tag_data["type"] == "semantic_segmentation_RLE":
             tag_segmentation_data = tag_data
@@ -209,13 +209,13 @@ def validate_tags_classes(
         return ("Can't found vector info inside tag", -1)
 
     # get the first element from vector list
-    vec_info: dict = vec_list[0]
+    vec_info: Dict = vec_list[0]
     if vec_info["type"] != "values":
         return ("Vector type must be `values`", -1)
 
-    classes_list: list[str] = vec_info["val"]
+    classes_list: List[str] = vec_info["val"]
 
-    classes_set: set[str] = set(classes_list)
+    classes_set: Set[str] = set(classes_list)
 
     extra_classes = classes_set - ontology_classes
     if extra_classes:
@@ -225,22 +225,22 @@ def validate_tags_classes(
 
 
 def parse_data_pointers(
-    data_under_vai: dict, pointer_type: str
-) -> tuple[Dict[tuple[str, str], dict], Dict[str, dict]]:
+    data_under_vai: Dict, pointer_type: str
+) -> Tuple[Dict[Tuple[str, str], Dict], Dict[str, Dict]]:
 
     """mapping data pointers under visionai with
     object uuid and its name as key
 
     Parameters
     ----------
-    data_under_vai : dict
+    data_under_vai : Dict
         data under visionai, such as `objects` or `contexts` data
     pointer_type : str
         key of data pointer under the objects, such as `object_data_pointers` or `context_data_pointers`
 
     Returns
     -------
-    tuple[Dict[tuple[str, str], dict], Dict[str, dict]]
+    tuple[Dict[tuple[str, str], Dict], Dict[str, Dict]]
         a tuple of two dictionary, the first dictionary is a dictionary of data pointer type and frame intervals
         with uuid and attribute name combination as the key, the second dictionary is a dictionary of
         object uuid with the list of interval tuple
@@ -248,8 +248,8 @@ def parse_data_pointers(
 
     if not data_under_vai:
         return {}, {}
-    data_pointers: Dict[tuple[str, str], dict] = defaultdict(dict)
-    data_obj_under_vai_intervals: Dict[str, list] = defaultdict(list)
+    data_pointers: Dict[Tuple[str, str], Dict] = defaultdict(dict)
+    data_obj_under_vai_intervals: Dict[str, List] = defaultdict(list)
     for uuid, data in data_under_vai.items():
 
         logger.debug(f"parse_data_pointers : {uuid}-{data['type']}")
@@ -269,8 +269,8 @@ def parse_data_pointers(
 
 
 def parse_static_attrs(
-    data_under_vai: dict, sub_root_key: str, only_tags: bool = True
-) -> Dict[tuple[str, str], dict]:
+    data_under_vai: Dict, sub_root_key: str, only_tags: bool = True
+) -> Dict[Tuple[str, str], Dict]:
     """mapping data attributes under visionai objects with
     object uuid and its name as key
 
@@ -289,7 +289,7 @@ def parse_static_attrs(
         dictionary of attribute type and value with uuid, attribute name,
         and frame number combination as the key
     """
-    static_attrs: Dict[tuple[str, str], dict] = defaultdict(dict)
+    static_attrs: Dict[Tuple[str, str], Dict] = defaultdict(dict)
     for uuid, data in data_under_vai.items():
         if only_tags and data["type"] != "*tagging":
             continue
@@ -306,8 +306,8 @@ def parse_static_attrs(
 
 
 def parse_dynamic_attrs(
-    frames: dict, root_key: str, sub_root_key: str, data_pointers: dict
-) -> Dict[tuple[str], dict]:
+    frames: Dict, root_key: str, sub_root_key: str, data_pointers: Dict
+) -> Dict[Tuple[str], dict]:
     """mapping attributes inside frame based on object uuid, attribute name, and frame number
 
     Parameters
@@ -327,7 +327,7 @@ def parse_dynamic_attrs(
         dictionary of attribute type and value with uuid, attribute name,
         and frame number combination as the key
     """
-    dynamic_attrs: Dict[tuple[str, str], dict] = defaultdict(lambda: defaultdict(dict))
+    dynamic_attrs: Dict[Tuple[str, str], Dict] = defaultdict(lambda: defaultdict(dict))
     for frame_no, frame_obj in frames.items():
         cur_frame_no = int(frame_no)
         if not frame_obj.get(root_key):
@@ -347,7 +347,7 @@ def parse_dynamic_attrs(
     return dynamic_attrs
 
 
-def gen_intervals(range_list: list[int]) -> list[tuple[int, int]]:
+def gen_intervals(range_list: List[int]) -> List[Tuple[int, int]]:
     """given a list of numbers, return its range interval list
 
     Parameters
@@ -400,9 +400,9 @@ def gen_intervals(range_list: list[int]) -> list[tuple[int, int]]:
 
 def validate_vai_data_frame_intervals(
     root_key: str,
-    data_obj_under_vai_intervals: Dict[str, list],
-    visionai_frame_intervals: list[tuple[int, int]],
-) -> tuple[bool, str]:
+    data_obj_under_vai_intervals: Dict[str, List],
+    visionai_frame_intervals: List[Tuple[int, int]],
+) -> Tuple[bool, str]:
     """_summary_
 
     Parameters
@@ -444,9 +444,9 @@ def validate_vai_data_frame_intervals(
 
 def vai_data_data_pointers_intervals(
     root_key: str,
-    data_pointers: Dict[tuple[str, str], dict],
-    data_obj_under_vai_intervals: Dict[str, list],
-) -> tuple[bool, Union[Dict[tuple[str, str], list[tuple[int, int]]], str]]:
+    data_pointers: Dict[Tuple[str, str], Dict],
+    data_obj_under_vai_intervals: Dict[str, List],
+) -> Tuple[bool, Union[Dict[Tuple[str, str], List[Tuple[int, int]]], str]]:
 
     """validate intervals between data pointer and its object frame intervals
 
@@ -470,11 +470,11 @@ def vai_data_data_pointers_intervals(
 
     # merge data pointers intervals
     data_pointers_frames_intervals: Dict[
-        tuple[str, str], list[tuple[int, int]]
+        Tuple[str, str], List[Tuple[int, int]]
     ] = defaultdict(list)
     for data_key, data_info in data_pointers.items():
-        interval_list: list[tuple[int, int]] = list()
-        interval_set: set[list[tuple[int, int]]] = set()
+        interval_list: List[Tuple[int, int]] = list()
+        interval_set: Set[List[Tuple[int, int]]] = set()
         for frame_interval_info in data_info["frame_intervals"]:
             start = int(frame_interval_info["frame_start"])
             end = int(frame_interval_info["frame_end"])
@@ -526,9 +526,9 @@ def vai_data_data_pointers_intervals(
 
 def validate_dynamic_attrs_data_pointer_intervals(
     root_key: str,
-    dynamic_attrs: Dict[tuple[str, str], dict],
-    data_pointers_frames_intervals: Dict[tuple[str, str], list[tuple[int, int]]],
-) -> tuple[bool, str]:
+    dynamic_attrs: Dict[Tuple[str, str], Dict],
+    data_pointers_frames_intervals: Dict[Tuple[str, str], List[Tuple[int, int]]],
+) -> Tuple[bool, str]:
     """validate dynamic attributes frames intervals with data pointer intervals
 
     Parameters
@@ -546,7 +546,7 @@ def validate_dynamic_attrs_data_pointer_intervals(
         return a tuple of boolean status and its error message
     """
 
-    dynamic_attrs_frames_intervals: Dict[tuple[str, str], list[tuple[int, int]]] = {
+    dynamic_attrs_frames_intervals: Dict[Tuple[str, str], List[Tuple[int, int]]] = {
         data_key: gen_intervals(list(data_info.keys()))
         for data_key, data_info in dynamic_attrs.items()
     }
@@ -578,15 +578,15 @@ def validate_dynamic_attrs_data_pointer_intervals(
 
 
 def validate_dynamic_attrs_data_pointer_semantic_values(
-    dynamic_attrs: Dict[tuple[str, str], dict],
+    dynamic_attrs: Dict[Tuple[str, str], Dict],
     tags_count: int,
     img_area: int = -1,
-) -> tuple[bool, str]:
+) -> Tuple[bool, str]:
     """validate dynamic attributes semantic value
 
     Parameters
     ----------
-    dynamic_attrs : Dict[tuple[str, str], dict]
+    dynamic_attrs : Dict[Tuple[str, str], dict]
         a dictionary of dynamic attributes that declared under `frames`
     tags_count : int
         number of classes inside tags object under visionai
@@ -595,7 +595,7 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
 
     Returns
     -------
-    tuple[bool,str]
+    Tuple[bool,str]
         return a tuple of boolean status and its error message
     """
 
@@ -612,9 +612,9 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
 
             # retrieve classes from #pixelnumVclass
             # TODO: move this to visionai-data-format
-            pixel_list: list[str] = [data for data in mask_rle.split("#") if data]
+            pixel_list: List[str] = [data for data in mask_rle.split("#") if data]
             pixel_total: int = 0
-            cls_list: list[int] = []
+            cls_list: List[int] = []
 
             for data in pixel_list:
                 pixel_count, cls_idx = data.rsplit("V", 1)
@@ -644,32 +644,28 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
 
 
 def validate_visionai_data(
-    data_under_vai: dict,
-    frames: Dict[str, dict],
+    data_under_vai: Dict,
+    frames: Dict[str, Dict],
     root_key: str = "contexts",
     sub_root_key: str = "context_data",
     pointer_type: str = "context_data_pointers",
     tags_count: int = -1,
-) -> tuple[bool, str]:
+) -> Tuple[bool, str]:
 
-    logger.debug(f"root_key : {root_key}")
-    logger.debug(f"sub_root_key : {sub_root_key}")
-    logger.debug(f"pointer_type : {pointer_type}")
-
-    parsed_data_pointers: tuple[
-        Dict[tuple[str, str], dict], Dict[str, list]
+    parsed_data_pointers: Tuple[
+        Dict[Tuple[str, str], Dict], Dict[str, List]
     ] = parse_data_pointers(
         data_under_vai,
         pointer_type,
     )
     data_pointers, data_obj_under_vai_intervals = parsed_data_pointers
 
-    static_attrs: Dict[tuple[str, str], dict] = parse_static_attrs(
+    static_attrs: Dict[Tuple[str, str], Dict] = parse_static_attrs(
         data_under_vai,
         sub_root_key,
     )
 
-    dynamic_attrs: Dict[tuple[str, str], dict] = parse_dynamic_attrs(
+    dynamic_attrs: Dict[Tuple[str, str], Dict] = parse_dynamic_attrs(
         frames,
         root_key,
         sub_root_key,
@@ -682,25 +678,25 @@ def validate_visionai_data(
     # to check attribute existence costs a lot.
 
     # retrieve static attributes keys
-    static_attrs_keys: set[tuple[str, str]] = (
+    static_attrs_keys: Set[Tuple[str, str]] = (
         set() if not static_attrs else set(static_attrs.keys())
     )
 
-    dynamic_attrs_keys: set[tuple[str, str]] = (
+    dynamic_attrs_keys: Set[Tuple[str, str]] = (
         set() if not dynamic_attrs else set(dynamic_attrs.keys())
     )
 
-    data_pointers_keys: set[tuple[str, str]] = (
+    data_pointers_keys: Set[Tuple[str, str]] = (
         set() if not data_pointers else set(data_pointers.keys())
     )
 
     logger.debug(f"static_attrs_keys : {static_attrs_keys}")
     logger.debug(f"data_pointers_keys : {data_pointers_keys}")
 
-    dynamic_attrs_uuid: set[str] = (
+    dynamic_attrs_uuid: Set[str] = (
         set() if not dynamic_attrs else {key[0] for key in dynamic_attrs.keys()}
     )
-    static_attrs_uuid: set[str] = (
+    static_attrs_uuid: Set[str] = (
         set() if not static_attrs else {key[0] for key in static_attrs.keys()}
     )
 
@@ -716,9 +712,9 @@ def validate_visionai_data(
     combination_attrs = static_attrs_keys | dynamic_attrs_keys
     if combination_attrs ^ data_pointers_keys:
 
-        extra_attributes_name: set[str] = combination_attrs - data_pointers_keys
-        missing_attributes_name: str[str] = data_pointers_keys - combination_attrs
-        msg: str = ""
+        extra_attributes_name: Set[str] = combination_attrs - data_pointers_keys
+        missing_attributes_name: Set[str] = data_pointers_keys - combination_attrs
+        msg = ""
         if extra_attributes_name:
             msg += f"Extra attributes from data pointers : {extra_attributes_name} \n"
 
@@ -732,7 +728,7 @@ def validate_visionai_data(
     frame_numbers = [int(frame_num) for frame_num in frames.keys()]
 
     # create frame intervals from frame numbers in case the frames is not continuous
-    visionai_frame_intervals: list[tuple[int, int]] = gen_intervals(frame_numbers)
+    visionai_frame_intervals: List[Tuple[int, int]] = gen_intervals(frame_numbers)
 
     # validate data under vai intervals with the frame intervals
     status, err = validate_vai_data_frame_intervals(
@@ -754,7 +750,7 @@ def validate_visionai_data(
 
     # retrieve data pointers frame intervals
     data_pointers_frames_intervals: Dict[
-        tuple[str, str], list[tuple[int, int]]
+        Tuple[str, str], List[Tuple[int, int]]
     ] = return_content
 
     # validate dynamic attributes frames intervals with data pointer intervals
@@ -794,7 +790,7 @@ def validate_streams_obj(
 
 
 def validate_coor_system_obj(
-    coord_systems_data: Dict[str, CoordinateSystem], project_sensors_name_set: set[str]
+    coord_systems_data: Dict[str, CoordinateSystem], project_sensors_name_set: Set[str]
 ) -> bool:
 
     if not coord_systems_data:
@@ -811,14 +807,14 @@ def validate_coor_system_obj(
 
 
 def validate_attribute(
-    label_attributes: dict, attributes: dict, excluded_attributes: Optional[set] = None
+    label_attributes: Dict, attributes: Dict, excluded_attributes: Optional[Set] = None
 ) -> Tuple[bool, Union[Tuple, None]]:
 
     for label_class, label_attrs in label_attributes.items():
         # already valid the class in previous step
-        ontology_attr_name_type_dict: Dict[str, set] = attributes.get(label_class, {})
-        ontology_attr_name_type_set: set[str] = set(ontology_attr_name_type_dict.keys())
-        label_name_type_set: set[str] = set(label_attrs.keys())
+        ontology_attr_name_type_dict: Dict[str, Set] = attributes.get(label_class, {})
+        ontology_attr_name_type_set: Set[str] = set(ontology_attr_name_type_dict.keys())
+        label_name_type_set: Set[str] = set(label_attrs.keys())
 
         extra_attr = label_name_type_set - ontology_attr_name_type_set
         if extra_attr:
@@ -838,7 +834,7 @@ def validate_attribute(
             ) or label_attr_type.lower() != "option":
                 continue
 
-            ontology_attr_options: set[str] = ontology_attr_name_type_dict.get(
+            ontology_attr_options: Set[str] = ontology_attr_name_type_dict.get(
                 label_attr_name_type, {}
             )
 
@@ -856,11 +852,11 @@ def validate_attribute(
 def validate_frame_object_data(
     data_root_key: str,
     data_child_key: str,
-    frames: dict,
+    frames: Dict,
     has_lidar_sensor: bool,
     has_multi_sensor: bool,
-    sensor_name_set: set[str],
-    required_data_type: Optional[list[str]] = None,
+    sensor_name_set: Set[str],
+    required_data_type: Optional[List[str]] = None,
 ) -> Optional[str]:
 
     for frame_id, frame_obj in frames.items():
@@ -901,7 +897,7 @@ def validate_frame_object_data(
 def get_frame_object_attr_type(
     frame_objects: Dict[str, Frame],
     all_objects: Dict[str, Object],
-    exist_attributes: dict,
+    exist_attributes: Dict,
     subroot_key: str,
 ) -> None:
     """get frame object/context attributes and convert to upper case to compare"""
@@ -938,7 +934,7 @@ def get_frame_object_attr_type(
 def parse_visionai_frames_content(
     frames: Dict[str, Frame],
     objects: Dict[str, Union[Object, Context]],
-    label_attributes: dict,
+    label_attributes: Dict,
     root_key: str,
 ) -> None:
     """get vision ai frames and convert object/context type and attribute to upper case to compare"""
@@ -953,11 +949,11 @@ def parse_visionai_frames_content(
 
 
 def validate_data_pointers(
-    attribute_data: Dict[str, dict],
-    data_under_vai: Dict[str, dict],
+    attribute_data: Dict[str, Dict],
+    data_under_vai: Dict[str, Dict],
     pointer_type: str = "context_data_pointers",
     only_tags: bool = True,
-) -> tuple[bool, str]:
+) -> Tuple[bool, str]:
     """validate attribute names and type under data_pointer with project settings,
     since data_pointer contains all attributes(name and type)
     under this uuid.
@@ -1004,7 +1000,7 @@ def validate_data_pointers(
         if extras:
             return False, f"UUID {data_uuid} have extra attributes : {extras}"
 
-        data_pointer_name_type_set: set[tuple[str, str]] = {
+        data_pointer_name_type_set: Set[Tuple[str, str]] = {
             (
                 data_pointer_name,
                 data_pointer_info["type"]
