@@ -13,7 +13,25 @@ def test_ontology(
     # convert project ontology into visionai ontology
     project_ontology_classes = project_ontology["classes"]
     image_type = project_ontology["image_type"]
+
+    has_lidar_sensor = any(
+        sensor_info["type"] == "lidar" for sensor_info in project_sensors
+    )
+
     root_key = "objects" if image_type != "classification" else "context"
+
+    dataset_type_label_map = {
+        "point": [("point2d_shape", "point2d")],
+        "polyline": [("poly2d_shape", "poly2d")],
+        "polygon": [("poly2d_shape", "poly2d")],
+        "2d_bounding_box": [("bbox_shape", "bbox")],
+        "semantic_segmentation": [("semantic_mask", "binary")],
+        "classification": [],
+    }
+
+    additional_attributes = dataset_type_label_map.get(image_type, []) + (
+        [("cuboid_shape", "cuboid")] if has_lidar_sensor else []
+    )
 
     visionai_ontology = {}
     mapping_attribute_type = {"number": "num", "option": "vec"}
@@ -21,7 +39,10 @@ def test_ontology(
     for project_ontology_info in project_ontology_classes:
         cls_name = project_ontology_info["name"]
         ontology_attributes = project_ontology_info.get("attributes", [])
-        attributes = {}
+        attributes = {
+            attr_name: {"type": attr_type}
+            for attr_name, attr_type in additional_attributes
+        }
         for _attr in ontology_attributes:
 
             attr_name = _attr["name"]
@@ -33,8 +54,7 @@ def test_ontology(
                 for opt in options:
                     attr_value.append(opt["value"])
 
-            new_attr = {attr_name: {"type": attr_type, "value": attr_value}}
-            attributes.update(**new_attr)
+            attributes.update(**{attr_name: {"type": attr_type, "value": attr_value}})
 
         visionai_ontology.update({cls_name: {"attributes": attributes}})
 
@@ -55,14 +75,13 @@ def test_ontology(
         root_key: visionai_ontology,
         "streams": visionai_streams,
         "taggings": visionai_taggings,
-        "type": project_ontology["image_type"],
     }
     ontology = Ontology(**ontology).dict()
     assert ontology == fake_visionai_ontology
 
-    validator = VisionAIValidator(ontology=ontology)
-    errors = validator.validate(
-        fake_objects_data_single_lidar,
+    errors = VisionAIValidator.validate(
+        ontology=ontology,
+        visionai=fake_objects_data_single_lidar,
     )
 
     assert errors == []
