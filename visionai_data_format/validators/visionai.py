@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
 
-from schemas.ontology import Ontology
-from utils.validator import (
+from visionai_data_format.schemas.ontology import Ontology
+from visionai_data_format.utils.validator import (
     parse_visionai_frames_content,
     validate_attribute,
     validate_classes,
@@ -23,8 +23,11 @@ class VisionAIValidator:
     def _build_ontology_attr_map(self):
         attributes = defaultdict(lambda: defaultdict(set))
         for _class_name, _class_data in self._ontology.items():
+
             attributes[_class_name] = defaultdict(set)
-            for attribute in _class_data["attributes"]:
+            if not _class_data:
+                continue
+            for attribute in _class_data.get("attributes", []):
                 # validate class and attribute name with uppercase
                 key = f"{attribute['name'].upper()}:{attribute['type']}"
                 options = {option["value"].upper() for option in attribute["options"]}
@@ -80,9 +83,8 @@ class VisionAIValidator:
             return f"Attribute Object error : class [{obj_cls}] attribute error [{name_type}]"
 
         sensor_name_set = set(sensor_info.keys())
-
         error_msg = validate_frame_object_data(
-            data_root_key=visionai.get(root_key, {}),
+            data_root_key=root_key,
             data_child_key=data_key_map["sub_root_key"],
             frames=visionai_frames,
             has_lidar_sensor=has_lidar_sensor,
@@ -225,12 +227,13 @@ class VisionAIValidator:
             project_sensors=sensor_info,
         ):
             return "streams error"
+        project_sensors_name_set = set(sensor_info.keys())
         if (
             has_multi_sensor
             and has_lidar_sensor
             and not validate_coor_system_obj(
                 coord_systems_data=visionai.get("coordinate_systems"),
-                project_sensors=sensor_info,
+                project_sensors_name_set=project_sensors_name_set,
             )
         ):
             return "coordinate systems error"
@@ -264,10 +267,11 @@ class VisionAIValidator:
 
         is_semantic = True if tags else False
 
+        visionai = visionai["visionai"]
         if not visionai.get("streams"):
             raise ValueError("VisionAI missing streams data")
 
-        streams_data = visionai.get("streams", {})
+        streams_data = self._ontology["streams"]
         has_multi_sensor: bool = len(streams_data) > 1
 
         sensor_info: Set[str, str] = {
@@ -279,6 +283,8 @@ class VisionAIValidator:
         )
 
         for ontology_type, ontology_data in self._ontology.items():
+            if not ontology_data:
+                continue
             err = validator_map[ontology_type](
                 visionai=visionai,
                 data_info=ontology_data,

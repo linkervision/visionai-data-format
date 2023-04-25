@@ -1,0 +1,578 @@
+{
+    "id": 81,
+    "name": "Kitti_bbox_project_tag",
+    "ego_car": null,
+    "description": "string",
+    "calibrations": [],
+    "ontology": {
+        "id": 81,
+        "classes": [
+            {
+                "id": 1329,
+                "attributes": [
+                    {
+                        "id": 257,
+                        "options": [],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "activity",
+                        "type": "text",
+                        "created_at": "2023-03-09T15:37:08.113730+08:00",
+                        "updated_at": "2023-03-09T15:37:08.113752+08:00",
+                        "ontology_class": 1329,
+                        "tag": null
+                    }
+                ],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "pedestrian",
+                "color": "#a863b6",
+                "rank": 1,
+                "created_at": "2023-03-09T15:37:08.090260+08:00",
+                "updated_at": "2023-03-09T15:37:08.090280+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1330,
+                "attributes": [
+                    {
+                        "id": 258,
+                        "options": [],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "color",
+                        "type": "text",
+                        "created_at": "2023-03-09T15:37:08.143891+08:00",
+                        "updated_at": "2023-03-09T15:37:08.143908+08:00",
+                        "ontology_class": 1330,
+                        "tag": null
+                    },
+                    {
+                        "id": 259,
+                        "options": [
+                            {
+                                "id": 486,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "true",
+                                "created_at": "2023-03-09T15:37:08.150178+08:00",
+                                "updated_at": "2023-03-09T15:37:08.150193+08:00",
+                                "attribute": 259
+                            },
+                            {
+                                "id": 487,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "false",
+                                "created_at": "2023-03-09T15:37:08.150209+08:00",
+                                "updated_at": "2023-03-09T15:37:08.150216+08:00",
+                                "attribute": 259
+                            }
+                        ],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "new",
+                        "type": "boolean",
+                        "created_at": "2023-03-09T15:37:08.147111+08:00",
+                        "updated_at": "2023-03-09T15:37:08.147126+08:00",
+                        "ontology_class": 1330,
+                        "tag": null
+                    },
+                    {
+                        "id": 260,
+                        "options": [],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "year",
+                        "type": "number",
+                        "created_at": "2023-03-09T15:37:08.187891+08:00",
+                        "updated_at": "2023-03-09T15:37:08.187914+08:00",
+                        "ontology_class": 1330,
+                        "tag": null
+                    },
+                    {
+                        "id": 261,
+                        "options": [
+                            {
+                                "id": 488,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "stop",
+                                "created_at": "2023-03-09T15:37:08.195536+08:00",
+                                "updated_at": "2023-03-09T15:37:08.195555+08:00",
+                                "attribute": 261
+                            },
+                            {
+                                "id": 489,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "run",
+                                "created_at": "2023-03-09T15:37:08.195572+08:00",
+                                "updated_at": "2023-03-09T15:37:08.195579+08:00",
+                                "attribute": 261
+                            },
+                            {
+                                "id": 490,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "small",
+                                "created_at": "2023-03-09T15:37:08.195592+08:00",
+                                "updated_at": "2023-03-09T15:37:08.195598+08:00",
+                                "attribute": 261
+                            },
+                            {
+                                "id": 491,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "large",
+                                "created_at": "2023-03-09T15:37:08.195610+08:00",
+                                "updated_at": "2023-03-09T15:37:08.195617+08:00",
+                                "attribute": 261
+                            }
+                        ],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "status",
+                        "type": "option",
+                        "created_at": "2023-03-09T15:37:08.191990+08:00",
+                        "updated_at": "2023-03-09T15:37:08.192009+08:00",
+                        "ontology_class": 1330,
+                        "tag": null
+                    }
+                ],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "truck",
+                "color": "#92b3d3",
+                "rank": 2,
+                "created_at": "2023-03-09T15:37:08.140309+08:00",
+                "updated_at": "2023-03-09T15:37:08.140330+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1331,
+                "attributes": [
+                    {
+                        "id": 262,
+                        "options": [],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "color",
+                        "type": "text",
+                        "created_at": "2023-03-09T15:37:08.209577+08:00",
+                        "updated_at": "2023-03-09T15:37:08.209593+08:00",
+                        "ontology_class": 1331,
+                        "tag": null
+                    },
+                    {
+                        "id": 263,
+                        "options": [
+                            {
+                                "id": 492,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "true",
+                                "created_at": "2023-03-09T15:37:08.217415+08:00",
+                                "updated_at": "2023-03-09T15:37:08.217431+08:00",
+                                "attribute": 263
+                            },
+                            {
+                                "id": 493,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "false",
+                                "created_at": "2023-03-09T15:37:08.217446+08:00",
+                                "updated_at": "2023-03-09T15:37:08.217452+08:00",
+                                "attribute": 263
+                            }
+                        ],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "new",
+                        "type": "boolean",
+                        "created_at": "2023-03-09T15:37:08.213051+08:00",
+                        "updated_at": "2023-03-09T15:37:08.213065+08:00",
+                        "ontology_class": 1331,
+                        "tag": null
+                    },
+                    {
+                        "id": 264,
+                        "options": [],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "year",
+                        "type": "number",
+                        "created_at": "2023-03-09T15:37:08.226720+08:00",
+                        "updated_at": "2023-03-09T15:37:08.226736+08:00",
+                        "ontology_class": 1331,
+                        "tag": null
+                    },
+                    {
+                        "id": 265,
+                        "options": [
+                            {
+                                "id": 494,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "stop",
+                                "created_at": "2023-03-09T15:37:08.233460+08:00",
+                                "updated_at": "2023-03-09T15:37:08.233476+08:00",
+                                "attribute": 265
+                            },
+                            {
+                                "id": 495,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "run",
+                                "created_at": "2023-03-09T15:37:08.233492+08:00",
+                                "updated_at": "2023-03-09T15:37:08.233512+08:00",
+                                "attribute": 265
+                            },
+                            {
+                                "id": 496,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "small",
+                                "created_at": "2023-03-09T15:37:08.233524+08:00",
+                                "updated_at": "2023-03-09T15:37:08.233530+08:00",
+                                "attribute": 265
+                            },
+                            {
+                                "id": 497,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "large",
+                                "created_at": "2023-03-09T15:37:08.233541+08:00",
+                                "updated_at": "2023-03-09T15:37:08.233547+08:00",
+                                "attribute": 265
+                            }
+                        ],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "status",
+                        "type": "option",
+                        "created_at": "2023-03-09T15:37:08.229909+08:00",
+                        "updated_at": "2023-03-09T15:37:08.229925+08:00",
+                        "ontology_class": 1331,
+                        "tag": null
+                    }
+                ],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "car",
+                "color": "#6b9263",
+                "rank": 3,
+                "created_at": "2023-03-09T15:37:08.206062+08:00",
+                "updated_at": "2023-03-09T15:37:08.206079+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1332,
+                "attributes": [],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "cyclist",
+                "color": "#ac956c",
+                "rank": 4,
+                "created_at": "2023-03-09T15:37:08.244262+08:00",
+                "updated_at": "2023-03-09T15:37:08.244279+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1333,
+                "attributes": [],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "dontcare",
+                "color": "#dddf72",
+                "rank": 5,
+                "created_at": "2023-03-09T15:37:08.247717+08:00",
+                "updated_at": "2023-03-09T15:37:08.247733+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1334,
+                "attributes": [
+                    {
+                        "id": 266,
+                        "options": [],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "color",
+                        "type": "text",
+                        "created_at": "2023-03-09T15:37:08.270083+08:00",
+                        "updated_at": "2023-03-09T15:37:08.270100+08:00",
+                        "ontology_class": 1334,
+                        "tag": null
+                    },
+                    {
+                        "id": 267,
+                        "options": [
+                            {
+                                "id": 498,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "toyota",
+                                "created_at": "2023-03-09T15:37:08.276617+08:00",
+                                "updated_at": "2023-03-09T15:37:08.276634+08:00",
+                                "attribute": 267
+                            },
+                            {
+                                "id": 499,
+                                "image_count": 0,
+                                "object_count": 0,
+                                "object_identity_count": 0,
+                                "value": "new",
+                                "created_at": "2023-03-09T15:37:08.276650+08:00",
+                                "updated_at": "2023-03-09T15:37:08.276658+08:00",
+                                "attribute": 267
+                            }
+                        ],
+                        "image_count": 0,
+                        "object_count": 0,
+                        "object_identity_count": 0,
+                        "name": "info",
+                        "type": "option",
+                        "created_at": "2023-03-09T15:37:08.273244+08:00",
+                        "updated_at": "2023-03-09T15:37:08.273260+08:00",
+                        "ontology_class": 1334,
+                        "tag": null
+                    }
+                ],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "misc",
+                "color": "#d56ca9",
+                "rank": 6,
+                "created_at": "2023-03-09T15:37:08.264942+08:00",
+                "updated_at": "2023-03-09T15:37:08.264960+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1335,
+                "attributes": [],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "van",
+                "color": "#dd9dd1",
+                "rank": 7,
+                "created_at": "2023-03-09T15:37:08.288340+08:00",
+                "updated_at": "2023-03-09T15:37:08.288358+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1336,
+                "attributes": [],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "tram",
+                "color": "#d2dbe4",
+                "rank": 8,
+                "created_at": "2023-03-09T15:37:08.292259+08:00",
+                "updated_at": "2023-03-09T15:37:08.292275+08:00",
+                "ontology": 81
+            },
+            {
+                "id": 1337,
+                "attributes": [],
+                "image_count": 0,
+                "object_count": 0,
+                "object_identity_count": 0,
+                "name": "person_sitting",
+                "color": "#445f4e",
+                "rank": 9,
+                "created_at": "2023-03-09T15:37:08.295734+08:00",
+                "updated_at": "2023-03-09T15:37:08.295750+08:00",
+                "ontology": 81
+            }
+        ],
+        "name": "kitti_ontology",
+        "image_type": "2d_bounding_box",
+        "pcd_type": "cuboid",
+        "created_at": "2023-03-09T15:37:08.083740+08:00",
+        "updated_at": "2023-03-09T15:37:08.083762+08:00",
+        "project": 81
+    },
+    "project_tag": {
+        "id": 257,
+        "attributes": [
+            {
+                "id": 274,
+                "options": [],
+                "name": "profession",
+                "type": "text",
+                "created_at": "2023-03-09T15:37:08.355885+08:00",
+                "updated_at": "2023-03-09T15:37:08.355900+08:00",
+                "ontology_class": null,
+                "tag": 257
+            },
+            {
+                "id": 273,
+                "options": [],
+                "name": "roadname",
+                "type": "text",
+                "created_at": "2023-03-09T15:37:08.352655+08:00",
+                "updated_at": "2023-03-09T15:37:08.352670+08:00",
+                "ontology_class": null,
+                "tag": 257
+            },
+            {
+                "id": 272,
+                "options": [],
+                "name": "name",
+                "type": "text",
+                "created_at": "2023-03-09T15:37:08.349255+08:00",
+                "updated_at": "2023-03-09T15:37:08.349272+08:00",
+                "ontology_class": null,
+                "tag": 257
+            },
+            {
+                "id": 271,
+                "options": [
+                    {
+                        "id": 502,
+                        "value": "sky",
+                        "created_at": "2023-03-09T15:37:08.339802+08:00",
+                        "updated_at": "2023-03-09T15:37:08.339819+08:00",
+                        "attribute": 271
+                    },
+                    {
+                        "id": 503,
+                        "value": "leaves",
+                        "created_at": "2023-03-09T15:37:08.339835+08:00",
+                        "updated_at": "2023-03-09T15:37:08.339843+08:00",
+                        "attribute": 271
+                    },
+                    {
+                        "id": 504,
+                        "value": "wheel_vehicle",
+                        "created_at": "2023-03-09T15:37:08.339856+08:00",
+                        "updated_at": "2023-03-09T15:37:08.339862+08:00",
+                        "attribute": 271
+                    },
+                    {
+                        "id": 505,
+                        "value": "fire",
+                        "created_at": "2023-03-09T15:37:08.339874+08:00",
+                        "updated_at": "2023-03-09T15:37:08.339880+08:00",
+                        "attribute": 271
+                    },
+                    {
+                        "id": 506,
+                        "value": "water",
+                        "created_at": "2023-03-09T15:37:08.339892+08:00",
+                        "updated_at": "2023-03-09T15:37:08.339899+08:00",
+                        "attribute": 271
+                    }
+                ],
+                "name": "unknown_object",
+                "type": "option",
+                "created_at": "2023-03-09T15:37:08.335686+08:00",
+                "updated_at": "2023-03-09T15:37:08.335703+08:00",
+                "ontology_class": null,
+                "tag": 257
+            },
+            {
+                "id": 270,
+                "options": [
+                    {
+                        "id": 500,
+                        "value": "true",
+                        "created_at": "2023-03-09T15:37:08.326780+08:00",
+                        "updated_at": "2023-03-09T15:37:08.326797+08:00",
+                        "attribute": 270
+                    },
+                    {
+                        "id": 501,
+                        "value": "false",
+                        "created_at": "2023-03-09T15:37:08.326813+08:00",
+                        "updated_at": "2023-03-09T15:37:08.326821+08:00",
+                        "attribute": 270
+                    }
+                ],
+                "name": "static_status",
+                "type": "boolean",
+                "created_at": "2023-03-09T15:37:08.323146+08:00",
+                "updated_at": "2023-03-09T15:37:08.323175+08:00",
+                "ontology_class": null,
+                "tag": 257
+            },
+            {
+                "id": 269,
+                "options": [],
+                "name": "year",
+                "type": "number",
+                "created_at": "2023-03-09T15:37:08.317290+08:00",
+                "updated_at": "2023-03-09T15:37:08.317307+08:00",
+                "ontology_class": null,
+                "tag": 257
+            },
+            {
+                "id": 268,
+                "options": [],
+                "name": "weather",
+                "type": "text",
+                "created_at": "2023-03-09T15:37:08.313172+08:00",
+                "updated_at": "2023-03-09T15:37:08.313189+08:00",
+                "ontology_class": null,
+                "tag": 257
+            }
+        ],
+        "created_at": "2023-03-09T15:37:08.306314+08:00",
+        "updated_at": "2023-03-09T15:37:08.306333+08:00",
+        "project": 81
+    },
+    "datasets": [],
+    "dataslices": [],
+    "sensors": [
+        {
+            "id": 90,
+            "name": "camera1",
+            "type": "camera",
+            "created_at": "2023-03-09T15:37:08.076144+08:00",
+            "updated_at": "2023-03-09T15:37:08.076167+08:00",
+            "project": 81
+        },
+        {
+            "id": 91,
+            "name": "lidar1",
+            "type": "lidar",
+            "created_at": "2023-03-09T15:37:08.076184+08:00",
+            "updated_at": "2023-03-09T15:37:08.076191+08:00",
+            "project": 81
+        }
+    ],
+    "created_at": "2023-03-09T15:37:08.050065+08:00",
+    "updated_at": "2023-03-09T15:37:08.050097+08:00"
+}

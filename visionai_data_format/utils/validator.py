@@ -4,8 +4,6 @@ import os
 from collections import defaultdict
 from typing import Dict, Optional, Set, Tuple, Union
 
-from common import ISO_SENSORS
-
 from visionai_data_format.schemas.bdd_schema import BDDSchema
 from visionai_data_format.schemas.visionai_schema import (
     Attributes,
@@ -308,7 +306,7 @@ def parse_static_attrs(
 
 
 def parse_dynamic_attrs(
-    frames: dict, root_key: str, sub_root_key: str, data_pointers: dict, only_tags: bool
+    frames: dict, root_key: str, sub_root_key: str, data_pointers: dict
 ) -> Dict[tuple[str], dict]:
     """mapping attributes inside frame based on object uuid, attribute name, and frame number
 
@@ -332,8 +330,7 @@ def parse_dynamic_attrs(
     dynamic_attrs: Dict[tuple[str, str], dict] = defaultdict(lambda: defaultdict(dict))
     for frame_no, frame_obj in frames.items():
         cur_frame_no = int(frame_no)
-        # allow frame doesn't have `contexts` key when parsing *tagging data
-        if only_tags and root_key == "contexts" and root_key not in frame_obj:
+        if not frame_obj.get(root_key):
             continue
         for uuid, data in frame_obj[root_key].items():
             for attr_type, attr_list in data[sub_root_key].items():
@@ -786,7 +783,6 @@ def validate_streams_obj(
 ) -> bool:
     if not streams_data:
         return False
-
     for stream_name, stream_obj in streams_data.items():
         stream_obj_type = stream_obj.get("type", "")
         if (
@@ -803,10 +799,12 @@ def validate_coor_system_obj(
 
     if not coord_systems_data:
         return False
-    data_sensors = {sensor for sensor in coord_systems_data.keys()}
-    logger.debug(f"data_sensors : {data_sensors}")
-    logger.debug(f"project_sensors_name : {project_sensors_name_set}")
-    extra_sensors = data_sensors - (project_sensors_name_set | ISO_SENSORS)
+    data_sensors = {
+        sensor_name
+        for sensor_name, sensor_info in coord_systems_data.items()
+        if sensor_info["type"] != "local_cs"
+    }
+    extra_sensors = data_sensors - project_sensors_name_set
     if len(extra_sensors) != 0:
         return False
     return True
@@ -869,7 +867,6 @@ def validate_frame_object_data(
         cur_obj_data_type = set()
         cur_obj_stream_sensor = set()
         cur_obj_coor_sensor = set()
-
         if data_root_key not in frame_obj:
             return f"Current frame {frame_id} doesn't have `{data_root_key}` key"
         for obj in frame_obj[data_root_key].values():

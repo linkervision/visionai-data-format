@@ -1,8 +1,9 @@
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-from common import SensorType
 from pydantic import BaseModel, StrictStr
+
+from visionai_data_format.schemas.common import SensorType
 
 
 class AttributeType(str, Enum):
