@@ -12,6 +12,15 @@ class AttributeType(str, Enum):
     TEXT = "text"
 
 
+class OntologyType(str, Enum):
+    POINT = "point"
+    POLYLINE = "polyline"
+    POLYGON = "polygon"
+    BOUNDING_BOX = " bounding_box"
+    SEMANTIC_SEGMENTATION = "semantic_segmentation"
+    CLASSIFICATION = "classification"
+
+
 class Attribute(BaseModel):
     type: AttributeType
     value: Optional[List[Union[float, str, int]]] = None
@@ -34,6 +43,7 @@ class Stream(BaseModel):
 class Ontology(BaseModel):
     contexts: Optional[Dict[StrictStr, OntologyInfo]] = None
     objects: Optional[Dict[StrictStr, OntologyInfo]] = None
-    taggings: Optional[Dict[StrictStr, OntologyInfo]] = None
+    taggings: Optional[Dict[StrictStr, Attribute]] = None
     streams: Dict[StrictStr, Stream]
     tags: Optional[Dict[StrictStr, OntologyInfo]] = None
+    type: str = OntologyType
