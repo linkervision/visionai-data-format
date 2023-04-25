@@ -17,7 +17,7 @@ class OntologyType(str, Enum):
     POINT = "point"
     POLYLINE = "polyline"
     POLYGON = "polygon"
-    BOUNDING_BOX = " bounding_box"
+    BOUNDING_BOX = "2d_bounding_box"
     SEMANTIC_SEGMENTATION = "semantic_segmentation"
     CLASSIFICATION = "classification"
 
@@ -47,4 +47,4 @@ class Ontology(BaseModel):
     taggings: Optional[Dict[StrictStr, Attribute]] = None
     streams: Dict[StrictStr, Stream]
     tags: Optional[Dict[StrictStr, OntologyInfo]] = None
-    type: str = OntologyType
+    type: OntologyType

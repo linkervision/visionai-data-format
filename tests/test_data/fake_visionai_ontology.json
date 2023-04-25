@@ -137,5 +137,6 @@
             "type": "lidar"
         }
     },
-    "tags": null
+    "tags": null,
+    "type":"2d_bounding_box"
 }

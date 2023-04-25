@@ -22,16 +22,23 @@ class VisionAIValidator:
 
     def _build_ontology_attr_map(self):
         attributes = defaultdict(lambda: defaultdict(set))
-        for _class_name, _class_data in self._ontology.items():
-
-            attributes[_class_name] = defaultdict(set)
-            if not _class_data:
+        ontology_keys = {"objects", "contexts", "tags"}
+        for ontology_root in ontology_keys:
+            ontology_info = self._ontology.get(ontology_root)
+            if not ontology_info:
                 continue
-            for attribute in _class_data.get("attributes", []):
-                # validate class and attribute name with uppercase
-                key = f"{attribute['name'].upper()}:{attribute['type']}"
-                options = {option["value"].upper() for option in attribute["options"]}
-                attributes[_class_name][key].update(options)
+            for _class_name, _class_data in ontology_info.items():
+                attributes[_class_name] = defaultdict(set)
+                if not _class_data:
+                    continue
+                for attr_name, attr_info in _class_data.get("attributes", {}).items():
+                    # validate class and attribute name with uppercase
+                    key = f"{attr_name.upper()}:{attr_info['type']}"
+                    options = {
+                        val.upper() if isinstance(val, str) else val
+                        for val in attr_info["value"]
+                    }
+                    attributes[_class_name][key].update(options)
         self._attributes = attributes
 
     def _validate_tags(
@@ -238,7 +245,20 @@ class VisionAIValidator:
         ):
             return "coordinate systems error"
 
-    def validate(self, visionai: Dict, required_data_type: list[str]) -> List[str]:
+    def _gen_validation_required_data_type(self, has_lidar_sensor: bool) -> List[str]:
+        dataset_type_label_map = {
+            "point": ["point2d_shape"],
+            "polyline": ["poly2d_shape"],
+            "polygon": ["poly2d_shape"],
+            "2d_bounding_box": ["bbox_shape"],
+            "semantic_segmentation": ["semantic_mask"],
+            "classification": [],
+        }
+        return dataset_type_label_map.get(self._ontology["type"], []) + (
+            ["cuboid_shape"] if has_lidar_sensor else []
+        )
+
+    def validate(self, visionai: Dict) -> List[str]:
         """
         visionai validator
 
@@ -254,6 +274,7 @@ class VisionAIValidator:
         List[str]
             list of validation error message
         """
+
         validator_map = {
             "streams": self._validate_streams,
             "contexts": self._validate_contexts,
@@ -282,8 +303,11 @@ class VisionAIValidator:
             sensor_type == "lidar" for sensor_type in sensor_info.values()
         )
 
+        required_data_type: List[str] = self._gen_validation_required_data_type(
+            has_lidar_sensor=has_lidar_sensor
+        )
         for ontology_type, ontology_data in self._ontology.items():
-            if not ontology_data:
+            if not ontology_data or ontology_type not in validator_map:
                 continue
             err = validator_map[ontology_type](
                 visionai=visionai,

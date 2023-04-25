@@ -55,13 +55,14 @@ def test_ontology(
         root_key: visionai_ontology,
         "streams": visionai_streams,
         "taggings": visionai_taggings,
+        "type": project_ontology["image_type"],
     }
     ontology = Ontology(**ontology).dict()
     assert ontology == fake_visionai_ontology
 
     validator = VisionAIValidator(ontology=ontology)
     errors = validator.validate(
-        fake_objects_data_single_lidar, ["bbox_shape", "cuboid_shape"]
+        fake_objects_data_single_lidar,
     )
 
     assert errors == []
