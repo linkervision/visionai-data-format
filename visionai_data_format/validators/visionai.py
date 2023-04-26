@@ -50,7 +50,7 @@ class VisionAIValidator:
         ontology_classes: Set[str] = set(tags.keys())
 
         return validate_tags_classes(
-            visionai=visionai, ontology_classes=ontology_classes
+            tags=visionai["tags"], ontology_classes=ontology_classes
         )
 
     def _validate_visionai_pointers(
