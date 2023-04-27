@@ -171,7 +171,7 @@ class VisionAIValidator:
             "pointer_type": "object_data_pointers",
         }
 
-        tags_count = -1
+        tags_count = 0
         if tags:
             error_msg, tags_count = self._validate_tags(visionai=visionai, tags=tags)
             if error_msg:

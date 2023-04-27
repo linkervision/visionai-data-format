@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Set, Union
 
 try:
     from typing import Literal
@@ -21,6 +21,14 @@ from pydantic import (
     conlist,
     root_validator,
     validator,
+)
+
+from visionai_data_format.schemas.ontology import Ontology
+from visionai_data_format.schemas.utils.validators import (
+    build_ontology_attributes_map,
+    validate_contexts,
+    validate_objects,
+    validate_streams,
 )
 
 
@@ -807,6 +815,7 @@ class VisionAI(BaseModel):
 
     @validator("tags")
     def validate_tags(cls, value):
+
         assert value, f" Value {value} is not allowed"
         return value
 
@@ -816,6 +825,52 @@ class VisionAIModel(BaseModel):
         extra = Extra.forbid
 
     visionai: VisionAI
+
+    def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
+
+        validator_map = {
+            "streams": validate_streams,
+            "contexts": validate_contexts,
+            "objects": validate_objects,
+        }
+
+        errors: List[str] = []
+
+        tags = ontology.get("tags", {})
+
+        visionai = self.visionai.dict(exclude_unset=True, exclude_none=True)
+        if not visionai.get("streams"):
+            raise ValueError("VisionAI missing streams data")
+
+        streams_data = ontology["streams"]
+        has_multi_sensor: bool = len(streams_data) > 1
+
+        sensor_info: Set[str, str] = {
+            sensor_name: sensor_obj["type"]
+            for sensor_name, sensor_obj in streams_data.items()
+        }
+
+        has_lidar_sensor: bool = any(
+            sensor_type == "lidar" for sensor_type in sensor_info.values()
+        )
+        ontology_attributes_map = build_ontology_attributes_map(ontology)
+
+        for ontology_type, ontology_data in ontology.items():
+            if not ontology_data or ontology_type not in validator_map:
+                continue
+            err = validator_map[ontology_type](
+                visionai=visionai,
+                ontology_data=ontology_data,
+                ontology_attributes_map=ontology_attributes_map,
+                tags=tags,
+                sensor_info=sensor_info,
+                has_multi_sensor=has_multi_sensor,
+                has_lidar_sensor=has_lidar_sensor,
+            )
+            if err:
+                errors.append(err)
+
+        return errors
 
 
 Attributes.update_forward_refs()

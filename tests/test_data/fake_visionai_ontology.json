@@ -1,5 +1,4 @@
 {
-    "contexts": null,
     "objects": {
         "pedestrian": {
             "attributes": {
@@ -167,43 +166,47 @@
             }
         }
     },
-    "taggings": {
-        "profession": {
-            "type": "text",
-            "value": []
-        },
-        "roadname": {
-            "type": "text",
-            "value": []
-        },
-        "name": {
-            "type": "text",
-            "value": []
-        },
-        "unknown_object": {
-            "type": "vec",
-            "value": [
-                "sky",
-                "leaves",
-                "wheel_vehicle",
-                "fire",
-                "water"
-            ]
-        },
-        "static_status": {
-            "type": "boolean",
-            "value": [
-                "true",
-                "false"
-            ]
-        },
-        "year": {
-            "type": "num",
-            "value": []
-        },
-        "weather": {
-            "type": "text",
-            "value": []
+    "contexts":{
+        "*tagging": {
+            "attributes":{
+                "profession": {
+                    "type": "text",
+                    "value": []
+                },
+                "roadname": {
+                    "type": "text",
+                    "value": []
+                },
+                "name": {
+                    "type": "text",
+                    "value": []
+                },
+                "unknown_object": {
+                    "type": "vec",
+                    "value": [
+                        "sky",
+                        "leaves",
+                        "wheel_vehicle",
+                        "fire",
+                        "water"
+                    ]
+                },
+                "static_status": {
+                    "type": "boolean",
+                    "value": [
+                        "true",
+                        "false"
+                    ]
+                },
+                "year": {
+                    "type": "num",
+                    "value": []
+                },
+                "weather": {
+                    "type": "text",
+                    "value": []
+                }
+            }
         }
     },
     "streams": {

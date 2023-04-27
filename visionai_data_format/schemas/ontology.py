@@ -41,6 +41,5 @@ class Stream(BaseModel):
 class Ontology(BaseModel):
     contexts: Optional[Dict[StrictStr, OntologyInfo]] = None
     objects: Optional[Dict[StrictStr, OntologyInfo]] = None
-    taggings: Optional[Dict[StrictStr, Attribute]] = None
     streams: Dict[StrictStr, Stream]
     tags: Optional[Dict[StrictStr, OntologyInfo]] = None
