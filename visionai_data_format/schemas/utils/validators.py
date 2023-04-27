@@ -61,8 +61,8 @@ def parse_visionai_child_type(
     classes_attributes_map: Dict[str, Dict[str, Set]] = defaultdict(dict)
     for data in child_data.values():
         obj_class = data["type"]
-        classes_attributes_map[obj_class] |= mapping_attributes_type_value(
-            data.get(data_key, None)
+        classes_attributes_map[obj_class].update(
+            mapping_attributes_type_value(data.get(data_key, None))
         )
 
     return classes_attributes_map
@@ -287,8 +287,8 @@ def get_frame_object_attr_type(
                 if not ele_obj:
                     continue
                 for ele in ele_obj:
-                    mapped_attributes |= mapping_attributes_type_value(
-                        ele.get("attributes")
+                    mapped_attributes.update(
+                        mapping_attributes_type_value(ele.get("attributes"))
                     )
         else:
             mapped_attributes = mapping_attributes_type_value(data)
@@ -312,8 +312,10 @@ def parse_visionai_frames_objects(
         obj = data.get(root_key, None)
         if not obj:
             continue
-        classes_attributes_map |= get_frame_object_attr_type(obj, objects, subroot_key)
 
+        classes_attributes_map.update(
+            get_frame_object_attr_type(obj, objects, subroot_key)
+        )
     return classes_attributes_map
 
 
