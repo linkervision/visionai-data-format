@@ -46,7 +46,7 @@
                 "frame_properties": {
                     "timestamp": "2020-04-11T12:00:01.000+0100",
                     "streams": {
-                        "camera1": {
+                        "camera2": {
                             "uri": "https://image1.path.url.png",
                             "stream_properties": {
                                 "sync": {

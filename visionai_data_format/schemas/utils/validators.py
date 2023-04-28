@@ -158,7 +158,7 @@ def validate_tags_classes(
 
     extra_classes = classes_set - ontology_classes
     if extra_classes:
-        raise (f"Tag label with classes {extra_classes} doesn't accepted", -1)
+        return (f"Tag label with classes {extra_classes} doesn't accepted", -1)
 
     return ("", len(classes_set))
 
@@ -249,10 +249,19 @@ def validate_frame_object_sensors_data(
                         cur_obj_coor_sensor.add(coor_sensor)
         extra = cur_obj_stream_sensor - sensor_name_set
         if has_multi_sensor and extra:
-            return f"frame stream sensor(s) {extra} are not in project sensor {sensor_name_set}"
+            return f"frame stream sensor(s) {extra} are not in visionai streams {sensor_name_set}"
         extra = cur_obj_coor_sensor - sensor_name_set
         if has_lidar_sensor and extra:
-            return f"current frame coordinate system sensor(s) {extra} are not in project sensor {sensor_name_set}"
+            return f"current frame coordinate system sensor(s) {extra} are not in visionai streams{sensor_name_set}"
+        frame_properties = frame_obj.get("frame_properties")
+        if not frame_properties:
+            return "current frame missing frame_properties"
+
+        streams_name_set = set(frame_properties["streams"].keys())
+
+        extra = streams_name_set - sensor_name_set
+        if extra:
+            return f"Frame properties contains extra sensor(s) : {extra}"
 
 
 def get_frame_object_attr_type(
@@ -1018,7 +1027,7 @@ def validate_coor_system_obj(
     }
     extra_sensors = data_sensors - project_sensors_name_set
     if len(extra_sensors) != 0:
-        return f"Contains extra sensor : {extra_sensors} from project sensor : {project_sensors_name_set}"
+        return f"Contains extra sensor : {extra_sensors} from visionai streams: {project_sensors_name_set}"
     return ""
 
 
@@ -1029,14 +1038,15 @@ def validate_streams(
     has_lidar_sensor: bool,
     *args,
     **kwargs,
-) -> Optional[str]:
+) -> Tuple[str, Dict[str, str]]:
 
     # verify the streams based on sensors
+    streams_data = visionai.get("streams")
     if not validate_streams_obj(
-        streams_data=visionai.get("streams"),
+        streams_data=streams_data,
         project_sensors=sensor_info,
     ):
-        return "streams error"
+        return "streams error", {}
     project_sensors_name_set = set(sensor_info.keys())
     if has_multi_sensor and has_lidar_sensor:
         error = validate_coor_system_obj(
@@ -1044,7 +1054,14 @@ def validate_streams(
             project_sensors_name_set=project_sensors_name_set,
         )
         if error:
-            return f"coordinate systems error : {error}"
+            return f"coordinate systems error : {error}", {}
+
+    new_sensor_info = {
+        stream_name: stream_obj.get("type", "")
+        for stream_name, stream_obj in streams_data.items()
+    }
+
+    return "", new_sensor_info
 
 
 def validate_data_pointers(

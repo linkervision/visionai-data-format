@@ -829,7 +829,6 @@ class VisionAIModel(BaseModel):
     def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
 
         validator_map = {
-            "streams": validate_streams,
             "contexts": validate_contexts,
             "objects": validate_objects,
         }
@@ -855,6 +854,15 @@ class VisionAIModel(BaseModel):
         )
         ontology_attributes_map = build_ontology_attributes_map(ontology)
 
+        err, visionai_sensor_info = validate_streams(
+            visionai=visionai,
+            sensor_info=sensor_info,
+            has_lidar_sensor=has_lidar_sensor,
+            has_multi_sensor=has_multi_sensor,
+        )
+        if err:
+            errors.append(err)
+
         for ontology_type, ontology_data in ontology.items():
             if not ontology_data or ontology_type not in validator_map:
                 continue
@@ -863,7 +871,7 @@ class VisionAIModel(BaseModel):
                 ontology_data=ontology_data,
                 ontology_attributes_map=ontology_attributes_map,
                 tags=tags,
-                sensor_info=sensor_info,
+                sensor_info=visionai_sensor_info,
                 has_multi_sensor=has_multi_sensor,
                 has_lidar_sensor=has_lidar_sensor,
             )

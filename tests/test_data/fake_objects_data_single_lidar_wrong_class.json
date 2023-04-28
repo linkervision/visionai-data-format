@@ -164,7 +164,7 @@
                         "type": "cuboid"
                     }
                 },
-                "type": "pedestrian"
+                "type": "children"
             }
         },
         "metadata":{

@@ -1,0 +1,29 @@
+{
+    "objects":{
+        "scene":{
+            "attributes":{
+                "weather":{
+                    "type":"vec",
+                    "value":[
+                        "dew",
+                        "fogsmog",
+                        "frost",
+                        "glaze",
+                        "hail",
+                        "lightning",
+                        "rain",
+                        "rainbow",
+                        "rime",
+                        "sandstorm",
+                        "snow"
+                    ]
+                }
+            }
+        }
+    },
+    "streams": {
+        "camera1": {
+            "type": "camera"
+        }
+    }
+}

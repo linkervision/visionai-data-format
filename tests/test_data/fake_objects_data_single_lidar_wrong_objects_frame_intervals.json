@@ -3,11 +3,129 @@
         "frame_intervals": [
             {
                 "frame_start": 0,
-                "frame_end": 0
+                "frame_end": 2
             }
         ],
         "frames": {
             "000000000000": {
+                "objects": {
+                    "893ac389-7782-4bc3-8f61-09a8e48c819f": {
+                        "object_data": {
+                            "bbox": [
+                                {
+                                    "name": "bbox_shape",
+                                    "stream": "camera1",
+                                    "val": [
+                                        761.565,
+                                        225.46,
+                                        98.33000000000004,
+                                        164.92000000000002
+                                    ]
+                                }
+                            ],
+                            "cuboid": [
+                                {
+                                    "name": "cuboid_shape",
+                                    "stream": "lidar1",
+                                    "val": [
+                                        8.727633224700037,
+                                        -1.8557590122690717,
+                                        -0.6544039394148177,
+                                        0.0,
+                                        0.0,
+                                        -1.5807963267948966,
+                                        1.2,
+                                        0.48,
+                                        1.89
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "frame_properties": {
+                    "timestamp": "2020-04-11T12:00:01.000+0100",
+                    "streams": {
+                        "camera1": {
+                            "uri": "https://image1.path.url.png",
+                            "stream_properties": {
+                                "sync": {
+                                    "timestamp": "2020-04-11T12:00:07.010+0100"
+                                }
+                            }
+                        },
+                        "lidar1": {
+                            "uri": "https://lidar0.path.url.pcd",
+                            "stream_properties": {
+                                "sync": {
+                                    "timestamp": "2020-04-11T12:00:10.087-01:00"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            "000000000001": {
+                "objects": {
+                    "893ac389-7782-4bc3-8f61-09a8e48c819f": {
+                        "object_data": {
+                            "bbox": [
+                                {
+                                    "name": "bbox_shape",
+                                    "stream": "camera1",
+                                    "val": [
+                                        761.565,
+                                        225.46,
+                                        98.33000000000004,
+                                        164.92000000000002
+                                    ]
+                                }
+                            ],
+                            "cuboid": [
+                                {
+                                    "name": "cuboid_shape",
+                                    "stream": "lidar1",
+                                    "val": [
+                                        8.727633224700037,
+                                        -1.8557590122690717,
+                                        -0.6544039394148177,
+                                        0.0,
+                                        0.0,
+                                        -1.5807963267948966,
+                                        1.2,
+                                        0.48,
+                                        1.89
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "frame_properties": {
+                    "timestamp": "2020-04-11T12:00:01.000+0100",
+                    "streams": {
+                        "camera1": {
+                            "uri": "https://image1.path.url.png",
+                            "stream_properties": {
+                                "sync": {
+                                    "timestamp": "2020-04-11T12:00:07.010+0100"
+                                }
+                            }
+                        },
+                        "lidar1": {
+                            "uri": "https://lidar0.path.url.pcd",
+                            "stream_properties": {
+                                "sync": {
+                                    "timestamp": "2020-04-11T12:00:10.087-01:00"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+
+            "000000000002": {
                 "objects": {
                     "893ac389-7782-4bc3-8f61-09a8e48c819f": {
                         "object_data": {
@@ -140,7 +258,7 @@
                 "frame_intervals": [
                     {
                         "frame_start": 0,
-                        "frame_end": 0
+                        "frame_end": 2
                     }
                 ],
                 "name": "pedestrian",
