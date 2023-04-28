@@ -127,13 +127,13 @@ def validate_tags_classes(
 
     Returns
     -------
-    tuple[bool, int]
+    tuple[str, int]
         a tuple of validation error message and number of classes under tags
 
     """
 
     if not tags:
-        return 0
+        return ("Can't validate empty tags", -1)
 
     tag_segmentation_data: Dict = {}
     for tag_data in tags.values():
@@ -722,7 +722,7 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
                 cls_list.append(int(cls_idx))
 
             if tags_count <= 0 and cls_list:
-                msg += "Can't declare RLE if the tag classes is missing or empty\n"
+                msg += "Can't declare RLE if the `tags` is missing or empty\n"
 
             # validate whether annotation class indices are lower or higher than allowed
             if max(cls_list) >= tags_count or min(cls_list) < 0:
@@ -856,7 +856,7 @@ def validate_visionai_data(
     return True, ""
 
 
-def validate_visionai_childs(
+def validate_visionai_children(
     visionai: Dict,
     ontology_data: Dict,
     root_key: str,
@@ -950,7 +950,7 @@ def validate_contexts(
         "pointer_type": "context_data_pointers",
     }
 
-    return validate_visionai_childs(
+    return validate_visionai_children(
         visionai=visionai,
         ontology_data=ontology_data,
         ontology_attributes_map=ontology_attributes_map,
@@ -986,7 +986,7 @@ def validate_objects(
         if error_msg:
             return error_msg
 
-    return validate_visionai_childs(
+    return validate_visionai_children(
         visionai=visionai,
         ontology_data=ontology_data,
         ontology_attributes_map=ontology_attributes_map,
@@ -1000,22 +1000,22 @@ def validate_objects(
 
 
 def validate_streams_obj(
-    streams_data: Dict[str, Dict], project_sensors: Dict[str, str]
+    streams_data: Dict[str, Dict], ontology_sensors: Dict[str, str]
 ) -> bool:
     if not streams_data:
         return False
     for stream_name, stream_obj in streams_data.items():
         stream_obj_type = stream_obj.get("type", "")
         if (
-            stream_name not in project_sensors
-            or stream_obj_type != project_sensors[stream_name]
+            stream_name not in ontology_sensors
+            or stream_obj_type != ontology_sensors[stream_name]
         ):
             return False
     return True
 
 
 def validate_coor_system_obj(
-    coord_systems_data: Dict[str, Dict], project_sensors_name_set: Set[str]
+    coord_systems_data: Dict[str, Dict], ontology_sensors_name_set: Set[str]
 ) -> str:
 
     if not coord_systems_data:
@@ -1025,9 +1025,9 @@ def validate_coor_system_obj(
         for sensor_name, sensor_info in coord_systems_data.items()
         if sensor_info["type"] != "local_cs"
     }
-    extra_sensors = data_sensors - project_sensors_name_set
+    extra_sensors = data_sensors - ontology_sensors_name_set
     if len(extra_sensors) != 0:
-        return f"Contains extra sensor : {extra_sensors} from visionai streams: {project_sensors_name_set}"
+        return f"Contains extra sensor : {extra_sensors} from ontology streams: {ontology_sensors_name_set}"
     return ""
 
 
@@ -1040,18 +1040,21 @@ def validate_streams(
     **kwargs,
 ) -> Tuple[str, Dict[str, str]]:
 
+    if not visionai.get("streams"):
+        return ("VisionAI missing streams data", {})
+
     # verify the streams based on sensors
     streams_data = visionai.get("streams")
     if not validate_streams_obj(
         streams_data=streams_data,
-        project_sensors=sensor_info,
+        ontology_sensors=sensor_info,
     ):
         return "streams error", {}
-    project_sensors_name_set = set(sensor_info.keys())
+    ontology_sensors_name_set = set(sensor_info.keys())
     if has_multi_sensor and has_lidar_sensor:
         error = validate_coor_system_obj(
             coord_systems_data=visionai.get("coordinate_systems"),
-            project_sensors_name_set=project_sensors_name_set,
+            ontology_sensors_name_set=ontology_sensors_name_set,
         )
         if error:
             return f"coordinate systems error : {error}", {}

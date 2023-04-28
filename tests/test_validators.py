@@ -144,7 +144,6 @@ def test_validate_wrong_object_frame_intervals(
     ).validate_with_ontology(
         ontology=ontology,
     )
-    print(errors)
 
     assert errors == [
         "validate objects error: objects UUID 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer"

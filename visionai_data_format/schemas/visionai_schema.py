@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Union
 
 try:
     from typing import Literal
@@ -838,16 +838,15 @@ class VisionAIModel(BaseModel):
         tags = ontology.get("tags", {})
 
         visionai = self.visionai.dict(exclude_unset=True, exclude_none=True)
-        if not visionai.get("streams"):
-            raise ValueError("VisionAI missing streams data")
 
         streams_data = ontology["streams"]
-        has_multi_sensor: bool = len(streams_data) > 1
 
-        sensor_info: Set[str, str] = {
+        sensor_info: Dict[str, str] = {
             sensor_name: sensor_obj["type"]
             for sensor_name, sensor_obj in streams_data.items()
         }
+
+        has_multi_sensor: bool = len(streams_data) > 1
 
         has_lidar_sensor: bool = any(
             sensor_type == "lidar" for sensor_type in sensor_info.values()
