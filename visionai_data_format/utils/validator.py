@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import Union
+from typing import Dict, Union
 
 from visionai_data_format.schemas.bdd_schema import BDDSchema
 from visionai_data_format.schemas.visionai_schema import VisionAIModel
@@ -9,7 +9,7 @@ from visionai_data_format.schemas.visionai_schema import VisionAIModel
 logger = logging.getLogger(__name__)
 
 
-def validate_vai(data: dict) -> Union[VisionAIModel, None]:
+def validate_vai(data: Dict) -> Union[VisionAIModel, None]:
     try:
         vai = VisionAIModel(**data)
         logger.info("[validated_vai] Validate success")
@@ -19,7 +19,7 @@ def validate_vai(data: dict) -> Union[VisionAIModel, None]:
         return None
 
 
-def validate_bdd(data: dict) -> Union[BDDSchema, None]:
+def validate_bdd(data: Dict) -> Union[BDDSchema, None]:
     try:
         bdd = BDDSchema(**data)
         logger.info("[validate_bdd] Validation success")
@@ -30,8 +30,8 @@ def validate_bdd(data: dict) -> Union[BDDSchema, None]:
 
 
 def attribute_generator(
-    category: str, attribute: dict, ontology_class_attrs: dict
-) -> dict:
+    category: str, attribute: Dict, ontology_class_attrs: Dict
+) -> Dict:
 
     if not attribute:
         return dict()
@@ -48,7 +48,7 @@ def attribute_generator(
     return new_attribute
 
 
-def save_as_json(data: dict, file_name: str, folder_name: str = "") -> None:
+def save_as_json(data: Dict, file_name: str, folder_name: str = "") -> None:
     try:
         if folder_name:
             os.makedirs(folder_name, exist_ok=True)

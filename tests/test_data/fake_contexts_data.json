@@ -1,0 +1,82 @@
+{
+    "visionai": {
+        "contexts": {
+            "25fd92e8-4730-47ae-a7b8-8ecd64b4886a": {
+                "frame_intervals": [
+                    {
+                        "frame_start": 0,
+                        "frame_end": 0
+                    }
+                ],
+                "name": "scene",
+                "context_data": {
+                    "vec": [
+                        {
+                            "name": "weather",
+                            "type": null,
+                            "val": [
+                                "dew"
+                            ]
+                        }
+                    ]
+                },
+                "context_data_pointers": {
+                    "weather": {
+                        "attributes": null,
+                        "frame_intervals": [
+                            {
+                                "frame_start": 0,
+                                "frame_end": 0
+                            }
+                        ],
+                        "type": "vec"
+                    }
+                },
+                "type": "scene"
+            }
+        },
+        "frame_intervals": [
+            {
+                "frame_start": 0,
+                "frame_end": 0
+            }
+        ],
+        "frames": {
+            "000000000000": {
+                "contexts": {
+                    "25fd92e8-4730-47ae-a7b8-8ecd64b4886a": {
+                        "context_data": {
+                            "vec": [
+                                {
+                                    "name": "weather",
+                                    "val": [
+                                        "dew"
+                                    ],
+                                    "stream": "camera1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "frame_properties": {
+                    "timestamp": null,
+                    "streams": {
+                        "camera1": {
+                            "uri": "https://helenmlopsstorageqatest.blob.core.windows.net/demodataset/context/weather/000000000000/data/camera1/000000000000.jpg"
+                        }
+                    }
+                }
+            }
+        },
+        "streams": {
+            "camera1": {
+                "type": "camera",
+                "uri": "",
+                "description": ""
+            }
+        },
+        "metadata": {
+            "schema_version": "1.0.0"
+        }
+    }
+}
