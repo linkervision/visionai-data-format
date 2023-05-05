@@ -199,6 +199,11 @@ class DynamicBoolean(StaticBoolean):
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
 
 
 class StaticNum(BaseModel):
@@ -227,6 +232,11 @@ class DynamicNum(StaticNum):
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
 
 
 class StaticText(BaseModel):
@@ -252,6 +262,12 @@ class DynamicText(StaticText):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
+    )
+
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
     )
 
 
@@ -283,6 +299,11 @@ class DynamicVec(StaticVec):
     stream: StrictStr = Field(
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
+    )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
     )
 
 
