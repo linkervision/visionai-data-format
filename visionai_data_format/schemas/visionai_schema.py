@@ -840,12 +840,28 @@ class VisionAI(BaseModel):
         assert value, f" Value {value} is not allowed"
         return value
 
+    def dict(self, **kwargs):
+        exclude_none = kwargs.get("exclude_none", True)
+        exclude_unset = kwargs.get("exclude_unset", True)
+        data = super().dict(
+            exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
+        )
+        return data
+
 
 class VisionAIModel(BaseModel):
     class Config:
         extra = Extra.forbid
 
     visionai: VisionAI
+
+    def dict(self, **kwargs):
+        exclude_none = kwargs.get("exclude_none", True)
+        exclude_unset = kwargs.get("exclude_unset", True)
+        data = super().dict(
+            exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
+        )
+        return data
 
     def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
 
