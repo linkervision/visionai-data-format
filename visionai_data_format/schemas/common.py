@@ -49,7 +49,13 @@ class ExcludedNoneBaseModel(BaseModel):
     def dict(self, **kwargs):
         exclude_none = kwargs.pop("exclude_none", True)
         exclude_unset = kwargs.pop("exclude_unset", True)
-        data = super().dict(
+        return super().dict(
             exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
         )
-        return data
+
+    def json(self, **kwargs):
+        exclude_none = kwargs.pop("exclude_none", True)
+        exclude_unset = kwargs.pop("exclude_unset", True)
+        return super().json(
+            exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
+        )
