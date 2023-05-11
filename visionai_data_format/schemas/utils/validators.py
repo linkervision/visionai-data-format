@@ -873,7 +873,6 @@ def validate_visionai_children(
     ontology_classes = set(ontology_data.keys())
     visionai_frames = visionai.get("frames", {})
     visionai_objects = visionai.get(root_key, {})
-
     extra_classes, classes_attributes_map = validate_classes(
         visionai=visionai,
         ontology_classes=ontology_classes,
@@ -882,7 +881,7 @@ def validate_visionai_children(
     )
 
     if extra_classes:
-        return f"Label with classes {extra_classes} doesn't accepted"
+        return f"Attribute {root_key} with classes {extra_classes} doesn't accepted"
 
     valid_attr, valid_attr_data = validate_attributes(
         classes_attributes_map, ontology_attributes_map
