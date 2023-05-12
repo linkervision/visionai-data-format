@@ -12,7 +12,6 @@ except ImportError:
     from typing_extensions import Literal  #
 
 from pydantic import (
-    BaseModel,
     Extra,
     Field,
     StrictBool,
@@ -23,6 +22,7 @@ from pydantic import (
     validator,
 )
 
+from visionai_data_format.schemas.common import ExcludedNoneBaseModel
 from visionai_data_format.schemas.ontology import Ontology
 from visionai_data_format.schemas.utils.validators import (
     build_ontology_attributes_map,
@@ -84,7 +84,7 @@ class StreamType(str, Enum):
     OTHER = "other"
 
 
-class Attributes(BaseModel):
+class Attributes(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -94,7 +94,7 @@ class Attributes(BaseModel):
     vec: List[StaticVec] = Field(default_factory=list)
 
 
-class CoordinateSystemWRTParent(BaseModel):
+class CoordinateSystemWRTParent(ExcludedNoneBaseModel):
     matrix4x4: List[Union[float, int]]
 
     @validator("matrix4x4")
@@ -105,7 +105,7 @@ class CoordinateSystemWRTParent(BaseModel):
         return value
 
 
-class CoordinateSystem(BaseModel):
+class CoordinateSystem(ExcludedNoneBaseModel):
     type: CoordinateSystemType
     parent: StrictStr
     children: List[StrictStr]
@@ -121,7 +121,7 @@ class CoordinateSystem(BaseModel):
         return value
 
 
-class FrameInterval(BaseModel):
+class FrameInterval(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -145,7 +145,7 @@ class FrameInterval(BaseModel):
         return values
 
 
-class IntrinsicsPinhole(BaseModel):
+class IntrinsicsPinhole(ExcludedNoneBaseModel):
     camera_matrix_3x4: List[float]
     distortion_coeffs_1xN: Optional[List[Union[float, int]]] = None
     height_px: int
@@ -164,7 +164,7 @@ class IntrinsicsPinhole(BaseModel):
         return value
 
 
-class Metadata(BaseModel):
+class Metadata(ExcludedNoneBaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.allow
@@ -174,7 +174,7 @@ class Metadata(BaseModel):
     )
 
 
-class StaticBoolean(BaseModel):
+class StaticBoolean(ExcludedNoneBaseModel):
 
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
@@ -199,9 +199,14 @@ class DynamicBoolean(StaticBoolean):
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
 
 
-class StaticNum(BaseModel):
+class StaticNum(ExcludedNoneBaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.forbid
@@ -227,9 +232,14 @@ class DynamicNum(StaticNum):
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
 
 
-class StaticText(BaseModel):
+class StaticText(ExcludedNoneBaseModel):
     class Config:
         use_enum_values = True
         extra = Extra.forbid
@@ -254,8 +264,14 @@ class DynamicText(StaticText):
         description="Name of the stream in respect of which this object data is expressed.",
     )
 
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
 
-class VecBaseNoName(BaseModel):
+
+class VecBaseNoName(ExcludedNoneBaseModel):
     attributes: Optional[Attributes] = None
     type: Optional[TypeRange] = Field(
         None,
@@ -284,9 +300,14 @@ class DynamicVec(StaticVec):
         ...,
         description="Name of the stream in respect of which this object data is expressed.",
     )
+    confidence_score: Optional[float] = Field(
+        None,
+        description="The confidence score of model prediction of this object."
+        + " Ground truth does not have this attribute.",
+    )
 
 
-class BaseStaticElementData(BaseModel):
+class BaseStaticElementData(ExcludedNoneBaseModel):
 
     boolean: Optional[List[StaticBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
@@ -302,7 +323,7 @@ class BaseStaticElementData(BaseModel):
     )
 
 
-class BaseDynamicElementData(BaseModel):
+class BaseDynamicElementData(ExcludedNoneBaseModel):
 
     boolean: Optional[List[DynamicBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
@@ -318,7 +339,7 @@ class BaseDynamicElementData(BaseModel):
     )
 
 
-class ElementDataPointer(BaseModel):
+class ElementDataPointer(ExcludedNoneBaseModel):
 
     attributes: Optional[Dict[StrictStr, AttributeType]] = Field(
         None,
@@ -352,7 +373,7 @@ class ContextDataPointer(ElementDataPointer):
     )
 
 
-class Context(BaseModel):
+class Context(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -443,7 +464,7 @@ class ObjectDataStatic(BaseStaticElementData):
         extra = Extra.forbid
 
 
-class Object(BaseModel):
+class Object(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -518,11 +539,11 @@ class Object(BaseModel):
         return values
 
 
-class StreamProperties(BaseModel):
+class StreamProperties(ExcludedNoneBaseModel):
     intrinsics_pinhole: IntrinsicsPinhole
 
 
-class TagData(BaseModel):
+class TagData(ExcludedNoneBaseModel):
     vec: List[StaticVec] = Field(...)
 
     @validator("vec")
@@ -533,7 +554,7 @@ class TagData(BaseModel):
         return values
 
 
-class Stream(BaseModel):
+class Stream(ExcludedNoneBaseModel):
     type: StreamType
     uri: Optional[StrictStr] = ""
     description: Optional[StrictStr] = ""
@@ -548,13 +569,13 @@ class Stream(BaseModel):
         return value
 
 
-class Tag(BaseModel):
+class Tag(ExcludedNoneBaseModel):
     ontology_uid: StrictStr
     type: StrictStr
     tag_data: TagData
 
 
-class TimeStampElement(BaseModel):
+class TimeStampElement(ExcludedNoneBaseModel):
     timestamp: str
 
     class Config:
@@ -567,11 +588,11 @@ class TimeStampElement(BaseModel):
         return value
 
 
-class StreamPropertyUnderFrameProperty(BaseModel):
+class StreamPropertyUnderFrameProperty(ExcludedNoneBaseModel):
     sync: Optional[TimeStampElement] = None
 
 
-class FramePropertyStream(BaseModel):
+class FramePropertyStream(ExcludedNoneBaseModel):
     uri: str = Field(description="the urls of image")
     stream_properties: Optional[StreamPropertyUnderFrameProperty] = Field(
         None, description="Additional properties of the stream"
@@ -586,7 +607,7 @@ class FramePropertyStream(BaseModel):
         return value
 
 
-class FrameProperties(BaseModel):
+class FrameProperties(ExcludedNoneBaseModel):
     timestamp: Optional[str] = Field(
         None,
         descriptions="A relative or absolute time reference that specifies "
@@ -595,7 +616,7 @@ class FrameProperties(BaseModel):
     streams: Dict[StrictStr, FramePropertyStream]
 
 
-class ObjectDataElement(BaseModel):
+class ObjectDataElement(ExcludedNoneBaseModel):
 
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
@@ -686,7 +707,7 @@ class Binary(ObjectDataElement):
         return value
 
 
-class DynamicObjectData(BaseModel):
+class DynamicObjectData(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -708,15 +729,15 @@ class DynamicObjectData(BaseModel):
     )
 
 
-class ObjectUnderFrame(BaseModel):
+class ObjectUnderFrame(ExcludedNoneBaseModel):
     object_data: DynamicObjectData
 
 
-class ContextUnderFrame(BaseModel):
+class ContextUnderFrame(ExcludedNoneBaseModel):
     context_data: DynamicContextData
 
 
-class Frame(BaseModel):
+class Frame(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -739,7 +760,7 @@ class Frame(BaseModel):
     )
 
 
-class VisionAI(BaseModel):
+class VisionAI(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -820,7 +841,7 @@ class VisionAI(BaseModel):
         return value
 
 
-class VisionAIModel(BaseModel):
+class VisionAIModel(ExcludedNoneBaseModel):
     class Config:
         extra = Extra.forbid
 

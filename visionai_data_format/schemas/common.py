@@ -1,6 +1,8 @@
 from enum import Enum, EnumMeta
 from typing import Any, Optional, Set
 
+from pydantic import BaseModel
+
 
 class BaseEnumMeta(EnumMeta):
     _value_set: Optional[Set[Any]] = None
@@ -41,3 +43,19 @@ class AnnotationFormat(str, Enum, metaclass=BaseEnumMeta):
 class DatasetType(str, Enum, metaclass=BaseEnumMeta):
     ANNOTATED_DATA = "annotated_data"
     RAW_DATA = "raw_data"
+
+
+class ExcludedNoneBaseModel(BaseModel):
+    def dict(self, **kwargs):
+        exclude_none = kwargs.pop("exclude_none", True)
+        exclude_unset = kwargs.pop("exclude_unset", True)
+        return super().dict(
+            exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
+        )
+
+    def json(self, **kwargs):
+        exclude_none = kwargs.pop("exclude_none", True)
+        exclude_unset = kwargs.pop("exclude_unset", True)
+        return super().json(
+            exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
+        )
