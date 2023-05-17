@@ -70,7 +70,7 @@ class SegmentSchema(BaseModel):
         min_items=4,
     )
 
-    counts: list[int]
+    counts: List[int]
 
     resolution: conlist(
         int,
