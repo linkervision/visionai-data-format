@@ -5,7 +5,6 @@ from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
 
 def test_validate_bbox(fake_visionai_ontology, fake_objects_data_single_lidar):
-
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
     errors = VisionAIModel(**fake_objects_data_single_lidar).validate_with_ontology(
@@ -18,7 +17,6 @@ def test_validate_bbox(fake_visionai_ontology, fake_objects_data_single_lidar):
 def test_validate_bbox_wrong_frame_properties_sensor_name(
     fake_visionai_ontology, fake_objects_data_wrong_frame_properties_sensor
 ):
-
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
     errors = VisionAIModel(
@@ -33,7 +31,6 @@ def test_validate_bbox_wrong_frame_properties_sensor_name(
 def test_validate_bbox_wrong_streams_under_visionai(
     fake_visionai_ontology, fake_objects_data_wrong_frame_properties_sensor
 ):
-
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
     errors = VisionAIModel(
@@ -48,7 +45,6 @@ def test_validate_bbox_wrong_streams_under_visionai(
 def test_validate_bbox_wrong_class_under_visionai(
     fake_visionai_ontology, fake_objects_data_single_lidar_wrong_class
 ):
-
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
     errors = VisionAIModel(
@@ -63,7 +59,6 @@ def test_validate_bbox_wrong_class_under_visionai(
 def test_validate_semantic_segmentation(
     fake_visionai_semantic_ontology, fake_objects_semantic_segmentation
 ):
-
     ontology = Ontology(**fake_visionai_semantic_ontology).dict(exclude_unset=True)
 
     errors = VisionAIModel(**fake_objects_semantic_segmentation).validate_with_ontology(
@@ -76,7 +71,6 @@ def test_validate_semantic_segmentation(
 def test_validate_semantic_segmentation_visionai_without_tags(
     fake_visionai_semantic_ontology, fake_objects_semantic_segmentation_without_tags
 ):
-
     ontology = Ontology(**fake_visionai_semantic_ontology).dict(exclude_unset=True)
     with pytest.raises(Exception):
         errors = VisionAIModel(
@@ -91,7 +85,6 @@ def test_validate_semantic_segmentation_visionai_wrong_tags_classes(
     fake_visionai_semantic_ontology,
     fake_objects_semantic_segmentation_wrong_tags_classes,
 ):
-
     ontology = Ontology(**fake_visionai_semantic_ontology).dict(exclude_unset=True)
     errors = VisionAIModel(
         **fake_objects_semantic_segmentation_wrong_tags_classes
@@ -104,7 +97,6 @@ def test_validate_semantic_segmentation_visionai_wrong_tags_classes(
 def test_validate_classification(
     fake_visionai_classification_ontology, fake_contexts_data
 ):
-
     ontology = Ontology(**fake_visionai_classification_ontology).dict(
         exclude_unset=True
     )

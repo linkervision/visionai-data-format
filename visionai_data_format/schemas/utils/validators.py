@@ -74,7 +74,6 @@ def validate_classes(
     sub_root_key: str,
     ontology_classes: Set[str],
 ) -> Tuple[Set[str], Dict[str, Dict[str, Set]]]:
-
     if not visionai:
         return set()
 
@@ -164,7 +163,6 @@ def validate_tags_classes(
 
 
 def validate_tags(visionai: Dict, tags: Dict, *args, **kwargs) -> Tuple[str, int]:
-
     ontology_classes: Set[str] = set(tags.keys())
 
     return validate_tags_classes(
@@ -177,7 +175,6 @@ def validate_attributes(
     attributes: Dict,
     excluded_attributes: Optional[Set] = None,
 ) -> Tuple[bool, Optional[Tuple]]:
-
     for label_class, label_attrs_data in classes_attributes_map.items():
         # already valid the class in previous step
         ontology_attr_name_type_dict: Dict[str, Set] = attributes.get(label_class, {})
@@ -225,7 +222,6 @@ def validate_frame_object_sensors_data(
     has_multi_sensor: bool,
     sensor_name_set: Set[str],
 ) -> Optional[str]:
-
     for frame_obj in frames.values():
         cur_obj_data_type = set()
         cur_obj_stream_sensor = set()
@@ -331,7 +327,6 @@ def parse_visionai_frames_objects(
 def parse_data_pointers(
     data_under_vai: Dict, pointer_type: str
 ) -> Tuple[Dict[Tuple[str, str], Dict], Dict[str, Dict]]:
-
     """mapping data pointers under visionai with
     object uuid and its name as key
 
@@ -355,7 +350,6 @@ def parse_data_pointers(
     data_pointers: Dict[Tuple[str, str], Dict] = defaultdict(dict)
     data_obj_under_vai_intervals: Dict[str, List] = defaultdict(list)
     for uuid, data in data_under_vai.items():
-
         for attr_name, attr_ptr_data in data[pointer_type].items():
             data_pointers[(uuid, attr_name)] = {
                 "type": attr_ptr_data["type"],
@@ -550,7 +544,6 @@ def vai_data_data_pointers_intervals(
     data_pointers: Dict[Tuple[str, str], Dict],
     data_obj_under_vai_intervals: Dict[str, List],
 ) -> Tuple[bool, Union[Dict[Tuple[str, str], List[Tuple[int, int]]], str]]:
-
     """validate intervals between data pointer and its object frame intervals
 
     Parameters
@@ -705,7 +698,6 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
     msg: str = ""
     for frame_data in dynamic_attrs.values():
         for frame_num, attr_info in frame_data.items():
-
             if attr_info["type"] != "binary":
                 continue
             mask_rle: str = attr_info["val"]
@@ -751,7 +743,6 @@ def validate_visionai_data(
     pointer_type: str = "context_data_pointers",
     tags_count: int = -1,
 ) -> Tuple[bool, str]:
-
     parsed_data_pointers: Tuple[
         Dict[Tuple[str, str], Dict], Dict[str, List]
     ] = parse_data_pointers(
@@ -793,7 +784,6 @@ def validate_visionai_data(
     # validate if combinations of static and dynamic equals to data pointers
     combination_attrs = static_attrs_keys | dynamic_attrs_keys
     if combination_attrs ^ data_pointers_keys:
-
         extra_attributes_name: Set[str] = combination_attrs - data_pointers_keys
         missing_attributes_name: Set[str] = data_pointers_keys - combination_attrs
         msg = ""
@@ -869,7 +859,6 @@ def validate_visionai_children(
     *args,
     **kwargs,
 ) -> Optional[str]:
-
     if not ontology_attributes_map:
         ontology_attributes_map = {}
     ontology_classes = set(ontology_data.keys())
@@ -1017,7 +1006,6 @@ def validate_streams_obj(
 def validate_coor_system_obj(
     coord_systems_data: Dict[str, Dict], ontology_sensors_name_set: Set[str]
 ) -> str:
-
     if not coord_systems_data:
         return False
     data_sensors = {
@@ -1039,7 +1027,6 @@ def validate_streams(
     *args,
     **kwargs,
 ) -> Tuple[str, Dict[str, str]]:
-
     if not visionai.get("streams"):
         return ("VisionAI missing streams data", {})
 
@@ -1098,7 +1085,6 @@ def validate_data_pointers(
     }
 
     for data_uuid, data_info in data_under_vai.items():
-
         data_pointer = data_info.get(pointer_type)
         if not data_pointer:
             return False, f"UUID {data_uuid} doesn't contains data key {pointer_type}"

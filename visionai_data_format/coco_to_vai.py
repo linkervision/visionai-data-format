@@ -160,7 +160,6 @@ def _coco_to_vision_ai(
     }
     # to vision_ai:
     for image_name, frame_obj in frames.items():
-
         objects_per_image = {
             object_id: objects[object_id] for object_id in frame_obj.objects
         }

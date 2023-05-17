@@ -175,7 +175,6 @@ class Metadata(BaseModel):
 
 
 class StaticBoolean(BaseModel):
-
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
         ...,
@@ -287,7 +286,6 @@ class DynamicVec(StaticVec):
 
 
 class BaseStaticElementData(BaseModel):
-
     boolean: Optional[List[StaticBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
@@ -303,7 +301,6 @@ class BaseStaticElementData(BaseModel):
 
 
 class BaseDynamicElementData(BaseModel):
-
     boolean: Optional[List[DynamicBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
@@ -319,7 +316,6 @@ class BaseDynamicElementData(BaseModel):
 
 
 class ElementDataPointer(BaseModel):
-
     attributes: Optional[Dict[StrictStr, AttributeType]] = Field(
         None,
         description="This is a JSON object which contains pointers to the attributes of"
@@ -596,7 +592,6 @@ class FrameProperties(BaseModel):
 
 
 class ObjectDataElement(BaseModel):
-
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
         description="This is a string encoding the name of this object data."
@@ -815,7 +810,6 @@ class VisionAI(BaseModel):
 
     @validator("tags")
     def validate_tags(cls, value):
-
         assert value, f" Value {value} is not allowed"
         return value
 
@@ -827,7 +821,6 @@ class VisionAIModel(BaseModel):
     visionai: VisionAI
 
     def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
-
         validator_map = {
             "contexts": validate_contexts,
             "objects": validate_objects,
