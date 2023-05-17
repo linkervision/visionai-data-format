@@ -19,8 +19,14 @@ class MetaDsSchema(BaseModel):
     coco_url: Optional[str]
 
 
+class ResolutionSchema(BaseModel):
+    width: int
+    height: int
+
+
 class MetaSeSchema(BaseModel):
     status: List[str] = ["INFERENCE_MODEL", "INFERENCE_MODEL"]
+    resolution: Optional[ResolutionSchema] = None
 
 
 class AtrributeSchema(BaseModel):
@@ -66,7 +72,7 @@ class SegmentSchema(BaseModel):
 
     counts: list[int]
 
-    resolutions: conlist(
+    resolution: conlist(
         int,
         max_items=2,
         min_items=2,
