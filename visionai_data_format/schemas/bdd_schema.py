@@ -2,7 +2,7 @@
 from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, conlist
 
 BDD_VERSION = "1.1.4"
 
@@ -57,6 +57,22 @@ class FrameLabelSchema(BaseModel):
     attributes: Optional[AtrributeSchema] = AtrributeSchema().dict()
 
 
+class SegmentSchema(BaseModel):
+    bbox: conlist(
+        Union[float, int],
+        max_items=4,
+        min_items=4,
+    )
+
+    counts: list[int]
+
+    resolutions: conlist(
+        int,
+        max_items=2,
+        min_items=2,
+    )
+
+
 class CategorySchema(BaseModel):
     category: str
     attributes: Optional[AtrributeSchema] = AtrributeSchema().dict()
@@ -67,6 +83,7 @@ class CategorySchema(BaseModel):
     meta_se: MetaSeSchema = {}
     uuid: str = Field(default_factory=gen_uuid)
     objectId: Optional[ObjectIdSchema]
+    segment: Optional[SegmentSchema] = None
 
     def dict(self, *args, **kwargs) -> Dict:
         kwargs.pop("exclude_none")

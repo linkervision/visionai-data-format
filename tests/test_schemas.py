@@ -63,7 +63,6 @@ def test_visionai(
     fake_objects_visionai_data,
     fake_generated_objects_visionai_data,
 ):
-
     assert (
         VisionAIModel(**fake_raw_visionai_data).dict(exclude_unset=True)
         == fake_generated_raw_visionai_data

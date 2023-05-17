@@ -32,7 +32,6 @@ def validate_bdd(data: Dict) -> Union[BDDSchema, None]:
 def attribute_generator(
     category: str, attribute: Dict, ontology_class_attrs: Dict
 ) -> Dict:
-
     if not attribute:
         return dict()
 
