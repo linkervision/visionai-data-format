@@ -53,7 +53,7 @@ def test_validate_bbox_wrong_class_under_visionai(
         ontology=ontology,
     )
 
-    assert errors == ["Label with classes {'children'} doesn't accepted"]
+    assert errors == ["Attribute objects with classes {'children'} doesn't accepted"]
 
 
 def test_validate_semantic_segmentation(

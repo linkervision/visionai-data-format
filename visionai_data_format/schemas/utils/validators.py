@@ -13,8 +13,6 @@ def mapping_attributes_type_value(attributes: Dict) -> Dict[str, Set]:
         if not data_list:
             continue
 
-        attr_type = "option" if attr_type == "vec" else attr_type
-
         for data in data_list:
             name = data.get("name").upper()
             key = f"{name}:{attr_type}"
@@ -864,7 +862,6 @@ def validate_visionai_children(
     ontology_classes = set(ontology_data.keys())
     visionai_frames = visionai.get("frames", {})
     visionai_objects = visionai.get(root_key, {})
-
     extra_classes, classes_attributes_map = validate_classes(
         visionai=visionai,
         ontology_classes=ontology_classes,
@@ -873,7 +870,7 @@ def validate_visionai_children(
     )
 
     if extra_classes:
-        return f"Label with classes {extra_classes} doesn't accepted"
+        return f"Attribute {root_key} with classes {extra_classes} doesn't accepted"
 
     valid_attr, valid_attr_data = validate_attributes(
         classes_attributes_map, ontology_attributes_map
