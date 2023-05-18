@@ -15,7 +15,6 @@ def xywh2xyxy(geometry: list) -> Tuple:
 
 
 def xyxy2xywh(geometry: Dict) -> Tuple:
-
     x1 = geometry["x1"]
     y1 = geometry["y1"]
     x2 = geometry["x2"]

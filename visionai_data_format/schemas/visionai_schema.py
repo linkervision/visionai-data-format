@@ -175,7 +175,6 @@ class Metadata(ExcludedNoneBaseModel):
 
 
 class StaticBoolean(ExcludedNoneBaseModel):
-
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
         ...,
@@ -308,7 +307,6 @@ class DynamicVec(StaticVec):
 
 
 class BaseStaticElementData(ExcludedNoneBaseModel):
-
     boolean: Optional[List[StaticBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
@@ -324,7 +322,6 @@ class BaseStaticElementData(ExcludedNoneBaseModel):
 
 
 class BaseDynamicElementData(ExcludedNoneBaseModel):
-
     boolean: Optional[List[DynamicBoolean]] = Field(
         None, description='List of "boolean" that describe this object.'
     )
@@ -340,7 +337,6 @@ class BaseDynamicElementData(ExcludedNoneBaseModel):
 
 
 class ElementDataPointer(ExcludedNoneBaseModel):
-
     attributes: Optional[Dict[StrictStr, AttributeType]] = Field(
         None,
         description="This is a JSON object which contains pointers to the attributes of"
@@ -617,7 +613,6 @@ class FrameProperties(ExcludedNoneBaseModel):
 
 
 class ObjectDataElement(ExcludedNoneBaseModel):
-
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
         description="This is a string encoding the name of this object data."
@@ -836,7 +831,6 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("tags")
     def validate_tags(cls, value):
-
         assert value, f" Value {value} is not allowed"
         return value
 
@@ -848,7 +842,6 @@ class VisionAIModel(ExcludedNoneBaseModel):
     visionai: VisionAI
 
     def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
-
         validator_map = {
             "contexts": validate_contexts,
             "objects": validate_objects,
