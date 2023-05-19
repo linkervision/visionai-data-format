@@ -69,7 +69,8 @@ def convert_vai_to_bdd_single(
         cur_data["name"] = frame_key + ".jpg"
         labels = []
         idx = 0
-        for obj_id, obj_data in frame_data.objects.items():
+        objects = getattr(frame_data, "objects", None) or {}
+        for obj_id, obj_data in objects.items():
             classes = vai_data.objects.get(obj_id).type
             bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
             for bbox in bboxes:
