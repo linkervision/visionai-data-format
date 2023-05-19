@@ -120,6 +120,7 @@ def _coco_to_vision_ai(
                 )
             )
         }
+
         frames[image_name].objects.update(objects_under_frames)
 
         # to vision_ai: objects
@@ -160,8 +161,9 @@ def _coco_to_vision_ai(
     }
     # to vision_ai:
     for image_name, frame_obj in frames.items():
+        current_frame_objects = getattr(frame_obj, "objects", None) or {}
         objects_per_image = {
-            object_id: objects[object_id] for object_id in frame_obj.objects
+            object_id: objects[object_id] for object_id in current_frame_objects
         }
 
         new_image_name = f"{int(image_name):012d}"
