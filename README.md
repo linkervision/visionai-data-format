@@ -11,6 +11,8 @@ This tool provides validator of `VisionAI` format schema. Currently, the library
 
 ## Getting started
 
+(WIP)
+
 ### Install the package
 
 ```
@@ -18,7 +20,6 @@ pip install visionai-data-format
 ```
 
 **Prerequisites**: You must have [Python 3.7](https://www.python.org/downloads/) and above to use this package.
-
 
 ## Example
 The following sections provide examples for the following:
@@ -28,12 +29,12 @@ The following sections provide examples for the following:
 
 ### Validate VisionAI schema
 
-To validated `VisionAI` format schema, following is the example :
+To validate `VisionAI` data structure, could follow the example below:
 
 ```Python
 from visionai_data_format.schemas.visionai_schema import VisionAIModel
-from dataverse_sdk.connections import get_connection
 
+# your custom visionai data
 custom_visionai_data = {
     "visionai": {
         "frame_intervals": [
@@ -182,17 +183,32 @@ custom_visionai_data = {
         }
     }
 }
+
+# validate custom data
+# If the data structure doesn't meets the VisionAI requirements, it would raise BaseModel error message
+# otherwise, it will returns dictionary of validated visionai data
 validated_visionai = VisionAIModel(**custom_visionai_data).dict()
+
 ```
+
+First, we declare our custom `VisionAI` data, then call `VisionAI(**custom_visionai_data).dict()` to validate our custom data visionai schema. It will raise error if any of required fields is missing or the value type doesn't meet with defined data type ( `BaseModel` error message). Otherwise, it will return dictionary of validated `VisionAI` data
 
 ### Validate VisionAI data with given Ontology
 
-Before upload dataset into `DataVerse` platform, we could try to validate a `VisionAI` annotation with `Ontology` schema. `Ontology` schema works as a predefined `Project Ontology` data in `DataVerse`.
+Before upload dataset into `Dataverse` platform, we could try to validate a `VisionAI` annotation with `Ontology` schema. `Ontology` schema works as a predefined `Project Ontology` data in `Dataverse`.
 
-`Ontology` contains `contexts`, `objects`, `streams`, and `tags` five main elements similar to `VisioniAI` schema. The difference is that `Ontology` is the union of all categories and attributes that will be compared with a `VisionAI` data.
+`Ontology` contains `contexts`, `objects`, `streams`, and `tags` four main elements similar to `VisioniAI` schema. The difference is that `Ontology` is the union of all categories and attributes that will be compared with a `VisionAI` data.
 
-Following is the example of `Ontology` Schema and how to validate `VisionAI` data:
+1. `contexts`
+    need to be filled if only the project ontology is `classification` type.
+2. `objects`
+    need to be filled for other project ontologies instead of `classification`, such as `bounding_box` or `semantic_segmentation`, etc.
+3. `streams`
+    required to be filled, since it is the project sensor related information.
+4. `tags`
+    need to be filled in case of `semantic_segmentation` project ontology.
 
+Following is the example of `Ontology` Schema and how to validate `VisionAI` data with it:
 
 ```Python
 
@@ -420,16 +436,22 @@ custom_ontology = {
     "tags": None
 }
 
-# Validate our ontology
+# Validate your custom ontology
 validated_ontology = Ontology(**custom_ontology).dict()
 
 # Validate VisionAI data with our ontology, custom_visionai_data is the custom data from upper example
 errors = VisionAIModel(**custom_visionai_data).validate_with_ontology(ontology=validated_ontology)
 
-# shows errors
+# Shows the errors
+# If there is any error occurred, it will returns list of error messages
+# Otherwise, it will return empty list
+# example of errors :
+# >["validate objects error: Missing attributes from data pointers : {('893ac389-7782-4bc3-8f61-09a8e48c819f', 'bbox_shape'), ('893ac389-7782-4bc3-8f61-09a8e48c819f', 'cuboid_shape')} \n"]
 print(errors)
 
 ```
+
+First, create a new `Ontology` that contains the project ontology. Then, call `validate_with_ontology(ontology=validated_ontology)` to validate whether current `VisionAI` data meets the `Ontology` data information. It will returns list of error messages if any error occured, otherwise it returns empty list.
 
 ## Troubleshooting
 
@@ -443,4 +465,4 @@ print(errors)
 
 ## Links to language repos
 
-[Python Readme](https://github.com/linkernetworks/visionai-data-format/tree/develop/python/README.md)
+[Python Readme](https://github.com/linkernetworks/visionai-data-format/tree/develop/README.md)
