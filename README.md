@@ -455,14 +455,18 @@ First, create a new `Ontology` that contains the project ontology. Then, call `v
 
 ## Troubleshooting
 
+(WIP)
 
 ## Next steps
 
+(WIP)
 
 ## Contributing
 
-
+(WIP)
 
 ## Links to language repos
+
+(WIP)
 
 [Python Readme](https://github.com/linkernetworks/visionai-data-format/tree/develop/README.md)
