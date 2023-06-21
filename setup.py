@@ -13,6 +13,8 @@ EXTRAS = {
         "pre-commit",
     ],
 }
+with open("README.md", encoding="utf-8") as fh:
+    long_description = fh.read()
 setup(
     name=PACKAGE_NAME,
     version=PACKAGE_VERSION,
@@ -23,4 +25,6 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     python_requires=REQUIRES_PYTHON,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
 )
