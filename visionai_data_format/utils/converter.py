@@ -3,7 +3,7 @@ import logging
 import os
 from collections import defaultdict
 
-from visionai_data_format.schemas.bdd_schema import AtrributeSchema
+from visionai_data_format.schemas.bdd_schema import AtrributeSchema, FrameSchema
 from visionai_data_format.schemas.visionai_schema import (
     Bbox,
     DynamicObjectData,
@@ -30,9 +30,9 @@ VERSION = "00"
 def convert_vai_to_bdd(
     folder_name: str,
     company_code: int,
-    sequence_name: str,
     storage_name: str,
     container_name: str,
+    annotation_name: str = "groundtruth"
 ) -> dict:
     if not os.path.exists(folder_name) or len(os.listdir(folder_name)) == 0:
         logger.info("[convert_vai_to_bdd] Folder empty or doesn't exits")
@@ -40,10 +40,12 @@ def convert_vai_to_bdd(
         logger.info("[convert_vai_to_bdd] Convert started")
 
     frame_list = list()
-    for file_name in sorted(os.listdir(folder_name)):
-        raw_data = open(os.path.join(folder_name, file_name)).read()
-        json_format = json.loads(raw_data)
-        vai_data = validate_vai(json_format).visionai
+    for sequence_name in sorted(os.listdir(folder_name)):
+        if not os.path.isdir(os.path.join(folder_name, sequence_name)):
+            continue
+        annotation_file =  os.path.join(folder_name, sequence_name,"annotations", annotation_name, "visionai.json")
+        vai_json = json.loads(open(annotation_file).read())
+        vai_data = validate_vai(vai_json).visionai
         cur_frame_list = convert_vai_to_bdd_single(
             vai_data, sequence_name, storage_name, container_name
         )
@@ -57,17 +59,17 @@ def convert_vai_to_bdd(
 
 
 def convert_vai_to_bdd_single(
-    vai_data: VisionAI, sequence_name: str, storage_name: str, container_name: str
+    vai_data: VisionAI, sequence_name: str, storage_name: str, container_name: str, img_extension:str=".jpg", include_sensors:list = ["camera"]
 ) -> list:
-    cur_data = {}
-    cur_data["sequence"] = sequence_name
-    cur_data["storage"] = storage_name
-    cur_data["dataset"] = container_name
-
     frame_list = list()
+    # only support sensor type is camera/bbox annotation for now
+    # TODO converter for lidar annotation
+    sensor_names = [sensor_name for sensor_name, sensor_content in vai_data.streams.items() if sensor_content.type in include_sensors]
     for frame_key, frame_data in vai_data.frames.items():
-        cur_data["name"] = frame_key + ".jpg"
-        labels = []
+        sensor_frame = {}
+        for sensor in sensor_names:
+            frame_temp = FrameSchema(storage=storage_name, dataset=container_name, sequence= '/'.join([sequence_name,"data", sensor]),name=frame_key + img_extension, labels=[])
+            sensor_frame[sensor] = frame_temp.dict()
         idx = 0
         objects = getattr(frame_data, "objects", None) or {}
         for obj_id, obj_data in objects.items():
@@ -75,7 +77,7 @@ def convert_vai_to_bdd_single(
             bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
             for bbox in bboxes:
                 geometry = bbox.val
-
+                sensor = bbox.stream
                 label = dict()
                 label["category"] = classes
                 label["meta_ds"] = {}
@@ -94,11 +96,10 @@ def convert_vai_to_bdd_single(
                 }
                 label["objectId"] = object_id
                 label["attributes"] = AtrributeSchema(INSTANCE_ID=idx).dict()
-                labels.append(label)
+                sensor_frame[sensor]["labels"].append(label)
                 idx += 1
-
-        cur_data["labels"] = labels
-        frame_list.append(cur_data)
+        for _, frame in sensor_frame.items():
+            frame_list.append(frame)
     return frame_list
 
 
