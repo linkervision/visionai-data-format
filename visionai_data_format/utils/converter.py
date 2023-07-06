@@ -32,7 +32,7 @@ def convert_vai_to_bdd(
     company_code: int,
     storage_name: str,
     container_name: str,
-    annotation_name: str = "groundtruth"
+    annotation_name: str = "groundtruth",
 ) -> dict:
     if not os.path.exists(folder_name) or len(os.listdir(folder_name)) == 0:
         logger.info("[convert_vai_to_bdd] Folder empty or doesn't exits")
@@ -43,7 +43,9 @@ def convert_vai_to_bdd(
     for sequence_name in sorted(os.listdir(folder_name)):
         if not os.path.isdir(os.path.join(folder_name, sequence_name)):
             continue
-        annotation_file =  os.path.join(folder_name, sequence_name,"annotations", annotation_name, "visionai.json")
+        annotation_file = os.path.join(
+            folder_name, sequence_name, "annotations", annotation_name, "visionai.json"
+        )
         vai_json = json.loads(open(annotation_file).read())
         vai_data = validate_vai(vai_json).visionai
         cur_frame_list = convert_vai_to_bdd_single(
@@ -59,16 +61,32 @@ def convert_vai_to_bdd(
 
 
 def convert_vai_to_bdd_single(
-    vai_data: VisionAI, sequence_name: str, storage_name: str, container_name: str, img_extension:str=".jpg", include_sensors:list = ["camera"]
+    vai_data: VisionAI,
+    sequence_name: str,
+    storage_name: str,
+    container_name: str,
+    img_extension: str = ".jpg",
+    target_sensor: str = "camera",
 ) -> list:
     frame_list = list()
     # only support sensor type is camera/bbox annotation for now
     # TODO converter for lidar annotation
-    sensor_names = [sensor_name for sensor_name, sensor_content in vai_data.streams.items() if sensor_content.type in include_sensors]
+    sensor_names = [
+        sensor_name
+        for sensor_name, sensor_content in vai_data.streams.items()
+        if sensor_content.type == target_sensor
+    ]
     for frame_key, frame_data in vai_data.frames.items():
+        # create emtpy frame for each target sensor
         sensor_frame = {}
         for sensor in sensor_names:
-            frame_temp = FrameSchema(storage=storage_name, dataset=container_name, sequence= '/'.join([sequence_name,"data", sensor]),name=frame_key + img_extension, labels=[])
+            frame_temp = FrameSchema(
+                storage=storage_name,
+                dataset=container_name,
+                sequence="/".join([sequence_name, "data", sensor]),
+                name=frame_key + img_extension,
+                labels=[],
+            )
             sensor_frame[sensor] = frame_temp.dict()
         idx = 0
         objects = getattr(frame_data, "objects", None) or {}
@@ -77,7 +95,7 @@ def convert_vai_to_bdd_single(
             bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
             for bbox in bboxes:
                 geometry = bbox.val
-                sensor = bbox.stream
+                sensor = bbox.stream  # which sensor is the bbox from
                 label = dict()
                 label["category"] = classes
                 label["meta_ds"] = {}
@@ -98,6 +116,7 @@ def convert_vai_to_bdd_single(
                 label["attributes"] = AtrributeSchema(INSTANCE_ID=idx).dict()
                 sensor_frame[sensor]["labels"].append(label)
                 idx += 1
+        # frame for different sensors is consider a unique frame in bdd
         for _, frame in sensor_frame.items():
             frame_list.append(frame)
     return frame_list
