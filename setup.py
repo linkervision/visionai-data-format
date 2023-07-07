@@ -2,9 +2,9 @@ from setuptools import find_packages, setup
 
 AUTHOR = "LinkerVision"
 PACKAGE_NAME = "visionai-data-format"
-PACKAGE_VERSION = "1.0.3"
+PACKAGE_VERSION = "1.0.4"
 DESC = "converter tool for visionai format"
-REQUIRED = ["pydantic"]
+REQUIRED = ["pydantic==1.*"]
 REQUIRES_PYTHON = ">=3.7, <4"
 EXTRAS = {
     "test": [

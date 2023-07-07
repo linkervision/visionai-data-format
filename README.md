@@ -453,6 +453,15 @@ print(errors)
 
 First, create a new `Ontology` that contains the project ontology. Then, call `validate_with_ontology(ontology=validated_ontology)` to validate whether current `VisionAI` data meets the `Ontology` data information. It will returns list of error messages if any error occured, otherwise it returns empty list.
 
+
+## Tools
+### Convert `VisionAI` format data to `BDD` format
+The script below could help convert `VisionAI` annotation data to `BDD` json file
+```
+python visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
+```
+
+
 ## Troubleshooting
 
 (WIP)

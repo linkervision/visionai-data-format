@@ -11,17 +11,17 @@ def vai_to_bdd(
     vai_src_folder: str,
     bdd_dest_file: str,
     company_code: int,
-    sequence_name: str,
     storage_name: str,
     container_name: str,
+    annotation_name:str
 ) -> None:
     try:
         bdd_data = convert_vai_to_bdd(
             folder_name=vai_src_folder,
             company_code=company_code,
-            sequence_name=sequence_name,
             storage_name=storage_name,
             container_name=container_name,
+            annotation_name=annotation_name
         )
         bdd = validate_bdd(data=bdd_data)
         save_as_json(bdd.dict(), file_name=bdd_dest_file)
@@ -50,12 +50,6 @@ if __name__ == "__main__":
         help="Company code information for BDD+",
     )
     parser.add_argument(
-        "-sequence_name",
-        type=str,
-        required=True,
-        help="Company code information for BDD+",
-    )
-    parser.add_argument(
         "-storage_name",
         type=str,
         required=True,
@@ -66,6 +60,13 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Container name information for BDD+",
+    )
+    parser.add_argument(
+        "-annotation_name",
+        type=str,
+        required=True,
+        default="groundtruth",
+        help="annotation folder name in VAI",
     )
 
     FORMAT = "%(asctime)s[%(process)d][%(levelname)s] %(name)-16s : %(message)s"
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         args.vai_src_folder,
         args.bdd_dest_file,
         args.company_code,
-        args.sequence_name,
         args.storage_name,
         args.container_name,
+        args.annotation_name,
     )
