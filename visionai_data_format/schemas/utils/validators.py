@@ -392,10 +392,6 @@ def parse_dynamic_attrs(
         for uuid, data in frame_obj[root_key].items():
             for attr_type, attr_list in data[sub_root_key].items():
                 for attr in attr_list:
-                    # skip uuid that we doesn't want to validate
-                    # TODO: find better implementation
-                    if (uuid, attr["name"]) not in data_pointers:
-                        continue
                     dynamic_attrs[(uuid, attr["name"])][cur_frame_no] = {
                         "type": attr_type,
                         "val": attr["val"],
@@ -733,6 +729,34 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
     return True, ""
 
 
+def generate_missing_attributes_error_message(
+    extra_attributes_name: Set[str],
+    missing_attributes_name: Set[str],
+    dynamic_attrs: dict,
+) -> str:
+    msg = ""
+    if extra_attributes_name:
+        msg += "Extra attributes from data pointers : \n"
+        for attr_name in extra_attributes_name:
+            if attr_name in dynamic_attrs:
+                msg += (
+                    f"{attr_name} with frames {list(dynamic_attrs[attr_name].keys())}\n"
+                )
+            else:
+                msg += f"{attr_name} \n"
+
+    if missing_attributes_name:
+        msg += "Missing attributes from data pointers : \n"
+        for attr_name in missing_attributes_name:
+            if attr_name in dynamic_attrs:
+                msg += (
+                    f"{attr_name} with frames {list(dynamic_attrs[attr_name].keys())}\n"
+                )
+            else:
+                msg += f"{attr_name} \n"
+    return msg
+
+
 def validate_visionai_data(
     data_under_vai: Dict,
     frames: Dict[str, Dict],
@@ -784,14 +808,12 @@ def validate_visionai_data(
     if combination_attrs ^ data_pointers_keys:
         extra_attributes_name: Set[str] = combination_attrs - data_pointers_keys
         missing_attributes_name: Set[str] = data_pointers_keys - combination_attrs
-        msg = ""
-        if extra_attributes_name:
-            msg += f"Extra attributes from data pointers : {extra_attributes_name} \n"
+        msg: str = generate_missing_attributes_error_message(
+            extra_attributes_name=extra_attributes_name,
+            missing_attributes_name=missing_attributes_name,
+            dynamic_attrs=dynamic_attrs,
+        )
 
-        if missing_attributes_name:
-            msg += (
-                f"Missing attributes from data pointers : {missing_attributes_name} \n"
-            )
         return False, msg
 
     # retrieve frame numbers
