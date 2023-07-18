@@ -79,12 +79,14 @@ def convert_vai_to_bdd_single(
     for frame_key, frame_data in vai_data.frames.items():
         # create emtpy frame for each target sensor
         sensor_frame = {}
+        img_name = frame_key + img_extension
         for sensor in sensor_names:
             frame_temp = FrameSchema(
                 storage=storage_name,
                 dataset=container_name,
                 sequence="/".join([sequence_name, "data", sensor]),
-                name=frame_key + img_extension,
+                name=img_name,
+                lidarPlaneURLs=[img_name],
                 labels=[],
             )
             sensor_frame[sensor] = frame_temp.dict()
