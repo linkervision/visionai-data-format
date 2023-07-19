@@ -1,18 +1,39 @@
 import argparse
 import json
 import logging
+from collections import defaultdict
 
+from visionai_data_format.schemas.bdd_schema import BDDSchema
 from visionai_data_format.utils.converter import convert_bdd_to_vai
 from visionai_data_format.utils.validator import validate_bdd
 
 logger = logging.getLogger(__name__)
 
 
-def bdd_to_vai(bdd_src_file: str, vai_dest_folder: str, sensor_name: str) -> None:
+def bdd_to_vai(
+    bdd_src_file: str, vai_dest_folder: str, sensor_name: str, uri_root: str
+) -> None:
     try:
         raw_data = json.load(open(bdd_src_file))
         bdd_data = validate_bdd(raw_data).dict()
-        convert_bdd_to_vai(bdd_data, vai_dest_folder, sensor_name)
+        sequence_frames = defaultdict(list)
+        for frame in bdd_data["frame_list"]:
+            sequence_frames[frame["sequence"]].append(frame)
+        i = 0
+        sequence_name_map = {}
+        for sequence_key, frame_list in sequence_frames.items():
+            sequence_bdd_data = BDDSchema(frame_list=frame_list).dict()
+            sequence_name = f"{int(i):012d}"
+            convert_bdd_to_vai(
+                bdd_data=sequence_bdd_data,
+                vai_dest_folder=vai_dest_folder,
+                sensor_name=sensor_name,
+                sequence_name=sequence_name,
+                uri_root=uri_root,
+            )
+            sequence_name_map[sequence_key] = sequence_name
+            i += 1
+        logger.info(f"mapping of sequence name: {sequence_name_map}")
     except Exception as e:
         logger.error("Convert bdd to vai format failed : " + str(e))
 
@@ -35,6 +56,12 @@ if __name__ == "__main__":
         "--sensor", type=str, help="Sensor name, i.e : `camera1`", default="camera1"
     )
 
+    parser.add_argument(
+        "--uri_root",
+        type=str,
+        help="uri root for storage i.e: https://azuresorate/container1",
+    )
+
     FORMAT = "%(asctime)s[%(process)d][%(levelname)s] %(name)-16s : %(message)s"
     DATEFMT = "[%d-%m-%Y %H:%M:%S]"
 
@@ -46,4 +73,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    bdd_to_vai(args.bdd_src_file, args.vai_dest_folder, args.sensor)
+    bdd_to_vai(args.bdd_src_file, args.vai_dest_folder, args.sensor, args.uri_root)

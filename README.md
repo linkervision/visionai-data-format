@@ -455,11 +455,31 @@ First, create a new `Ontology` that contains the project ontology. Then, call `v
 
 
 ## Tools
-### Convert `VisionAI` format data to `BDD` format
-The script below could help convert `VisionAI` annotation data to `BDD` json file
+### Convert `VisionAI` format data to `BDD+` format
+The script below could help convert `VisionAI` annotation data to `BDD+` json file
 ```
 python visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
 ```
+Arguments :
+- `-vai_src_folder` : folder contains VAI format json file
+- `-bdd_dest_file`  : BDD+ format file save destination
+- `-company_code`  : company code
+- `-storage_name`  : storage name
+- `-container_name`  : container name (dataset name)
+- `-annotation_name` : annotation folder name (default: "groundtruth")
+
+
+### Convert `BDD+` format data to `VisionAI` format
+
+```
+ python visionai_data_format/bdd_to_vai.py -bdd_src_file /path/bdd.json -vai_dest_folder /path_for_visionai_root_folder  --sensor camera1 --uri_root https://azuresorate/container1
+
+```
+Arguments :
+- `-bdd_src_file`  : source BDD+ format file
+- `-vai_dest_folder` : VAI root folder (would put VAI format json files here)
+- `--sensor`  : sensor name
+- `--uri_root` : uri root for storage i.e: https://azuresorate/container1
 
 
 ## Troubleshooting

@@ -177,12 +177,15 @@ def convert_bdd_to_vai(
                 )
 
             for label in labels:
+                # Get object attribute data
                 attributes = label["attributes"]
+                # this two keys are sensor id and object id (not the actual attributes we need)
                 attributes.pop("cameraIndex", None)
                 attributes.pop("INSTANCE_ID", None)
                 frame_obj_attr = defaultdict(list)
                 object_data_pointers_attr = defaultdict(str)
                 for attr_name, attr_value in attributes.items():
+                    # ignore attribute with no value (None or empty list/dict)
                     if attr_value is None or not attr_value:
                         continue
                     if isinstance(attr_value, bool):
@@ -195,7 +198,7 @@ def convert_bdd_to_vai(
                             {"name": attr_name, "val": attr_value}
                         )
                         object_data_pointers_attr[attr_name] = "num"
-                    # TODO  usually we need vec attribute type for str and list attributes
+                    # TODO  usually we need vec type for str and list attributes
                     # might need to ask user to provide ontology to know which type they want (text / vec)
                     else:
                         object_data_pointers_attr[attr_name] = "vec"
@@ -209,9 +212,7 @@ def convert_bdd_to_vai(
                             )
 
                 category = label["category"]
-                obj_uuid = label.get("uuid")
-                if obj_uuid is None:
-                    obj_uuid = str(uuid.uuid4())
+                obj_uuid = label.get("uuid", str(uuid.uuid4()))
                 x, y, w, h = xyxy2xywh(label["box2d"])
                 confidence_score = label.get("meta_ds", {}).get("score", None)
                 object_under_frames = {
@@ -262,8 +263,10 @@ def convert_bdd_to_vai(
                 context_attr = frame_lb["attributes"]
 
                 for attr_name, attr_value in context_attr.items():
+                    # this two keys are sensor id and object id (not the actual attributes we need)
                     if attr_name in {"cameraIndex", "INSTANCE_ID"}:
                         continue
+                    # ingore attribute with no value (None or empty list/dict)
                     if attr_value is None or not attr_value:
                         continue
                     context_item = {
@@ -298,7 +301,7 @@ def convert_bdd_to_vai(
                                     "stream": sensor_name,
                                 }
                             )
-
+            # update the contexts of frame_data
             for context_id, context_data in dynamic_context_data.items():
                 context_under_frames = {
                     context_id: ContextUnderFrame(
