@@ -253,11 +253,13 @@ def convert_bdd_to_vai(
             for frame_lb in frameLabels:
                 context_id = context_cat.get(frame_lb["category"])
                 if context_id is None:
+                    # create empty form of context data for recording attributes
                     context_id = str(uuid.uuid4())
                     context_cat[frame_lb["category"]] = context_id
                     contexts.update(
                         {context_id: {"name": frame_lb["category"], "type": "*tagging"}}
                     )
+                # record dynamic_context_data for given frame
                 if context_id not in dynamic_context_data:
                     dynamic_context_data[context_id] = defaultdict(list)
                 context_attr = frame_lb["attributes"]
