@@ -30,7 +30,7 @@ def bdd_to_vai(
         i = 0
         for sequence_key, frame_list in sequence_frames.items():
             sequence_bdd_data = BDDSchema(frame_list=frame_list).dict()
-            sequence_name = f"{int(i):012d}"
+            sequence_name = f"{i:012d}"
             convert_bdd_to_vai(
                 bdd_data=sequence_bdd_data,
                 vai_dest_folder=vai_dest_folder,

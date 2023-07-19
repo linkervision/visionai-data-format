@@ -153,7 +153,7 @@ def convert_bdd_to_vai(
         context_poninters: dict[str, dict] = defaultdict(dict)
         context_cat: dict[str, str] = {}
         for i, frame in enumerate(frame_list):
-            frame_idx = f"{int(i):012d}"
+            frame_idx = f"{i:012d}"
             labels = frame["labels"]
             frameLabels = frame["frameLabels"]
             url = os.path.join(
@@ -167,9 +167,7 @@ def convert_bdd_to_vai(
                     streams={sensor_name: FramePropertyStream(uri=url)}
                 ),
             )
-            frame_intervals = [
-                FrameInterval(frame_end=int(frame_idx), frame_start=int(frame_idx))
-            ]
+            frame_intervals = [FrameInterval(frame_end=i, frame_start=i)]
 
             if not labels:
                 logger.info(
@@ -246,9 +244,7 @@ def convert_bdd_to_vai(
                 )
 
             # frame tagging data (contexts)
-            tagging_frame_intervals = [
-                FrameInterval(frame_end=int(frame_idx), frame_start=0)
-            ]
+            tagging_frame_intervals = [FrameInterval(frame_end=i, frame_start=0)]
             dynamic_context_data = {}
             for frame_lb in frameLabels:
                 context_id = context_cat.get(frame_lb["category"])
@@ -314,7 +310,7 @@ def convert_bdd_to_vai(
 
             frames[frame_idx] = frame_data
 
-        frame_intervals = [FrameInterval(frame_end=int(i), frame_start=int(0))]
+        frame_intervals = [FrameInterval(frame_end=i, frame_start=0)]
         for context_id, context_pointer_value in context_poninters.items():
             contexts[context_id].update(
                 {"context_data_pointers": context_pointer_value}
