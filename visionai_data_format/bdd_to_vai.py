@@ -11,7 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 def bdd_to_vai(
-    bdd_src_file: str, vai_dest_folder: str, sensor_name: str, uri_root: str
+    bdd_src_file: str,
+    vai_dest_folder: str,
+    uri_root: str,
+    sensor_name: str,
+    annotation_name: str = "groundtruth",
+    img_extention: str = ".jpg",
 ) -> None:
     try:
         raw_data = json.load(open(bdd_src_file))
@@ -30,6 +35,8 @@ def bdd_to_vai(
                 sensor_name=sensor_name,
                 sequence_name=sequence_name,
                 uri_root=uri_root,
+                annotation_name=annotation_name,
+                img_extention=img_extention,
             )
             sequence_name_map[sequence_key] = sequence_name
             i += 1
@@ -41,25 +48,36 @@ def bdd_to_vai(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-vai_dest_folder",
-        type=str,
-        required=True,
-        help="VisionAI format destination folder path",
-    )
-    parser.add_argument(
         "-bdd_src_file",
         type=str,
         required=True,
         help="BDD+ format source file name (i.e : bdd_dest.json)",
     )
     parser.add_argument(
-        "--sensor", type=str, help="Sensor name, i.e : `camera1`", default="camera1"
+        "-vai_dest_folder",
+        type=str,
+        required=True,
+        help="VisionAI format destination folder path",
     )
-
     parser.add_argument(
-        "--uri_root",
+        "-uri_root",
         type=str,
         help="uri root for storage i.e: https://azuresorate/container1",
+    )
+    parser.add_argument(
+        "-sensor", type=str, help="Sensor name, i.e : `camera1`", default="camera1"
+    )
+    parser.add_argument(
+        "-annotation_name",
+        type=str,
+        default="groundtruth",
+        help=" annotation folder name (default: 'groundtruth')",
+    )
+    parser.add_argument(
+        "-img_extention",
+        type=str,
+        default=".jpg",
+        help="image extention (default: .jpg)",
     )
 
     FORMAT = "%(asctime)s[%(process)d][%(levelname)s] %(name)-16s : %(message)s"
@@ -73,4 +91,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    bdd_to_vai(args.bdd_src_file, args.vai_dest_folder, args.sensor, args.uri_root)
+    bdd_to_vai(
+        args.bdd_src_file,
+        args.vai_dest_folder,
+        args.uri_root,
+        args.sensor,
+        args.annotation_name,
+        args.img_extention,
+    )
