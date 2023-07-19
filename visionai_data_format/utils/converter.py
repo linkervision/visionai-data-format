@@ -8,6 +8,7 @@ from visionai_data_format.schemas.bdd_schema import AtrributeSchema, FrameSchema
 from visionai_data_format.schemas.visionai_schema import (
     Bbox,
     Context,
+    ContextUnderFrame,
     DynamicContextData,
     DynamicObjectData,
     Frame,
@@ -149,8 +150,8 @@ def convert_bdd_to_vai(
         frames: dict[str, Frame] = defaultdict(Frame)
         objects: dict[str, Object] = defaultdict(Object)
         contexts: dict[str, Context] = defaultdict(Context)
-        context_cat = {}
-        context_poninters = {}
+        context_poninters: dict[str, dict] = defaultdict(dict)
+        context_cat: dict[str, str] = {}
         for i, frame in enumerate(frame_list):
             frame_idx = f"{int(i):012d}"
             labels = frame["labels"]
@@ -182,22 +183,30 @@ def convert_bdd_to_vai(
                 frame_obj_attr = defaultdict(list)
                 object_data_pointers_attr = defaultdict(str)
                 for attr_name, attr_value in attributes.items():
+                    if attr_value is None or not attr_value:
+                        continue
                     if isinstance(attr_value, bool):
                         frame_obj_attr["boolean"].append(
                             {"name": attr_name, "val": attr_value}
                         )
                         object_data_pointers_attr[attr_name] = "boolean"
-                    elif isinstance(type(attr_value), int):
+                    elif isinstance(attr_value, int):
                         frame_obj_attr["num"].append(
                             {"name": attr_name, "val": attr_value}
                         )
                         object_data_pointers_attr[attr_name] = "num"
-                    # TODO  distinguish text and vec attribute type
+                    # TODO  usually we need vec attribute type for str and list attributes
+                    # might need to ask user to provide ontology to know which type they want (text / vec)
                     else:
-                        frame_obj_attr["vec"].append(
-                            {"name": attr_name, "val": [attr_value]}
-                        )
                         object_data_pointers_attr[attr_name] = "vec"
+                        if isinstance(attr_value, list):
+                            frame_obj_attr["vec"].append(
+                                {"name": attr_name, "val": attr_value}
+                            )
+                        else:
+                            frame_obj_attr["vec"].append(
+                                {"name": attr_name, "val": [attr_value]}
+                            )
 
                 category = label["category"]
                 obj_uuid = label.get("uuid")
@@ -239,64 +248,50 @@ def convert_bdd_to_vai(
             tagging_frame_intervals = [
                 FrameInterval(frame_end=int(frame_idx), frame_start=0)
             ]
+            dynamic_context_data = {}
             for frame_lb in frameLabels:
                 context_id = context_cat.get(frame_lb["category"])
                 if context_id is None:
                     context_id = str(uuid.uuid4())
                     context_cat[frame_lb["category"]] = context_id
-                    contexts.update({context_id: {"context_data": defaultdict(list)}})
+                    contexts.update(
+                        {context_id: {"name": frame_lb["category"], "type": "*tagging"}}
+                    )
+                if context_id not in dynamic_context_data:
+                    dynamic_context_data[context_id] = defaultdict(list)
                 context_attr = frame_lb["attributes"]
 
                 for attr_name, attr_value in context_attr.items():
                     if attr_name in {"cameraIndex", "INSTANCE_ID"}:
                         continue
-                    if attr_value is None:
+                    if attr_value is None or not attr_value:
                         continue
+                    context_item = {
+                        "name": attr_name,
+                        "val": attr_value,
+                        "stream": sensor_name,
+                    }
                     if isinstance(attr_value, int):
-                        context_poninters[attr_name] = {
+                        context_poninters[context_id][attr_name] = {
                             "type": "num",
                             "frame_intervals": tagging_frame_intervals,
                         }
-                        frame_data.contexts[context_id]["context_data"]["num"].append(
-                            {
-                                "name": attr_name,
-                                "val": attr_value,
-                                "stream": sensor_name,
-                            }
-                        )
+                        dynamic_context_data[context_id]["num"].append(context_item)
                     elif isinstance(attr_value, bool):
-                        context_poninters[attr_name] = {
+                        context_poninters[context_id][attr_name] = {
                             "type": "boolean",
                             "frame_intervals": tagging_frame_intervals,
                         }
-                        frame_data.contexts[context_id]["context_data"][
-                            "boolean"
-                        ].append(
-                            {
-                                "name": attr_name,
-                                "val": attr_value,
-                                "stream": sensor_name,
-                            }
-                        )
+                        dynamic_context_data[context_id]["boolean"].append(context_item)
                     else:
-                        context_poninters[attr_name] = {
+                        context_poninters[context_id][attr_name] = {
                             "type": "vec",
                             "frame_intervals": tagging_frame_intervals,
                         }
                         if isinstance(attr_value, list):
-                            frame_data.contexts[context_id]["context_data"][
-                                "vec"
-                            ].append(
-                                {
-                                    "name": attr_name,
-                                    "val": attr_value,
-                                    "stream": sensor_name,
-                                }
-                            )
+                            dynamic_context_data[context_id]["vec"].append(context_item)
                         else:
-                            frame_data.contexts[context_id]["context_data"][
-                                "vec"
-                            ].append(
+                            dynamic_context_data[context_id]["vec"].append(
                                 {
                                     "name": attr_name,
                                     "val": [attr_value],
@@ -304,21 +299,40 @@ def convert_bdd_to_vai(
                                 }
                             )
 
+            for context_id, context_data in dynamic_context_data.items():
+                context_under_frames = {
+                    context_id: ContextUnderFrame(
+                        context_data=DynamicContextData(**context_data)
+                    )
+                }
+                frame_data.contexts.update(context_under_frames)
+
             frames[frame_idx] = frame_data
 
         frame_intervals = [FrameInterval(frame_end=int(i), frame_start=int(0))]
+        for context_id, context_pointer_value in context_poninters.items():
+            contexts[context_id].update(
+                {"context_data_pointers": context_pointer_value}
+            )
+            contexts[context_id].update({"frame_intervals": frame_intervals})
+
         streams = {sensor_name: Stream(type=StreamType.CAMERA)}
         vai_data = {
             "visionai": {
                 "frame_intervals": frame_intervals,
                 "objects": objects,
+                "contexts": contexts,
                 "frames": frames,
                 "streams": streams,
                 "metadata": {"schema_version": "1.0.0"},
             }
         }
+
         if not objects:
             vai_data["visionai"].pop("objects")
+        if not contexts:
+            vai_data["visionai"].pop("contexts")
+
         vai_data = validate_vai(vai_data).dict(exclude_none=True)
         save_as_json(
             vai_data,
