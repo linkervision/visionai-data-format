@@ -24,8 +24,10 @@ def bdd_to_vai(
         sequence_frames = defaultdict(list)
         for frame in bdd_data["frame_list"]:
             sequence_frames[frame["sequence"]].append(frame)
-        i = 0
+        # one bdd file might contain mutiple sequqences
+        # we record the mapping here and convert one sequence at one time
         sequence_name_map = {}
+        i = 0
         for sequence_key, frame_list in sequence_frames.items():
             sequence_bdd_data = BDDSchema(frame_list=frame_list).dict()
             sequence_name = f"{int(i):012d}"
@@ -40,6 +42,7 @@ def bdd_to_vai(
             )
             sequence_name_map[sequence_key] = sequence_name
             i += 1
+        # User might need the mapping for moving image files
         logger.info(f"mapping of sequence name: {sequence_name_map}")
     except Exception as e:
         logger.error("Convert bdd to vai format failed : " + str(e))
