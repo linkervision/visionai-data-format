@@ -29,6 +29,7 @@ from visionai_data_format.schemas.utils.validators import (
     validate_contexts,
     validate_objects,
     validate_streams,
+    validate_visionai_intervals,
 )
 
 
@@ -852,6 +853,10 @@ class VisionAIModel(ExcludedNoneBaseModel):
         tags = ontology.get("tags", {})
 
         visionai = self.visionai.dict(exclude_unset=True, exclude_none=True)
+
+        err = validate_visionai_intervals(visionai=visionai)
+        if err:
+            errors.append(err)
 
         streams_data = ontology["streams"]
 
