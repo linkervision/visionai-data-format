@@ -66,6 +66,41 @@ def parse_visionai_child_type(
     return classes_attributes_map
 
 
+def validate_visionai_intervals(visionai: Dict) -> Optional[str]:
+    """Validate frame intervals under visionai with its frames
+
+    Parameters
+    ----------
+    visionai : Dict
+        visionai data in dictionary
+
+    Returns
+    -------
+    Optional[str]
+        error message
+    """
+    msg: Optional[str] = None
+
+    visionai_frame_interval_set = {
+        frame_num
+        for frame_interval in visionai["frame_intervals"]
+        for frame_num in range(
+            frame_interval["frame_start"], frame_interval["frame_end"] + 1
+        )
+    }
+    frame_num_set = {int(frame_num) for frame_num in visionai["frames"].keys()}
+
+    if visionai_frame_interval_set ^ frame_num_set:
+        extra_frames = frame_num_set - visionai_frame_interval_set
+        missing_frames = visionai_frame_interval_set - frame_num_set
+        msg = ""
+        if extra_frames:
+            msg += f"Extra frames from `frame_intervals` : {extra_frames}\n"
+        if missing_frames:
+            msg += f"Missing frames from `frame_intervals` : {missing_frames}\n"
+    return msg
+
+
 def validate_classes(
     visionai: Dict,
     root_key: str,
@@ -494,7 +529,7 @@ def validate_vai_data_frame_intervals(
     data_obj_under_vai_intervals: Dict[str, List],
     visionai_frame_intervals: List[Tuple[int, int]],
 ) -> Tuple[bool, str]:
-    """_summary_
+    """validate frame intervals of object/context under visionai
 
     Parameters
     ----------
@@ -822,11 +857,11 @@ def validate_visionai_data(
     # validate if combinations of static and dynamic equals to data pointers
     combination_attrs = static_attrs_keys | dynamic_attrs_keys
     if combination_attrs ^ data_pointers_keys:
-        extra_attributes_name: Set[str] = combination_attrs - data_pointers_keys
-        missing_attributes_name: Set[str] = data_pointers_keys - combination_attrs
+        extra_attribute_names: Set[str] = combination_attrs - data_pointers_keys
+        missing_attribute_names: Set[str] = data_pointers_keys - combination_attrs
         msg: str = generate_missing_attributes_error_message(
-            extra_attributes_name=extra_attributes_name,
-            missing_attributes_name=missing_attributes_name,
+            extra_attribute_names=extra_attribute_names,
+            missing_attribute_names=missing_attribute_names,
             dynamic_attrs=dynamic_attrs,
         )
 

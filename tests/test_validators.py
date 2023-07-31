@@ -119,9 +119,10 @@ def test_validate_wrong_visionai_frame_intervals(
     )
 
     assert errors == [
+        "Extra frames from `frame_intervals` : {1, 2}\n",
         "validate objects error: objects UUID 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer"
         + " bbox_shape frame interval(s) error, current data pointer interval (0, 2) "
-        + "doesn't match with objects interval [(0, 0)]"
+        + "doesn't match with objects interval [(0, 0)]",
     ]
 
 
