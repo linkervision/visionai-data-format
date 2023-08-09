@@ -782,8 +782,9 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("frames")
     def validate_frames(cls, value):
-        frame_keys = list(value.keys())
+        assert value, f"value {value} is not allowed"
 
+        frame_keys = list(value.keys())
         assert all(
             len(key) == 12 and key.isdigit() for key in frame_keys
         ), "Key must be a digit with 12 characters length"
