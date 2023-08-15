@@ -458,10 +458,14 @@ def parse_static_attrs(
     static_attrs: Dict[Tuple[str, str], Dict] = defaultdict(dict)
 
     for uuid, data in data_under_vai.items():
-        # skip accessing current data if
-        # only tags and type is not *tagging,
-        # or not only tags and current type is *tagging
-        # or current data doesn't contains object_data/context_data (no static attributes)
+        # we need to skip to parsing current contexts/objects static attributes
+        # if we meets below requirements:
+        # 1. when only parsing tags data, we will skip data with type is equal to "*tagging"
+        #    ,since project tag type in visionai is *tagging
+        # 2. when we need to parsing data unrelated with tags
+        #    we will skip data with type is not equal to "*tagging"
+        # 3. when current contexts/objects doesn't contains `context_data`/`object_data`,
+        #    we could skip current contexts/objects
         if (
             (only_tags and data["type"] != "*tagging")
             or (not only_tags and data["type"] == "*tagging")
