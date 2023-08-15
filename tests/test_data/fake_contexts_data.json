@@ -9,17 +9,6 @@
                     }
                 ],
                 "name": "scene",
-                "context_data": {
-                    "vec": [
-                        {
-                            "name": "weather",
-                            "type": null,
-                            "val": [
-                                "dew"
-                            ]
-                        }
-                    ]
-                },
                 "context_data_pointers": {
                     "weather": {
                         "attributes": null,
