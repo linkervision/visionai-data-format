@@ -398,7 +398,7 @@ def parse_data_pointers(
 
 
 def parse_dynamic_attrs(
-    frames: Dict, root_key: str, sub_root_key: str, data_pointers: Dict
+    frames: Dict, root_key: str, sub_root_key: str
 ) -> Dict[Tuple[str], dict]:
     """mapping attributes inside frame based on object uuid, attribute name, and frame number
 
@@ -410,8 +410,6 @@ def parse_dynamic_attrs(
         key under frame, such as `objects` or `contexts`
     sub_root_key : str
         child key of the root key, such as `object_data` or `context_data`
-    data_pointers : dict
-        data pointer from `objects` or `contexts` under visionai
 
     Returns
     -------
@@ -446,7 +444,7 @@ def parse_static_attrs(
     data_under_vai : dict
         data under visionai, such as `objects` or `contexts` data
     sub_root_key : str
-        key under the data
+        child key of the root key, such as `object_data` or `context_data`
     only_tags : bool, optional
         flag to retrieve only tags related data, by default True
 
@@ -460,9 +458,15 @@ def parse_static_attrs(
     static_attrs: Dict[Tuple[str, str], Dict] = defaultdict(dict)
 
     for uuid, data in data_under_vai.items():
-        if only_tags and data["type"] != "*tagging":
-            continue
-        elif not only_tags and data["type"] == "*tagging":
+        # skip accessing current data if
+        # only tags and type is not *tagging,
+        # or not only tags and current type is *tagging
+        # or current data doesn't contains object_data/context_data (no static attributes)
+        if (
+            (only_tags and data["type"] != "*tagging")
+            or (not only_tags and data["type"] == "*tagging")
+            or (sub_root_key not in data)
+        ):
             continue
         for attr_type, attr_list in data[sub_root_key].items():
             for attr in attr_list:
@@ -833,7 +837,6 @@ def validate_visionai_data(
         frames,
         root_key,
         sub_root_key,
-        data_pointers,
     )
 
     # the reason why changing static_attrs and dynamic_attrs structure is the key

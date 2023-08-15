@@ -1,46 +1,42 @@
 {
     "visionai": {
-        "contexts": {
-            "25fd92e8-4730-47ae-a7b8-8ecd64b4886a": {
-                "frame_intervals": [
-                    {
-                        "frame_start": 0,
-                        "frame_end": 0
-                    }
-                ],
-                "name": "scene",
-                "context_data_pointers": {
-                    "weather": {
-                        "attributes": null,
-                        "frame_intervals": [
-                            {
-                                "frame_start": 0,
-                                "frame_end": 0
-                            }
-                        ],
-                        "type": "vec"
-                    }
-                },
-                "type": "scene"
-            }
-        },
-        "frame_intervals": [
-            {
-                "frame_start": 0,
-                "frame_end": 0
-            }
-        ],
         "frames": {
             "000000000000": {
                 "contexts": {
-                    "25fd92e8-4730-47ae-a7b8-8ecd64b4886a": {
+                    "01f79336-4ab6-4916-9e63-a2427282b1c9": {
                         "context_data": {
                             "vec": [
                                 {
-                                    "name": "weather",
                                     "val": [
-                                        "dew"
+                                        "daytime"
                                     ],
+                                    "name": "timeofday",
+                                    "stream": "camera1"
+                                }
+                            ]
+                        }
+                    },
+                    "0fb39044-72b8-4880-8556-02479f0637f5": {
+                        "context_data": {
+                            "vec": [
+                                {
+                                    "val": [
+                                        "rainy"
+                                    ],
+                                    "name": "weather",
+                                    "stream": "camera1"
+                                }
+                            ]
+                        }
+                    },
+                    "6e68a3ba-268e-4d1e-a892-db3aae03f95c": {
+                        "context_data": {
+                            "vec": [
+                                {
+                                    "val": [
+                                        "gasstations"
+                                    ],
+                                    "name": "scene",
                                     "stream": "camera1"
                                 }
                             ]
@@ -48,10 +44,9 @@
                     }
                 },
                 "frame_properties": {
-                    "timestamp": null,
                     "streams": {
                         "camera1": {
-                            "uri": "https://helenmlopsstorageqatest.blob.core.windows.net/demodataset/context/weather/000000000000/data/camera1/000000000000.jpg"
+                            "uri": "https: //dataverse-staging-bucket.s3.ap-northeast-1.amazonaws.com/backend/upload/datasets/qatest-20230809025824317467/data/000000000003/data/camera1/000000000000.jpg"
                         }
                     }
                 }
@@ -59,13 +54,90 @@
         },
         "streams": {
             "camera1": {
-                "type": "camera",
-                "uri": "",
-                "description": ""
+                "uri": "https://dataverse-staging-bucket.s3.ap-northeast-1.amazonaws.com/backend/upload/datasets/qatest-20230809025824317467/data/000000000003/data/camera1/000000000000.jpg",
+                "type": "camera"
+            }
+        },
+        "contexts": {
+            "01f79336-4ab6-4916-9e63-a2427282b1c9": {
+                "name": "*auto_tagging",
+                "type": "*tagging",
+                "frame_intervals": [
+                    {
+                        "frame_end": 0,
+                        "frame_start": 0
+                    }
+                ],
+                "context_data_pointers": {
+                    "timeofday": {
+                        "type": "vec",
+                        "frame_intervals": [
+                            {
+                                "frame_end": 0,
+                                "frame_start": 0
+                            }
+                        ]
+                    }
+                }
+            },
+            "0fb39044-72b8-4880-8556-02479f0637f5": {
+                "name": "*auto_tagging",
+                "type": "*tagging",
+                "frame_intervals": [
+                    {
+                        "frame_end": 0,
+                        "frame_start": 0
+                    }
+                ],
+                "context_data_pointers": {
+                    "weather": {
+                        "type": "vec",
+                        "frame_intervals": [
+                            {
+                                "frame_end": 0,
+                                "frame_start": 0
+                            }
+                        ]
+                    }
+                }
+            },
+            "6e68a3ba-268e-4d1e-a892-db3aae03f95c": {
+                "name": "*auto_tagging",
+                "type": "*tagging",
+                "frame_intervals": [
+                    {
+                        "frame_end": 0,
+                        "frame_start": 0
+                    }
+                ],
+                "context_data_pointers": {
+                    "scene": {
+                        "type": "vec",
+                        "frame_intervals": [
+                            {
+                                "frame_end": 0,
+                                "frame_start": 0
+                            }
+                        ]
+                    }
+                }
             }
         },
         "metadata": {
             "schema_version": "1.0.0"
+        },
+        "frame_intervals": [
+            {
+                "frame_end": 0,
+                "frame_start": 0
+            }
+        ],
+        "coordinate_systems": {
+            "camera1": {
+                "type": "sensor_cs",
+                "parent": "",
+                "children": []
+            }
         }
     }
 }
