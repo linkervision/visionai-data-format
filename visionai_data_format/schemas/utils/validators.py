@@ -348,8 +348,6 @@ def parse_visionai_frames_objects(
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
     classes_attributes_map: Dict[str, Dict[str, Set]] = {}
-    print(f"subroot_key {subroot_key}")
-    print(f"frames {frames}")
     for data in frames.values():
         obj = data.get(root_key, None)
         if not obj:
