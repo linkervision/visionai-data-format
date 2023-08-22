@@ -161,3 +161,22 @@ def test_validate_wrong_context_vector_attribute(
         "Attribute contexts error : class [*tagging] attribute error"
         + " [TIMEOFDAY:vec] extra options : {'THIS_IS_THE_WRONG_VALUE'}"
     ]
+
+
+def test_validate_wrong_context_vector_attribute_classification(
+    fake_visionai_classification_ontology,
+    fake_contexts_classification_wrong_vector_value,
+):
+    ontology = Ontology(**fake_visionai_classification_ontology).dict(
+        exclude_unset=True
+    )
+
+    errors = VisionAIModel(
+        **fake_contexts_classification_wrong_vector_value
+    ).validate_with_ontology(
+        ontology=ontology,
+    )
+    assert errors == [
+        "Attribute contexts error : class [*tagging] attribute error"
+        + " [TIMEOFDAY:vec] extra options : {'ASDFLL'}"
+    ]

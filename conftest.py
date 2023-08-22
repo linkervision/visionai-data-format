@@ -112,3 +112,9 @@ def fake_objects_data_single_lidar_wrong_objects_frame_intervals():
 def fake_contexts_data_wrong_vector_value():
     file_name = "fake_contexts_data_wrong_vector_value.json"
     return json.load(open(os.path.join(TEST_DATA_FOLDER, file_name)))
+
+
+@pytest.fixture(scope="session")
+def fake_contexts_classification_wrong_vector_value():
+    file_name = "fake_contexts_classification_wrong_vector_value.json"
+    return json.load(open(os.path.join(TEST_DATA_FOLDER, file_name)))

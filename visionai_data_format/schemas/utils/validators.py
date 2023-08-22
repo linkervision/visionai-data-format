@@ -307,7 +307,9 @@ def get_frame_object_attr_type(
 
     obj_data_ele_set = {"bbox", "poly2d", "point2d", "binary"}
 
-    classes_attributes_map: Dict[str, Dict[str, Set]] = {}
+    classes_attributes_map: Dict[str, Dict[str, Set]] = defaultdict(
+        lambda: defaultdict(set)
+    )
     for obj_id, obj_data in frame_objects.items():
         global_object = all_objects.get(obj_id)
         if not global_object:
@@ -331,9 +333,8 @@ def get_frame_object_attr_type(
                     )
         else:
             mapped_attributes = mapping_attributes_type_value(data)
-
-        classes_attributes_map[obj_class] = mapped_attributes
-
+        for attribute_name_type, attribute_options in mapped_attributes.items():
+            classes_attributes_map[obj_class][attribute_name_type] |= attribute_options
     return classes_attributes_map
 
 
@@ -347,6 +348,8 @@ def parse_visionai_frames_objects(
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
     classes_attributes_map: Dict[str, Dict[str, Set]] = {}
+    print(f"subroot_key {subroot_key}")
+    print(f"frames {frames}")
     for data in frames.values():
         obj = data.get(root_key, None)
         if not obj:
@@ -979,7 +982,6 @@ def validate_visionai_children(
     frames_attributes_map: Dict[str, Dict[str, Set]] = parse_visionai_frames_objects(
         visionai_frames, visionai_objects, root_key
     )
-
     valid_attr, valid_attr_data = validate_attributes(
         frames_attributes_map, ontology_attributes_map
     )
