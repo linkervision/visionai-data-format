@@ -229,7 +229,7 @@ def validate_attributes(
             # Check whether attribute name in the excluded attributes set
             if (
                 excluded_attributes and label_attr_name.lower() in excluded_attributes
-            ) or label_attr_type.lower() != "option":
+            ) or label_attr_type.lower() != "vec":
                 continue
 
             ontology_attr_options: Set[str] = ontology_attr_name_type_dict.get(
@@ -242,8 +242,9 @@ def validate_attributes(
                 if not label_attr_options
                 else {str(opt).upper() for opt in label_attr_options}
             )
-            if not ontology_attr_options or (processed_options - ontology_attr_options):
-                return False, (label_class, label_attr_name_type)
+            extra_options = processed_options - ontology_attr_options
+            if not ontology_attr_options or extra_options:
+                return False, (label_class, label_attr_name_type, extra_options)
     return True, None
 
 
@@ -306,7 +307,9 @@ def get_frame_object_attr_type(
 
     obj_data_ele_set = {"bbox", "poly2d", "point2d", "binary"}
 
-    classes_attributes_map: Dict[str, Dict[str, Set]] = {}
+    classes_attributes_map: Dict[str, Dict[str, Set]] = defaultdict(
+        lambda: defaultdict(set)
+    )
     for obj_id, obj_data in frame_objects.items():
         global_object = all_objects.get(obj_id)
         if not global_object:
@@ -330,9 +333,8 @@ def get_frame_object_attr_type(
                     )
         else:
             mapped_attributes = mapping_attributes_type_value(data)
-
-        classes_attributes_map[obj_class] = mapped_attributes
-
+        for attribute_name_type, attribute_options in mapped_attributes.items():
+            classes_attributes_map[obj_class][attribute_name_type] |= attribute_options
     return classes_attributes_map
 
 
@@ -956,8 +958,11 @@ def validate_visionai_children(
         classes_attributes_map, ontology_attributes_map
     )
     if not valid_attr:
-        obj_cls, name_type = valid_attr_data
-        return f"Attribute {root_key} error : class [{obj_cls}] attribute error [{name_type}]"
+        obj_cls, name_type, extra_option = valid_attr_data
+        return (
+            f"Attribute {root_key} error : class [{obj_cls}] attribute error [{name_type}]"
+            + f"extra options : {extra_option}"
+        )
 
     sensor_name_set = set(sensor_info.keys())
     error_msg: Optional[str] = validate_frame_object_sensors_data(
@@ -975,15 +980,15 @@ def validate_visionai_children(
     frames_attributes_map: Dict[str, Dict[str, Set]] = parse_visionai_frames_objects(
         visionai_frames, visionai_objects, root_key
     )
-
     valid_attr, valid_attr_data = validate_attributes(
         frames_attributes_map, ontology_attributes_map
     )
 
     if not valid_attr:
-        obj_cls, name_type = valid_attr_data
+        obj_cls, name_type, extra_option = valid_attr_data
         return (
-            f"Attribute Object error : class [{obj_cls}] attribute error [{name_type}]"
+            f"Attribute {root_key} error : class [{obj_cls}] attribute error [{name_type}]"
+            + f" extra options : {extra_option}"
         )
 
     status, err = validate_visionai_data(

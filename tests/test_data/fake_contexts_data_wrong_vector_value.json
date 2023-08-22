@@ -1,0 +1,94 @@
+{
+    "visionai": {
+        "frames": {
+            "000000000000": {
+                "contexts": {
+                    "01f79336-4ab6-4916-9e63-a2427282b1c9": {
+                        "context_data": {
+                            "vec": [
+                                {
+                                    "val": [
+                                        "this_is_the_wrong_value"
+                                    ],
+                                    "name": "timeofday",
+                                    "stream": "camera1"
+                                },
+                                {
+                                    "val": [
+                                        "rainy"
+                                    ],
+                                    "name": "weather",
+                                    "stream": "camera1"
+                                }
+
+                            ]
+
+
+                        }
+                    }
+                },
+                "frame_properties": {
+                    "streams": {
+                        "camera1": {
+                            "uri": "https: //dataverse-staging-bucket.s3.ap-northeast-1.amazonaws.com/backend/upload/datasets/qatest-20230809025824317467/data/000000000003/data/camera1/000000000000.jpg"
+                        }
+                    }
+                }
+            }
+        },
+        "streams": {
+            "camera1": {
+                "uri": "https://dataverse-staging-bucket.s3.ap-northeast-1.amazonaws.com/backend/upload/datasets/qatest-20230809025824317467/data/000000000003/data/camera1/000000000000.jpg",
+                "type": "camera"
+            }
+        },
+        "contexts": {
+            "01f79336-4ab6-4916-9e63-a2427282b1c9": {
+                "name": "*auto_tagging",
+                "type": "*tagging",
+                "frame_intervals": [
+                    {
+                        "frame_end": 0,
+                        "frame_start": 0
+                    }
+                ],
+                "context_data_pointers": {
+                    "timeofday": {
+                        "type": "vec",
+                        "frame_intervals": [
+                            {
+                                "frame_end": 0,
+                                "frame_start": 0
+                            }
+                        ]
+                    },
+                    "weather": {
+                        "type": "vec",
+                        "frame_intervals": [
+                            {
+                                "frame_end": 0,
+                                "frame_start": 0
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "metadata": {
+            "schema_version": "1.0.0"
+        },
+        "frame_intervals": [
+            {
+                "frame_end": 0,
+                "frame_start": 0
+            }
+        ],
+        "coordinate_systems": {
+            "camera1": {
+                "type": "sensor_cs",
+                "parent": "",
+                "children": []
+            }
+        }
+    }
+}
