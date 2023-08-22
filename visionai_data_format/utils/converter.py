@@ -190,22 +190,22 @@ def convert_bdd_to_vai(
                         frame_obj_attr["boolean"].append(
                             {"name": attr_name, "val": attr_value}
                         )
-                        object_data_pointers_attr[attr_name] = "boolean"
+                        object_data_pointers_attr[attr_name] = ObjectType.BOOLEAN
                     elif isinstance(attr_value, int):
                         frame_obj_attr["num"].append(
                             {"name": attr_name, "val": attr_value}
                         )
-                        object_data_pointers_attr[attr_name] = "num"
+                        object_data_pointers_attr[attr_name] = ObjectType.NUM
                     # TODO  usually we need vec type for str and list attributes
                     # might need to ask user to provide ontology to know which type they want (text / vec)
                     else:
-                        object_data_pointers_attr[attr_name] = "vec"
+                        object_data_pointers_attr[attr_name] = ObjectType.VEC
                         if isinstance(attr_value, list):
-                            frame_obj_attr["vec"].append(
+                            frame_obj_attr[ObjectType.VEC].append(
                                 {"name": attr_name, "val": attr_value}
                             )
                         else:
-                            frame_obj_attr["vec"].append(
+                            frame_obj_attr[ObjectType.VEC].append(
                                 {"name": attr_name, "val": [attr_value]}
                             )
 
@@ -274,7 +274,7 @@ def convert_bdd_to_vai(
                     }
                     if isinstance(attr_value, int):
                         context_poninters[context_id][attr_name] = {
-                            "type": "num",
+                            "type": ObjectType.NUM,
                             "frame_intervals": tagging_frame_intervals,
                         }
                         dynamic_context_data[context_id]["num"].append(context_item)
@@ -286,13 +286,15 @@ def convert_bdd_to_vai(
                         dynamic_context_data[context_id]["boolean"].append(context_item)
                     else:
                         context_poninters[context_id][attr_name] = {
-                            "type": "vec",
+                            "type": ObjectType.VEC,
                             "frame_intervals": tagging_frame_intervals,
                         }
                         if isinstance(attr_value, list):
-                            dynamic_context_data[context_id]["vec"].append(context_item)
+                            dynamic_context_data[context_id][ObjectType.VEC].append(
+                                context_item
+                            )
                         else:
-                            dynamic_context_data[context_id]["vec"].append(
+                            dynamic_context_data[context_id][ObjectType.VEC].append(
                                 {
                                     "name": attr_name,
                                     "val": [attr_value],
