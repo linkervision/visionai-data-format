@@ -48,7 +48,7 @@ class DatasetConverter:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-inpupt_format",
+        "-input_format",
         type=str,
         required=True,
         help="BDDP/COCO ",
