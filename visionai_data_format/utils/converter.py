@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 import uuid
 from collections import defaultdict
 
@@ -134,8 +135,10 @@ def convert_bdd_to_vai(
     sensor_name: str,
     sequence_name: str,
     uri_root: str,
+    source_data_root=str,
     annotation_name: str = "groundtruth",
     img_extention: str = ".jpg",
+    copy_image: bool = True,
 ) -> None:
     frame_list = bdd_data.get("frame_list", None)
 
@@ -154,8 +157,24 @@ def convert_bdd_to_vai(
         context_cat: dict[str, str] = {}
         for i, frame in enumerate(frame_list):
             frame_idx = f"{i:012d}"
+            if copy_image:
+                img_source = os.path.join(
+                    source_data_root,
+                    frame["storage"],
+                    frame["sequence"],
+                    frame["dataset"],
+                    frame["name"],
+                )
+                img_dest_dir = os.path.join(
+                    vai_dest_folder, sequence_name, "data", sensor_name
+                )
+                os.makedirs(img_dest_dir, exist_ok=True)
+                shutil.copy2(
+                    img_source, os.path.join(img_dest_dir, frame_idx + img_extention)
+                )
+
             labels = frame["labels"]
-            frameLabels = frame["frameLabels"]
+            frameLabels = frame.get("frameLabels", [])
             url = os.path.join(
                 uri_root, sequence_name, "data", sensor_name, frame_idx + img_extention
             )
