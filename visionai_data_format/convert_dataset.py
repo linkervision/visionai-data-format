@@ -1,8 +1,8 @@
 import argparse
 import logging
 
+from visionai_data_format.converters.base import ConverterFactory
 from visionai_data_format.schemas.common import AnnotationFormat, OntologyImageType
-from visionai_data_format.utils.converters import ConverterFactory
 
 
 class DatasetConverter:
