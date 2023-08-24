@@ -32,6 +32,8 @@ from visionai_data_format.utils.validator import (
     validate_vai,
 )
 
+__all__ = ["BDDtoVAI"]
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,7 +48,8 @@ class BDDtoVAI(Converter):
         cls,
         input_annotation_path: str,
         output_dest_folder: str,
-        sensor_name: str,
+        camera_sensor_name: str,
+        lidar_sensor_name: str,
         source_data_root: str,
         uri_root: str,
         sequence_idx_start: int = 0,
@@ -79,7 +82,8 @@ class BDDtoVAI(Converter):
                 cls.convert_sequence_bdd_to_vai(
                     bdd_data=sequence_bdd_data,
                     vai_dest_folder=output_dest_folder,
-                    sensor_name=sensor_name,
+                    camera_sensor_name=camera_sensor_name,
+                    lidar_sensor_name=lidar_sensor_name,
                     sequence_name=sequence_name,
                     uri_root=uri_root,
                     annotation_name=annotation_name,
@@ -97,7 +101,8 @@ class BDDtoVAI(Converter):
     def convert_sequence_bdd_to_vai(
         bdd_data: dict,
         vai_dest_folder: str,
-        sensor_name: str,
+        camera_sensor_name: str,
+        lidar_sensor_name: str,
         sequence_name: str,
         uri_root: str,
         source_data_root=str,
@@ -112,6 +117,9 @@ class BDDtoVAI(Converter):
                 "[convert_bdd_to_vai] frame_list is empty, convert_bdd_to_vai will not be executed"
             )
             return
+        # TODO BDD lidar convert
+        if lidar_sensor_name:
+            raise NotImplementedError("Current BDD lidar convert is not supported!")
 
         try:
             logger.info(
@@ -133,7 +141,7 @@ class BDDtoVAI(Converter):
                         frame["name"],
                     )
                     img_dest_dir = os.path.join(
-                        vai_dest_folder, sequence_name, "data", sensor_name
+                        vai_dest_folder, sequence_name, "data", camera_sensor_name
                     )
                     os.makedirs(img_dest_dir, exist_ok=True)
                     shutil.copy2(
@@ -147,14 +155,14 @@ class BDDtoVAI(Converter):
                     uri_root,
                     sequence_name,
                     "data",
-                    sensor_name,
+                    camera_sensor_name,
                     frame_idx + img_extention,
                 )
                 frame_data: Frame = Frame(
                     objects=defaultdict(DynamicObjectData),
                     contexts=defaultdict(DynamicContextData),
                     frame_properties=FrameProperties(
-                        streams={sensor_name: FramePropertyStream(uri=url)}
+                        streams={camera_sensor_name: FramePropertyStream(uri=url)}
                     ),
                 )
                 frame_intervals = [FrameInterval(frame_end=i, frame_start=i)]
@@ -167,7 +175,7 @@ class BDDtoVAI(Converter):
                     box2d = label.get("box2d", None)
                     # only convert box2D objects for now
                     if box2d is None:
-                        logging.info(
+                        logger.info(
                             f"The label shape of {label} in {frame['sequence']}/{frame['name']} is not box2d"
                         )
                         continue
@@ -216,7 +224,7 @@ class BDDtoVAI(Converter):
                                     Bbox(
                                         name="bbox_shape",
                                         val=[x, y, w, h],
-                                        stream=sensor_name,
+                                        stream=camera_sensor_name,
                                         confidence_score=confidence_score,
                                         attributes=frame_obj_attr,
                                     )
@@ -271,7 +279,7 @@ class BDDtoVAI(Converter):
                         context_item = {
                             "name": attr_name,
                             "val": attr_value,
-                            "stream": sensor_name,
+                            "stream": camera_sensor_name,
                         }
                         if isinstance(attr_value, int):
                             context_poninters[context_id][attr_name] = {
@@ -301,7 +309,7 @@ class BDDtoVAI(Converter):
                                     {
                                         "name": attr_name,
                                         "val": [attr_value],
-                                        "stream": sensor_name,
+                                        "stream": camera_sensor_name,
                                     }
                                 )
                 # update the contexts of frame_data
@@ -322,7 +330,7 @@ class BDDtoVAI(Converter):
                 )
                 contexts[context_id].update({"frame_intervals": frame_intervals})
 
-            streams = {sensor_name: Stream(type=StreamType.CAMERA)}
+            streams = {camera_sensor_name: Stream(type=StreamType.CAMERA)}
             vai_data = {
                 "visionai": {
                     "frame_intervals": frame_intervals,

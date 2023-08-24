@@ -16,7 +16,8 @@ class DatasetConverter:
         source_data_root: str,
         output_dest_folder: str,
         uri_root: str,
-        sensor_name: str,
+        camera_sensor_name: str,
+        lidar_sensor_name: str,
         sequence_idx_start: int = 0,
         copy_image: bool = True,
         n_img: int = -1,
@@ -31,11 +32,14 @@ class DatasetConverter:
             to_=output_format,
             image_annotation_type=image_annotation_type,
         )
+        if not converter:
+            raise ValueError("The requested converter is not supported!")
         converter.convert(
             input_annotation_path=input_annotation_path,
             output_dest_folder=output_dest_folder,
             uri_root=uri_root,
-            sensor_name=sensor_name,
+            camera_sensor_name=camera_sensor_name,
+            lidar_sensor_name=lidar_sensor_name,
             sequence_idx_start=sequence_idx_start,
             copy_image=copy_image,
             source_data_root=source_data_root,
@@ -91,7 +95,17 @@ if __name__ == "__main__":
         help="uri root for storage i.e: https://azuresorate/container1",
     )
     parser.add_argument(
-        "-sensor", type=str, help="Sensor name, i.e : `camera1`", default="camera1"
+        "-camera_sensor_name",
+        type=str,
+        help="Camera Sensor name, i.e : `camera1`",
+        default="",
+    )
+
+    parser.add_argument(
+        "-lidar_sensor_name",
+        type=str,
+        help="Lidar Sensor name, i.e : `lidar1`",
+        default="",
     )
     parser.add_argument(
         "-sequence_idx_start", type=int, help="seqnuece id start number", default=0
@@ -127,6 +141,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if not args.camera_sensor_name and not args.lidar_sensor_name:
+        raise ValueError("Please specify at least one sensor _name (camera/lidar)!")
+
     DatasetConverter.run(
         input_format=args.input_format,
         output_format=args.output_format,
@@ -136,7 +153,8 @@ if __name__ == "__main__":
         output_dest_folder=args.output_dest_folder,
         uri_root=args.uri_root,
         sequence_idx_start=args.sequence_idx_start,
-        sensor_name=args.sensor,
+        camera_sensor_name=args.camera_sensor_name,
+        lidar_sensor_name=args.lidar_sensor_name,
         annotation_name=args.annotation_name,
         img_extention=args.img_extention,
         n_img=args.n_img,
