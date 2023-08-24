@@ -53,8 +53,8 @@ class BDDtoVAI(Converter):
         source_data_root: str,
         uri_root: str,
         sequence_idx_start: int = 0,
-        copy_image: bool = True,
-        n_img: int = -1,
+        copy_sensor_data: bool = True,
+        n_frame: int = -1,
         annotation_name: str = "groundtruth",
         img_extention: str = ".jpg",
     ) -> None:
@@ -71,11 +71,11 @@ class BDDtoVAI(Converter):
             # one bdd file might contain mutiple sequqences
             seq_id = sequence_idx_start
             for sequence_key, frame_list in sequence_frames.items():
-                if n_img > 0:
+                if n_frame > 0:
                     frame_count = len(frame_list)
-                    if n_img < frame_count:
-                        frame_list = frame_list[:n_img]
-                    n_img -= len(frame_list)
+                    if n_frame < frame_count:
+                        frame_list = frame_list[:n_frame]
+                    n_frame -= len(frame_list)
                 sequence_bdd_data = BDDSchema(frame_list=frame_list).dict()
                 sequence_name = f"{seq_id:012d}"
                 logger.info(f"convert sequence {sequence_key} to {sequence_name}")
@@ -88,11 +88,11 @@ class BDDtoVAI(Converter):
                     uri_root=uri_root,
                     annotation_name=annotation_name,
                     img_extention=img_extention,
-                    copy_image=copy_image,
+                    copy_sensor_data=copy_sensor_data,
                     source_data_root=source_data_root,
                 )
                 seq_id += 1
-                if n_img == 0:
+                if n_frame == 0:
                     break
         except Exception as e:
             logger.error("Convert bdd to vai format failed : " + str(e))
@@ -108,7 +108,7 @@ class BDDtoVAI(Converter):
         source_data_root=str,
         annotation_name: str = "groundtruth",
         img_extention: str = ".jpg",
-        copy_image: bool = True,
+        copy_sensor_data: bool = True,
     ) -> None:
         frame_list = bdd_data.get("frame_list", None)
 
@@ -123,7 +123,7 @@ class BDDtoVAI(Converter):
 
         try:
             logger.info(
-                f"[convert_bdd_to_vai] Convert started (copy image is {copy_image})"
+                f"[convert_bdd_to_vai] Convert started (copy sensor data is {copy_sensor_data})"
             )
             frames: dict[str, Frame] = defaultdict(Frame)
             objects: dict[str, Object] = defaultdict(Object)
@@ -132,7 +132,7 @@ class BDDtoVAI(Converter):
             context_cat: dict[str, str] = {}
             for i, frame in enumerate(frame_list):
                 frame_idx = f"{i:012d}"
-                if copy_image:
+                if copy_sensor_data:
                     img_source = os.path.join(
                         source_data_root,
                         frame["storage"],
