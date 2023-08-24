@@ -149,13 +149,16 @@ def convert_bdd_to_vai(
         return
 
     try:
-        logger.info("[convert_bdd_to_vai] Convert started ")
+        logger.info(
+            f"[convert_bdd_to_vai] Convert started (copy image is {copy_image})"
+        )
         frames: dict[str, Frame] = defaultdict(Frame)
         objects: dict[str, Object] = defaultdict(Object)
         contexts: dict[str, Context] = defaultdict(Context)
         context_poninters: dict[str, dict] = defaultdict(dict)
         context_cat: dict[str, str] = {}
         for i, frame in enumerate(frame_list):
+            logger.info(f"index {i} / frame: {frame}")
             frame_idx = f"{i:012d}"
             if copy_image:
                 img_source = os.path.join(
@@ -172,13 +175,11 @@ def convert_bdd_to_vai(
                 shutil.copy2(
                     img_source, os.path.join(img_dest_dir, frame_idx + img_extention)
                 )
-
-            labels = frame["labels"]
+            labels = frame.get("labels", [])
             frameLabels = frame.get("frameLabels", [])
             url = os.path.join(
                 uri_root, sequence_name, "data", sensor_name, frame_idx + img_extention
             )
-
             frame_data: Frame = Frame(
                 objects=defaultdict(DynamicObjectData),
                 contexts=defaultdict(DynamicContextData),
@@ -190,7 +191,7 @@ def convert_bdd_to_vai(
 
             if not labels:
                 logger.info(
-                    f"[convert_bdd_to_vai] No labels in this frame : {frame['name']}"
+                    f"[convert_bdd_to_vai] No labels in this frame : {frame['sequence']}/{frame['name']}"
                 )
 
             for label in labels:
@@ -349,7 +350,6 @@ def convert_bdd_to_vai(
                 "metadata": {"schema_version": "1.0.0"},
             }
         }
-
         if not objects:
             vai_data["visionai"].pop("objects")
         if not contexts:

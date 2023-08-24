@@ -95,7 +95,6 @@ class BDDtoVAI(Converter):
                 storage_name = frame["storage"]
                 sequence_frames[(storage_name, dataset_name, seq_name)].append(frame)
             # one bdd file might contain mutiple sequqences
-            sequence_name_map = {}
             seq_id = sequence_idx_start
             for sequence_key, frame_list in sequence_frames.items():
                 if n_img > 0:
@@ -105,7 +104,7 @@ class BDDtoVAI(Converter):
                     n_img -= len(frame_list)
                 sequence_bdd_data = BDDSchema(frame_list=frame_list).dict()
                 sequence_name = f"{seq_id:012d}"
-
+                logger.info(f"convert sequence {sequence_key} to {sequence_name}")
                 convert_bdd_to_vai(
                     bdd_data=sequence_bdd_data,
                     vai_dest_folder=output_dest_folder,
@@ -117,10 +116,8 @@ class BDDtoVAI(Converter):
                     copy_image=copy_image,
                     source_data_root=source_data_root,
                 )
-                sequence_name_map[sequence_key] = sequence_name
                 seq_id += 1
                 if n_img == 0:
                     break
-            logger.info(f"mapping of sequence name: {sequence_name_map}")
         except Exception as e:
             logger.error("Convert bdd to vai format failed : " + str(e))

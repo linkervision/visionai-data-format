@@ -87,6 +87,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-uri_root",
         type=str,
+        required=True,
         help="uri root for storage i.e: https://azuresorate/container1",
     )
     parser.add_argument(
