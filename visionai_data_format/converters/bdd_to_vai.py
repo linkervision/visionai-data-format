@@ -68,7 +68,7 @@ class BDDtoVAI(Converter):
                 dataset_name = frame["dataset"]
                 storage_name = frame["storage"]
                 sequence_frames[(storage_name, dataset_name, seq_name)].append(frame)
-            # one bdd file might contain mutiple sequqences
+            # one bdd file might contain mutiple sequences
             seq_id = sequence_idx_start
             for sequence_key, frame_list in sequence_frames.items():
                 if n_frame > 0:

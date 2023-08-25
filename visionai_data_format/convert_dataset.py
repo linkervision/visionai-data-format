@@ -87,7 +87,7 @@ if __name__ == "__main__":
         "-input_format",
         type=str,
         required=True,
-        help="BDDP/COCO ",
+        help="bddp/coco/kitti",
     )
     parser.add_argument(
         "-output_format",
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         default="",
     )
     parser.add_argument(
-        "-sequence_idx_start", type=int, help="seqnuece id start number", default=0
+        "-sequence_idx_start", type=int, help="sequence id start number", default=0
     )
 
     parser.add_argument(
