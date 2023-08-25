@@ -101,10 +101,10 @@ class FrameSchema(BaseModel):
     storage: str
     dataset: str
     sequence: str
-    lidarPlaneURLs: List[str]
     labels: List[CategorySchema]
     frameLabels: List[FrameLabelSchema] = []
     meta_ds: MetaDsSchema = {}
+    lidarPlaneURLs: List[str] = []
 
 
 class BDDSchema(BaseModel):

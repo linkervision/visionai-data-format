@@ -455,6 +455,35 @@ First, create a new `Ontology` that contains the project ontology. Then, call `v
 
 
 ## Tools
+### Convert `BDD+` format data to `VisionAI` format
+#### (Only support box2D and camera sensor data only for now)
+```
+ python visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extention .jpg --copy_sensor_data
+
+```
+Arguments :
+- `-input_format`  : input format (use bddp for BDD+)
+- `-output_format`  : output format (vision_ai)
+- `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-input_annotation_path`  : source annotation path (BDD+ format json file)
+- `-source_data_root`  : source data root for sensor data and calibration data (will find and copy image from this root)
+- `-input_annotation_path`  : source annotation path (BDD+ format json file)
+- `-output_dest_folder` : output root folder (VisionAI local root folder)
+- `-uri_root` : uri root for target upload VAI storage i.e: https://azuresorate/vai_dataset
+- `-n_frame`  : number of frame to be converted (-1 means all), by default -1
+- `-sequence_idx_start `  : sequence start id, by default 0
+- `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
+- `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
+- `-annotation_name` : annotation folder name (default: "groundtruth")
+- `-img_extention` :image file extention (default: ".jpg")
+- `--copy_sensor_data` :enable to copy image/lidar data
+
+
+
+
+
+
+
 ### Convert `VisionAI` format data to `BDD+` format
 #### (Only support box2D for now)
 The script below could help convert `VisionAI` annotation data to `BDD+` json file
@@ -469,19 +498,6 @@ Arguments :
 - `-container_name`  : container name (dataset name)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
 
-
-### Convert `BDD+` format data to `VisionAI` format
-#### (Only support box2D for now)
-```
- python visionai_data_format/bdd_to_vai.py -bdd_src_file /path/bdd.json -vai_dest_folder /path_vai_root/vai_dataset -uri_root https://azure_storage/vai_dataset -sensor camera1 -annotation_name groundtruth -img_extention .jpg
-
-```
-Arguments :
-- `-bdd_src_file`  : source BDD+ format file
-- `-vai_dest_folder` : VAI root folder (would put VAI format json files here)
-- `-uri_root` : uri root for VAI storage i.e: https://azuresorate/vai_dataset
-- `-sensor`  : sensor name
-- `-annotation_name` : annotation folder name (default: "groundtruth")
 
 
 ## Troubleshooting
