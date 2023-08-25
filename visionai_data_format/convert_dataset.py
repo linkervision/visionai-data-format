@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "-output_format",
         type=str,
         required=True,
-        help="vision_ai ",
+        help="vision_ai",
     )
     parser.add_argument(
         "-image_annotation_type",
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.camera_sensor_name and not args.lidar_sensor_name:
-        raise ValueError("Please specify at least one sensor _name (camera/lidar)!")
+        raise ValueError("Please specify at least one sensor name (camera/lidar)!")
 
     DatasetConverter.run(
         input_format=args.input_format,
