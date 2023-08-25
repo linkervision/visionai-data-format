@@ -458,7 +458,7 @@ First, create a new `Ontology` that contains the project ontology. Then, call `v
 ### Convert `BDD+` format data to `VisionAI` format
 #### (Only support box2D and camera sensor data only for now)
 ```
- python visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extention .jpg --copy_sensor_data
+ python visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 
 ```
 Arguments :
@@ -475,7 +475,7 @@ Arguments :
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extention` :image file extention (default: ".jpg")
+- `-img_extension` :image file extention (default: ".jpg")
 - `--copy_sensor_data` :enable to copy image/lidar data
 
 
