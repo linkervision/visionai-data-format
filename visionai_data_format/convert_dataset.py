@@ -33,7 +33,6 @@ class DatasetConverter:
         output_format : str
         image_annotation_type : str
             label annotation type of images (2d_bounding_box/polygon/point ...)
-        input_annotation_path : str
         source_data_root : str
             source data root for sensor data and calibration data (will use relative path for getting the files inside)
         output_dest_folder : str
@@ -41,6 +40,8 @@ class DatasetConverter:
             uri root for target upload data path
         camera_sensor_name : str
         lidar_sensor_name : str
+        input_annotation_path : str, optional
+            annotation file path, by default None
         sequence_idx_start : int, optional
             sequence start id, by default 0
         copy_sensor_data : bool, optional

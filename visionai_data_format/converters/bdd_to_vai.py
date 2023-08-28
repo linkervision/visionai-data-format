@@ -114,7 +114,7 @@ class BDDtoVAI(Converter):
 
         if not frame_list:
             logger.info(
-                "[convert_sequence_bdd_to_vai] frame_list is empty, convert_bdd_to_vai will not be executed"
+                "[convert_bdd_to_vai] frame_list is empty, convert_bdd_to_vai will not be executed"
             )
             return
         # TODO BDD lidar convert
@@ -356,4 +356,4 @@ class BDDtoVAI(Converter):
             )
             logger.info("[convert_bdd_to_vai] Convert finished")
         except Exception as e:
-            logger.error("[convert_sequence_bdd_to_vai] Convert failed : " + str(e))
+            logger.error("[convert_bdd_to_vai] Convert failed : " + str(e))
