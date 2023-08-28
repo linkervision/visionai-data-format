@@ -45,7 +45,7 @@ class DatasetType(str, Enum, metaclass=BaseEnumMeta):
     RAW_DATA = "raw_data"
 
 
-class ExcludedNoneBaseModel(BaseModel):
+class ExcludedNoneBaseModel(BaseModel, smart_union=True):
     def dict(self, **kwargs):
         exclude_none = kwargs.pop("exclude_none", True)
         exclude_unset = kwargs.pop("exclude_unset", True)

@@ -135,7 +135,7 @@ class KITTItoVAI(Converter):
                 source_data_root, "labels", f"{source_sequence_name}.txt"
             )
 
-            dict_calib = None if not calib_path else parse_calib_data(calib_path)
+            dict_calib = {} if not calib_path else parse_calib_data(calib_path)
 
             lidar_coor_system = (
                 {}
@@ -422,7 +422,6 @@ class KITTItoVAI(Converter):
                     "streams": streams,
                 }
             }
-
             vai_data = validate_vai(vai_data).dict(exclude_none=True)
             save_as_json(
                 vai_data,

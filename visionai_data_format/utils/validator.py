@@ -69,13 +69,8 @@ def save_as_json(data: Dict, file_name: str, folder_name: str = "") -> None:
 def read_calib_data(calib_path: str) -> dict[str, np.array]:
     data = {}
     with open(calib_path, encoding="utf8") as f:
-        calib_data = f.read()
-        lines = [
-            line.strip()
-            for line in calib_data.split("\n")
-            if len(line) and line != "\n"
-        ]
-        for line in lines:
+        calib_data = f.readlines()
+        for line in calib_data:
             if not len(line) or line == "\n":
                 continue
             key, value = line.split(":")
@@ -95,7 +90,6 @@ def inverse_transformation_matrix(Tr: np.array):
 
 def parse_calib_data(calib_path: str) -> dict[str, Union[list, np.array]]:
     dict_calib: dict[str, np.array] = read_calib_data(calib_path=calib_path)
-
     R0_rect = (
         None
         if dict_calib is None or dict_calib.get("R0_rect", None) is None
