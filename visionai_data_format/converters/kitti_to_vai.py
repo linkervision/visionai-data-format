@@ -187,7 +187,7 @@ class KITTItoVAI(Converter):
                     vai_dest_folder, dest_sequence_name, "data", camera_sensor_name
                 )
                 dest_camera_path = os.path.join(
-                    dest_camera_folder, dest_sequence_name + img_extension
+                    dest_camera_folder, frame_num + img_extension
                 )
                 camera_url = os.path.join(uri_root, dest_camera_path)
                 frame_properties["streams"].update(
@@ -203,9 +203,7 @@ class KITTItoVAI(Converter):
                 dest_lidar_folder = os.path.join(
                     vai_dest_folder, dest_sequence_name, "data", lidar_sensor_name
                 )
-                dest_lidar_path = os.path.join(
-                    dest_lidar_folder, dest_sequence_name + ".pcd"
-                )
+                dest_lidar_path = os.path.join(dest_lidar_folder, frame_num + ".pcd")
                 lidar_url = os.path.join(uri_root, dest_lidar_path)
 
                 frame_properties["streams"].update(
