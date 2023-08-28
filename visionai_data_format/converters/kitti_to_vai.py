@@ -79,7 +79,10 @@ class KITTItoVAI(Converter):
                     n_frame -= 1
                 dest_sequence_name = f"{sequence_idx:012d}"
                 image_file_path = os.path.join(image_folder_path, image_path)
-                logger.info(f"convert sequence {sequence_idx} to {dest_sequence_name}")
+                old_sequence_idx = os.path.splitext(image_path)[0].split(os.sep)[-1]
+                logger.info(
+                    f"convert sequence {old_sequence_idx} to {dest_sequence_name}"
+                )
                 try:
                     cls.convert_kitti_to_vai(
                         vai_dest_folder=output_dest_folder,
@@ -109,7 +112,7 @@ class KITTItoVAI(Converter):
         image_file_path: str,
         uri_root: str,
         dest_sequence_name: str,
-        source_data_root=str,
+        source_data_root: str,
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
         copy_sensor_data: bool = True,

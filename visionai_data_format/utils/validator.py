@@ -6,6 +6,7 @@ from typing import Dict, Union
 import numpy as np
 
 from visionai_data_format.schemas.bdd_schema import BDDSchema
+from visionai_data_format.schemas.coco_schema import COCO
 from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,16 @@ def validate_bdd(data: Dict) -> Union[BDDSchema, None]:
         return bdd
     except Exception as e:
         logger.error("[validate_bdd] Validation failed : " + str(e))
+        return None
+
+
+def validate_coco(data: Dict) -> Union[COCO, None]:
+    try:
+        bdd = COCO(**data)
+        logger.info("[validate_coco] Validation success")
+        return bdd
+    except Exception as e:
+        logger.error("[validate_coco] Validation failed : " + str(e))
         return None
 
 

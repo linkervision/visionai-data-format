@@ -1,7 +1,7 @@
 import pytest
 
 from visionai_data_format.schemas.bdd_schema import BDDSchema
-from visionai_data_format.schemas.coco_schema import Coco
+from visionai_data_format.schemas.coco_schema import COCO
 from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
 
@@ -36,7 +36,7 @@ def test_coco():
         "annotations": [],
     }
 
-    assert Coco(**input_data).dict() == generated_data
+    assert COCO(**input_data).dict() == generated_data
 
 
 def test_visionai_model():
