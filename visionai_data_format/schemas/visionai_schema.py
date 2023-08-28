@@ -811,7 +811,6 @@ class VisionAI(ExcludedNoneBaseModel):
     @validator("coordinate_systems")
     def validate_coordinate_systems(cls, value):
         assert value, f" Value {value} is not allowed"
-
         for k, v in value.items():
             if v.type == "local_cs" and "iso8855" not in k:
                 raise ValueError(

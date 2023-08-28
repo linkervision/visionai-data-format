@@ -16,7 +16,7 @@ from visionai_data_format.utils.common import (
     IMAGE_EXT,
     LOGGING_DATEFMT,
     LOGGING_FORMAT,
-    VISIONAI_OBJECT_JSON,
+    VISIONAI_JSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -163,7 +163,7 @@ def vision_ai_to_coco(src: str, dst: str, ontology_classes: str, copy_image: boo
     logger.info("retrieve visionai annotations started")
     for sequence in sequence_folder_list:
         ground_truth_path = os.path.join(
-            src, sequence, GROUND_TRUTH_FOLDER, VISIONAI_OBJECT_JSON
+            src, sequence, GROUND_TRUTH_FOLDER, VISIONAI_JSON
         )
         logger.info(f"retrieve annotation from {ground_truth_path}")
         with open(ground_truth_path) as f:

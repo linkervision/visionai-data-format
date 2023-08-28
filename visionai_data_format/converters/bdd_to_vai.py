@@ -56,7 +56,7 @@ class BDDtoVAI(Converter):
         copy_sensor_data: bool = True,
         n_frame: int = -1,
         annotation_name: str = "groundtruth",
-        img_extention: str = ".jpg",
+        img_extension: str = ".jpg",
     ) -> None:
         try:
             raw_data = json.load(open(input_annotation_path))
@@ -87,7 +87,7 @@ class BDDtoVAI(Converter):
                     sequence_name=sequence_name,
                     uri_root=uri_root,
                     annotation_name=annotation_name,
-                    img_extention=img_extention,
+                    img_extension=img_extension,
                     copy_sensor_data=copy_sensor_data,
                     source_data_root=source_data_root,
                 )
@@ -107,7 +107,7 @@ class BDDtoVAI(Converter):
         uri_root: str,
         source_data_root=str,
         annotation_name: str = "groundtruth",
-        img_extention: str = ".jpg",
+        img_extension: str = ".jpg",
         copy_sensor_data: bool = True,
     ) -> None:
         frame_list = bdd_data.get("frame_list", None)
@@ -128,7 +128,7 @@ class BDDtoVAI(Converter):
             frames: dict[str, Frame] = defaultdict(Frame)
             objects: dict[str, Object] = defaultdict(Object)
             contexts: dict[str, Context] = defaultdict(Context)
-            context_poninters: dict[str, dict] = defaultdict(dict)
+            context_pointers: dict[str, dict] = defaultdict(dict)
             context_cat: dict[str, str] = {}
             for i, frame in enumerate(frame_list):
                 frame_idx = f"{i:012d}"
@@ -146,7 +146,7 @@ class BDDtoVAI(Converter):
                     os.makedirs(img_dest_dir, exist_ok=True)
                     shutil.copy2(
                         img_source,
-                        os.path.join(img_dest_dir, frame_idx + img_extention),
+                        os.path.join(img_dest_dir, frame_idx + img_extension),
                     )
                 labels = frame.get("labels", [])
                 frameLabels = frame.get("frameLabels", [])
@@ -156,7 +156,7 @@ class BDDtoVAI(Converter):
                     sequence_name,
                     "data",
                     camera_sensor_name,
-                    frame_idx + img_extention,
+                    frame_idx + img_extension,
                 )
                 frame_data: Frame = Frame(
                     objects=defaultdict(DynamicObjectData),
@@ -282,13 +282,13 @@ class BDDtoVAI(Converter):
                             "stream": camera_sensor_name,
                         }
                         if isinstance(attr_value, int):
-                            context_poninters[context_id][attr_name] = {
+                            context_pointers[context_id][attr_name] = {
                                 "type": ObjectType.NUM,
                                 "frame_intervals": tagging_frame_intervals,
                             }
                             dynamic_context_data[context_id]["num"].append(context_item)
                         elif isinstance(attr_value, bool):
-                            context_poninters[context_id][attr_name] = {
+                            context_pointers[context_id][attr_name] = {
                                 "type": "boolean",
                                 "frame_intervals": tagging_frame_intervals,
                             }
@@ -296,7 +296,7 @@ class BDDtoVAI(Converter):
                                 context_item
                             )
                         else:
-                            context_poninters[context_id][attr_name] = {
+                            context_pointers[context_id][attr_name] = {
                                 "type": ObjectType.VEC,
                                 "frame_intervals": tagging_frame_intervals,
                             }
@@ -324,7 +324,7 @@ class BDDtoVAI(Converter):
                 frames[frame_idx] = frame_data
 
             frame_intervals = [FrameInterval(frame_end=i, frame_start=0)]
-            for context_id, context_pointer_value in context_poninters.items():
+            for context_id, context_pointer_value in context_pointers.items():
                 contexts[context_id].update(
                     {"context_data_pointers": context_pointer_value}
                 )

@@ -31,7 +31,7 @@ from visionai_data_format.utils.common import (
     IMAGE_EXT,
     LOGGING_DATEFMT,
     LOGGING_FORMAT,
-    VISIONAI_OBJECT_JSON,
+    VISIONAI_JSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -216,10 +216,8 @@ def coco_to_vision_ai(
 
         os.makedirs(f"{dest_annot_path}", exist_ok=True)
 
-        logger.info(
-            f"Saving data to {os.path.join(dest_annot_path,VISIONAI_OBJECT_JSON)}"
-        )
-        with open(os.path.join(dest_annot_path, VISIONAI_OBJECT_JSON), "w+") as f:
+        logger.info(f"Saving data to {os.path.join(dest_annot_path,VISIONAI_JSON)}")
+        with open(os.path.join(dest_annot_path, VISIONAI_JSON), "w+") as f:
             json.dump(vision_ai.dict(exclude_none=True), f, indent=4)
         logger.info("Save finished")
 

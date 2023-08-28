@@ -458,7 +458,7 @@ First, create a new `Ontology` that contains the project ontology. Then, call `v
 ### Convert `BDD+` format data to `VisionAI` format
 #### (Only support box2D and camera sensor data only for now)
 ```
- python visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extention .jpg --copy_sensor_data
+ python visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 
 ```
 Arguments :
@@ -467,7 +467,6 @@ Arguments :
 - `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
 - `-input_annotation_path`  : source annotation path (BDD+ format json file)
 - `-source_data_root`  : source data root for sensor data and calibration data (will find and copy image from this root)
-- `-input_annotation_path`  : source annotation path (BDD+ format json file)
 - `-output_dest_folder` : output root folder (VisionAI local root folder)
 - `-uri_root` : uri root for target upload VAI storage i.e: https://azuresorate/vai_dataset
 - `-n_frame`  : number of frame to be converted (-1 means all), by default -1
@@ -475,7 +474,7 @@ Arguments :
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extention` :image file extention (default: ".jpg")
+- `-img_extension` :image file extention (default: ".jpg")
 - `--copy_sensor_data` :enable to copy image/lidar data
 
 
@@ -497,6 +496,65 @@ Arguments :
 - `-storage_name`  : storage name
 - `-container_name`  : container name (dataset name)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
+
+
+
+### Convert `Kitti` format data to `VisionAI` format
+#### (Only support KITTI with one camera and one lidar sensor)
+
+Important:
+- image type is not restricted, could be ".jpg" or ".png", but we will convert it into ".jpg" in `VisionAI` format
+- only support for `P2` projection matrix calibration information
+
+Currently,only support `KITTI` dataset with structure folder :
+```bash
+.kitti_folder
+├── calib
+│   ├── 000000.txt
+│   ├── 000001.txt
+│   ├── 000002.txt
+│   ├── 000003.txt
+│   └── 000004.txt
+├── data
+│   ├── 000000.png
+│   ├── 000001.png
+│   ├── 000002.png
+│   ├── 000003.png
+│   └── 000004.png
+├── labels
+│   ├── 000000.txt
+│   ├── 000001.txt
+│   ├── 000002.txt
+│   ├── 000003.txt
+│   └── 000004.txt
+└── pcd
+    ├── 000000.pcd
+    ├── 000001.pcd
+    ├── 000002.pcd
+    ├── 000003.pcd
+    └── 000004.pcd
+```
+
+Command :
+
+```
+ python visionai_data_format/convert_dataset.py -input_format kitti -output_format vision_ai -image_annotation_type 2d_bounding_box -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -lidar_sensor_name lidar1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+
+```
+Arguments :
+- `-input_format`  : input format (use bddp for BDD+)
+- `-output_format`  : output format (vision_ai)
+- `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-source_data_root`  : source data root for sensor data and calibration data (will find and copy image from this root)
+- `-output_dest_folder` : output root folder (VisionAI local root folder)
+- `-uri_root` : uri root for target upload VAI storage i.e: https://azuresorate/vai_dataset
+- `-n_frame`  : number of frame to be converted (-1 means all), by default -1
+- `-sequence_idx_start `  : sequence start id, by default 0
+- `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
+- `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
+- `-annotation_name` : annotation folder name (default: "groundtruth")
+- `-img_extension` :image file extention (default: ".jpg")
+- `--copy_sensor_data` :enable to copy image/lidar data
 
 
 
