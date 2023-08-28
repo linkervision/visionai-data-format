@@ -542,7 +542,7 @@ Command :
 
 ```
 Arguments :
-- `-input_format`  : input format (use bddp for BDD+)
+- `-input_format`  : input format (use kitti for KITTI)
 - `-output_format`  : output format (vision_ai)
 - `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
 - `-source_data_root`  : source data root for sensor data and calibration data (will find and copy image from this root)
@@ -556,6 +556,26 @@ Arguments :
 - `-img_extension` :image file extention (default: ".jpg")
 - `--copy_sensor_data` :enable to copy image/lidar data
 
+
+### Convert `COCO` format data to `VisionAI` format
+
+```
+ python visionai_data_format/convert_dataset.py -input_format coco -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./coco_instance.json -source_data_root ./coco_images/ -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+
+```
+Arguments :
+- `-input_format`  : input format (use coco for COCO format)
+- `-output_format`  : output format (vision_ai)
+- `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-source_data_root`  : image data folder
+- `-output_dest_folder` : output root folder (VisionAI local root folder)
+- `-uri_root` : uri root for target upload VAI storage i.e: https://azuresorate/vai_dataset
+- `-n_frame`  : number of frame to be converted (-1 means all), by default -1
+- `-sequence_idx_start `  : sequence start id, by default 0
+- `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
+- `-annotation_name` : annotation folder name (default: "groundtruth")
+- `-img_extension` :image file extention (default: ".jpg")
+- `--copy_sensor_data` :enable to copy image/lidar data
 
 
 ## Troubleshooting
