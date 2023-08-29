@@ -17,7 +17,7 @@ class DatasetConverter:
         output_dest_folder: str,
         uri_root: str,
         camera_sensor_name: str,
-        lidar_sensor_name: str,
+        lidar_sensor_name: Optional[str] = None,
         input_annotation_path: Optional[str] = None,
         sequence_idx_start: int = 0,
         copy_sensor_data: bool = True,
@@ -39,7 +39,8 @@ class DatasetConverter:
         uri_root : str
             uri root for target upload data path
         camera_sensor_name : str
-        lidar_sensor_name : str
+        lidar_sensor_name : str, optional
+            lidar sensor name, by default None
         input_annotation_path : str, optional
             annotation file path, by default None
         sequence_idx_start : int, optional

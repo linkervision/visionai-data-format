@@ -34,7 +34,7 @@ class Info(BaseModel):
     date_created: str = ""
 
 
-class Coco(BaseModel):
+class COCO(BaseModel):
     info: Info = Info()
     licenses: List = []
     categories: List[Category]

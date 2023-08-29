@@ -105,7 +105,7 @@ class BDDtoVAI(Converter):
         lidar_sensor_name: str,
         sequence_name: str,
         uri_root: str,
-        source_data_root=str,
+        source_data_root: str,
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
         copy_sensor_data: bool = True,

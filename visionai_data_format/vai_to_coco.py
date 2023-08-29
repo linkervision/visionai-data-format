@@ -6,7 +6,7 @@ import shutil
 
 from PIL import Image as PILImage
 
-from visionai_data_format.schemas.coco_schema import Annotation, Category, Coco, Image
+from visionai_data_format.schemas.coco_schema import COCO, Annotation, Category, Image
 from visionai_data_format.utils.classes import gen_ontology_classes_dict
 from visionai_data_format.utils.common import (
     ANNOT_PATH,
@@ -142,7 +142,7 @@ def _vision_ai_to_coco(
             )
             categories.append(category)
 
-    coco = Coco(categories=categories, images=images, annotations=annotations)
+    coco = COCO(categories=categories, images=images, annotations=annotations)
     return coco
 
 
