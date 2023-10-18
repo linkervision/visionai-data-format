@@ -70,7 +70,7 @@ def parse_visionai_child_type(
     return classes_attributes_map
 
 
-def validate_visionai_intervals(visionai: Dict) -> Optional[str]:
+def validate_visionai_intervals(visionai: Dict) -> Optional[List[VisionAIException]]:
     """Validate frame intervals under visionai with its frames
 
     Parameters
@@ -97,11 +97,21 @@ def validate_visionai_intervals(visionai: Dict) -> Optional[str]:
     if visionai_frame_interval_set ^ frame_num_set:
         extra_frames = frame_num_set - visionai_frame_interval_set
         missing_frames = visionai_frame_interval_set - frame_num_set
-        msg = ""
+        msg = []
         if extra_frames:
-            msg += f"Extra frames from `frame_intervals` : {extra_frames}\n"
+            msg += [
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_024,
+                    message_kwargs={"extra_frames": extra_frames},
+                )
+            ]
         if missing_frames:
-            msg += f"Missing frames from `frame_intervals` : {missing_frames}\n"
+            msg += [
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_025,
+                    message_kwargs={"missing_frames": missing_frames},
+                )
+            ]
     return msg
 
 
@@ -151,7 +161,7 @@ def build_ontology_attributes_map(ontology: Ontology) -> Dict[str, Dict[str, Set
 def validate_tags_classes(
     ontology_classes: Set[str],
     tags: Optional[Dict] = None,
-) -> Tuple[str, int]:
+) -> Tuple[Optional[VisionAIException], int]:
     """verify tags under visionai data
 
     Parameters
@@ -179,16 +189,38 @@ def validate_tags_classes(
             tag_segmentation_data = tag_data
             break
     if not tag_segmentation_data:
-        return ("Tag with type `semantic_segmentation_RLE` doesn't found", -1)
+        return (
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_026,
+                message_kwargs={
+                    "field_key": "type",
+                    "field_value": "semantic_segmentation_RLE",
+                    "required_place": "tags",
+                },
+            ),
+            -1,
+        )
 
     vec_list = tag_segmentation_data.get("tag_data", {}).get("vec", [])
     if not vec_list:
-        return ("Can't found vector info inside tag", -1)
+        return (
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_004,
+                message_kwargs={"field_name": "vector", "required_place": "tags"},
+            ),
+            -1,
+        )
 
     # get the first element from vector list
     vec_info: Dict = vec_list[0]
     if vec_info["type"] != "values":
-        return ("Vector type must be `values`", -1)
+        return (
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_014,
+                message_kwargs={"data_name": "vector", "required_type": "values"},
+            ),
+            -1,
+        )
 
     classes_list: List[str] = vec_info["val"]
 
@@ -196,9 +228,15 @@ def validate_tags_classes(
 
     extra_classes = classes_set - ontology_classes
     if extra_classes:
-        return (f"Tag label with classes {extra_classes} doesn't accepted", -1)
+        return (
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_020,
+                message_kwargs={"class_name": extra_classes},
+            ),
+            -1,
+        )
 
-    return ("", len(classes_set))
+    return (None, len(classes_set))
 
 
 def validate_tags(visionai: Dict, tags: Dict, *args, **kwargs) -> Tuple[str, int]:
@@ -214,7 +252,7 @@ def validate_attributes(
     classes_attributes_map: Dict[str, Dict[str, Set]],
     attributes: Dict,
     excluded_attributes: Optional[Set] = None,
-) -> Tuple[bool, Optional[Tuple]]:
+) -> Optional[VisionAIException]:
     for label_class, label_attrs_data in classes_attributes_map.items():
         # already valid the class in previous step
         ontology_attr_name_type_dict: Dict[str, Set] = attributes.get(label_class, {})
@@ -223,7 +261,7 @@ def validate_attributes(
 
         extra_attr = label_name_type_set - ontology_attr_name_type_set
         if extra_attr:
-            raise VisionAIException(
+            return VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_017,
                 message_kwargs={
                     "extra_attributes": extra_attr,
@@ -255,8 +293,15 @@ def validate_attributes(
             )
             extra_options = processed_options - ontology_attr_options
             if not ontology_attr_options or extra_options:
-                return False, (label_class, label_attr_name_type, extra_options)
-    return True, None
+                return VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_017,
+                    message_kwargs={
+                        "extra_attributes": label_attr_name_type,
+                        "ontology_class_name": label_class,
+                        "ontology_class_attribute_name_set": extra_options,
+                    },
+                )
+    return None
 
 
 def validate_frame_object_sensors_data(
@@ -266,7 +311,7 @@ def validate_frame_object_sensors_data(
     has_lidar_sensor: bool,
     has_multi_sensor: bool,
     sensor_name_set: Set[str],
-) -> Optional[str]:
+) -> Optional[VisionAIException]:
     for frame_obj in frames.values():
         cur_obj_data_type = set()
         cur_obj_stream_sensor = set()
@@ -294,15 +339,28 @@ def validate_frame_object_sensors_data(
         extra = cur_obj_coor_sensor - sensor_name_set
         if has_lidar_sensor and extra:
             return f"current frame coordinate system sensor(s) {extra} are not in visionai streams {sensor_name_set}"
+            return VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_019,
+                message_kwargs={"root_key": "frame_properties"},
+            )
+
         frame_properties = frame_obj.get("frame_properties")
         if not frame_properties:
-            return "current frame missing frame_properties"
+            return VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_019,
+                message_kwargs={"root_key": "frame_properties"},
+            )
 
         streams_name_set = set(frame_properties["streams"].keys())
 
         extra = streams_name_set - sensor_name_set
         if extra:
-            return f"Frame properties contains extra sensor(s) : {extra}"
+            return VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_012,
+                message_kwargs={"sensor_name": extra},
+            )
+
+    return None
 
 
 def get_frame_object_attr_type(
@@ -952,7 +1010,7 @@ def validate_visionai_children(
     tags_count: int = -1,
     *args,
     **kwargs,
-) -> Optional[str]:
+) -> Optional[VisionAIException]:
     if not ontology_attributes_map:
         ontology_attributes_map = {}
     ontology_classes = set(ontology_data.keys())
@@ -966,17 +1024,16 @@ def validate_visionai_children(
     )
 
     if extra_classes:
-        return f"Attribute {root_key} with classes {extra_classes} doesn't accepted"
+        return VisionAIException(
+            error_code=VisionAIErrorCode.VAI_ERR_020,
+            message_kwargs={"class_name": extra_classes},
+        )
 
-    valid_attr, valid_attr_data = validate_attributes(
+    valid_attr_exception = validate_attributes(
         classes_attributes_map, ontology_attributes_map
     )
-    if not valid_attr:
-        obj_cls, name_type, extra_option = valid_attr_data
-        return (
-            f"Attribute {root_key} error : class [{obj_cls}] attribute error [{name_type}]"
-            + f"extra options : {extra_option}"
-        )
+    if valid_attr_exception:
+        return valid_attr_exception
 
     sensor_name_set = set(sensor_info.keys())
     error_msg: Optional[str] = validate_frame_object_sensors_data(
@@ -1086,7 +1143,7 @@ def validate_objects(
 
 def validate_streams_obj(
     streams_data: Dict[str, Dict], ontology_sensors: Dict[str, str]
-) -> bool:
+) -> Optional[VisionAIException]:
     if not streams_data:
         return False
     for stream_name, stream_obj in streams_data.items():
@@ -1095,24 +1152,40 @@ def validate_streams_obj(
             stream_name not in ontology_sensors
             or stream_obj_type != ontology_sensors[stream_name]
         ):
-            return False
-    return True
+            return VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_012,
+                message_kwargs={
+                    "sensor_name": "stream_name",
+                    "sensor_type": stream_obj_type,
+                },
+            )
+    return None
 
 
 def validate_coor_system_obj(
     coord_systems_data: Dict[str, Dict], ontology_sensors_name_set: Set[str]
-) -> str:
+) -> Optional[VisionAIErrorCode]:
     if not coord_systems_data:
-        return False
+        return VisionAIException(
+            error_code=VisionAIErrorCode.VAI_ERR_018,
+            message_kwargs={"root_key": "coordinate_systems"},
+        )
     data_sensors = {
         sensor_name
         for sensor_name, sensor_info in coord_systems_data.items()
         if sensor_info["type"] != "local_cs"
     }
     extra_sensors = data_sensors - ontology_sensors_name_set
-    if len(extra_sensors) != 0:
-        return f"Contains extra sensor : {extra_sensors} from ontology streams: {ontology_sensors_name_set}"
-    return ""
+    if extra_sensors:
+        return VisionAIException(
+            error_code=VisionAIErrorCode.VAI_ERR_003,
+            message_kwargs={
+                "extra_sensors": extra_sensors,
+                "root_sensors": ontology_sensors_name_set,
+            },
+        )
+
+    return None
 
 
 def validate_streams(
@@ -1122,32 +1195,36 @@ def validate_streams(
     has_lidar_sensor: bool,
     *args,
     **kwargs,
-) -> Tuple[str, Dict[str, str]]:
+) -> Tuple[Optional[VisionAIException], Dict[str, str]]:
     if not visionai.get("streams"):
-        return ("VisionAI missing streams data", {})
+        return VisionAIException(
+            error_code=VisionAIErrorCode.VAI_ERR_019,
+            message_kwargs={"root_key": "streams"},
+        )
 
     # verify the streams based on sensors
     streams_data = visionai.get("streams")
-    if not validate_streams_obj(
+    error: Optional[VisionAIErrorCode] = validate_streams_obj(
         streams_data=streams_data,
         ontology_sensors=sensor_info,
-    ):
-        return "streams error", {}
+    )
+    if error:
+        return error, {}
     ontology_sensors_name_set = set(sensor_info.keys())
     if has_multi_sensor and has_lidar_sensor:
-        error = validate_coor_system_obj(
+        error: Optional[VisionAIErrorCode] = validate_coor_system_obj(
             coord_systems_data=visionai.get("coordinate_systems"),
             ontology_sensors_name_set=ontology_sensors_name_set,
         )
         if error:
-            return f"coordinate systems error : {error}", {}
+            return error, {}
 
     new_sensor_info = {
         stream_name: stream_obj.get("type", "")
         for stream_name, stream_obj in streams_data.items()
     }
 
-    return "", new_sensor_info
+    return None, new_sensor_info
 
 
 def validate_data_pointers(

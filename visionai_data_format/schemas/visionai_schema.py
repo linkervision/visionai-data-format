@@ -965,7 +965,9 @@ class VisionAIModel(ExcludedNoneBaseModel):
 
     visionai: VisionAI
 
-    def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
+    def validate_with_ontology(
+        self, ontology: Type[Ontology]
+    ) -> List[VisionAIException]:
         validator_map = {
             "contexts": validate_contexts,
             "objects": validate_objects,
