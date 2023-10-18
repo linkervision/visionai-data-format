@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Set, Tuple, Union
 
+from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
+
 from ..ontology import Ontology
 
 
@@ -40,11 +42,13 @@ def mapping_attributes_type_value(attributes: Dict) -> Dict[str, Set]:
 
                     data_length = len(data.get("val", []))
                     if data_length != len(probability_list):
-                        raise ValueError(
-                            "Probability list length "
-                            + f" {len(probability_list)} doesn't match needed length : {data_length}"
+                        raise VisionAIException(
+                            error_code=VisionAIErrorCode.VAI_ERR_016,
+                            message_kwargs={
+                                "field_name": "Probability",
+                                "required_length": data_length,
+                            },
                         )
-
                 option = {str(d).upper() for d in data.get("val")}
             attributes_map[key] |= option
     return attributes_map
@@ -219,9 +223,13 @@ def validate_attributes(
 
         extra_attr = label_name_type_set - ontology_attr_name_type_set
         if extra_attr:
-            raise ValueError(
-                f"\nContain extra attributes {extra_attr} from"
-                + f" ontology class {label_class} attributes : {ontology_attr_name_type_set}"
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_017,
+                message_kwargs={
+                    "extra_attributes": extra_attr,
+                    "ontology_class_name": label_class,
+                    "ontology_class_attribute_name_set": ontology_attr_name_type_set,
+                },
             )
 
         for label_attr_name_type, label_attr_options in label_attrs_data.items():
@@ -285,7 +293,7 @@ def validate_frame_object_sensors_data(
             return f"frame stream sensor(s) {extra} are not in visionai streams {sensor_name_set}"
         extra = cur_obj_coor_sensor - sensor_name_set
         if has_lidar_sensor and extra:
-            return f"current frame coordinate system sensor(s) {extra} are not in visionai streams{sensor_name_set}"
+            return f"current frame coordinate system sensor(s) {extra} are not in visionai streams {sensor_name_set}"
         frame_properties = frame_obj.get("frame_properties")
         if not frame_properties:
             return "current frame missing frame_properties"
@@ -306,7 +314,10 @@ def get_frame_object_attr_type(
     if not frame_objects:
         return
     if subroot_key not in {"object_data", "context_data"}:
-        raise ValueError(f"Current subroot_key ({subroot_key}) is invalid.")
+        raise VisionAIException(
+            error_code=VisionAIErrorCode.VAI_ERR_018,
+            message_kwargs={"root_key": subroot_key},
+        )
 
     obj_data_ele_set = {"bbox", "poly2d", "point2d", "binary"}
 

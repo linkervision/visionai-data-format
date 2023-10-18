@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Optional
 
 from visionai_data_format.converters.base import Converter, ConverterFactory
+from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
 from visionai_data_format.schemas.common import AnnotationFormat, OntologyImageType
 from visionai_data_format.schemas.visionai_schema import (
     Bbox,
@@ -69,7 +70,13 @@ class COCOtoVAI(Converter):
             img_name_id_map = defaultdict(int)
             for img_info in coco_json_data.get("images"):
                 if not (file_name := img_info.get("file_name")):
-                    raise ValueError(f"field `file_name` is not found in {img_info}")
+                    raise VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_002,
+                        message_kwargs={
+                            "field_name": "file_name",
+                            "required_place": "images",
+                        },
+                    )
                 img_name_id_map[file_name] = img_info["id"]
 
             for sequence_idx, image_data in enumerate(
@@ -99,8 +106,12 @@ class COCOtoVAI(Converter):
                 )
                 if n_frame == 0:
                     break
-        except Exception as e:
-            logger.error("Convert bdd to vai format failed : " + str(e))
+
+        except VisionAIException:
+            logger.exception("Convert bdd to vai format failed")
+        except Exception:
+            logger.exception("Convert bdd to vai format failed")
+            raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_999)
 
     @staticmethod
     def convert_coco_to_vai(
