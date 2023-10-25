@@ -145,17 +145,17 @@ def build_ontology_attributes_map(ontology: Ontology) -> Dict[str, Dict[str, Set
 
 
 def validate_tags_classes(
-    tags: Dict,
     ontology_classes: Set[str],
+    tags: Optional[Dict] = None,
 ) -> Tuple[str, int]:
     """verify tags under visionai data
 
     Parameters
     ----------
-    tags : Dict
-        tags under visionai data
     ontology_classes : Set[str]
         current ontology classes
+    tags : Optional[Dict]
+        tags under visionai data, could be None
 
     Returns
     -------
@@ -163,6 +163,8 @@ def validate_tags_classes(
         a tuple of validation error message and number of classes under tags
 
     """
+    if tags is None:
+        return ("", 0)
 
     if not tags:
         return ("Can't validate empty tags", -1)
@@ -196,10 +198,11 @@ def validate_tags_classes(
 
 
 def validate_tags(visionai: Dict, tags: Dict, *args, **kwargs) -> Tuple[str, int]:
+    # Validate the tags classes if the visionai contains this key
     ontology_classes: Set[str] = set(tags.keys())
 
     return validate_tags_classes(
-        tags=visionai["tags"], ontology_classes=ontology_classes
+        tags=visionai.get("tags"), ontology_classes=ontology_classes
     )
 
 
