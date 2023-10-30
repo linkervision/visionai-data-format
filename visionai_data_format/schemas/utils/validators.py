@@ -357,7 +357,8 @@ def validate_frame_object_sensors_data(
                 message_kwargs={
                     "data_type": "frame stream",
                     "extra_sensors": extra,
-                    "root_sensor": sensor_name_set,
+                    "root_sensors": sensor_name_set,
+                    "root_name": "visionai streams",
                 },
             )
         extra = cur_obj_coor_sensor - sensor_name_set
@@ -365,9 +366,10 @@ def validate_frame_object_sensors_data(
             return VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_003,
                 message_kwargs={
-                    "data_type": "coordinate system",
+                    "data_type": "frame coordinate systems",
                     "extra_sensors": extra,
-                    "root_sensor": sensor_name_set,
+                    "root_sensors": sensor_name_set,
+                    "root_name": "visionai coordinate systems",
                 },
             )
 
@@ -948,7 +950,6 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
                         },
                     )
                 )
-    print("validate_dynamic_attrs_data_pointer_semantic_values error list ", error_list)
     return error_list
 
 
@@ -1309,9 +1310,10 @@ def validate_coor_system_obj(
         return VisionAIException(
             error_code=VisionAIErrorCode.VAI_ERR_003,
             message_kwargs={
-                "data_type": "project ontology",
+                "data_type": "coordinate systems",
                 "extra_sensors": extra_sensors,
-                "root_sensor": ontology_sensors_name_set,
+                "root_sensors": ontology_sensors_name_set,
+                "root_name": "project ontology",
             },
         )
 
