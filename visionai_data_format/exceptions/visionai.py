@@ -3,12 +3,15 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import StrictStr
 
+from .constants import VisionAIErrorCode
 from .error_messages import VAI_ERROR_MESSAGES_MAP
 
 logger = logging.getLogger(__name__)
 
 
 class VisionAIException(Exception):
+    error_code: Optional[VisionAIErrorCode] = None
+
     def __init__(
         self, error_code: StrictStr, message_kwargs: Optional[dict] = None
     ) -> Dict[StrictStr, Union[StrictStr, List[StrictStr]]]:
@@ -28,4 +31,5 @@ class VisionAIException(Exception):
         except KeyError:
             logger.exception(f"Missing required string keys for {error_code}")
 
+        self.error_code = error_code
         super().__init__(new_error_message)
