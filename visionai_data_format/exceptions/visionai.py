@@ -22,6 +22,7 @@ class VisionAIException(Exception):
 
         # we can assign message kwargs for these keys
         # since each keys is a string with variable
+        new_error_message = ""
         try:
             new_error_message: StrictStr = error_message_str.format(**message_kwargs)
         except KeyError:

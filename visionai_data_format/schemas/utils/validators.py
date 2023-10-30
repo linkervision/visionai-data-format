@@ -85,7 +85,7 @@ def validate_visionai_intervals(visionai: Dict) -> List[VisionAIException]:
     Optional[str]
         error message
     """
-    error: List[VisionAIException] = []
+    error_list: List[VisionAIException] = []
 
     visionai_frame_interval_set = {
         frame_num
@@ -100,20 +100,21 @@ def validate_visionai_intervals(visionai: Dict) -> List[VisionAIException]:
         extra_frames = frame_num_set - visionai_frame_interval_set
         missing_frames = visionai_frame_interval_set - frame_num_set
         if extra_frames:
-            error += [
+            error_list.append(
                 VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_024,
                     message_kwargs={"extra_frames": extra_frames},
                 )
-            ]
+            )
+
         if missing_frames:
-            error += [
+            error_list.append(
                 VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_025,
                     message_kwargs={"missing_frames": missing_frames},
                 )
-            ]
-    return error
+            )
+    return error_list
 
 
 def validate_classes(
@@ -263,7 +264,8 @@ def validate_attributes(
     classes_attributes_map: Dict[str, Dict[str, Set]],
     attributes: Dict,
     excluded_attributes: Optional[Set] = None,
-) -> Optional[VisionAIException]:
+) -> List[VisionAIException]:
+    error_list = []
     for label_class, label_attrs_data in classes_attributes_map.items():
         # already valid the class in previous step
         ontology_attr_name_type_dict: Dict[str, Set] = attributes.get(label_class, {})
@@ -272,13 +274,15 @@ def validate_attributes(
 
         extra_attr = label_name_type_set - ontology_attr_name_type_set
         if extra_attr:
-            return VisionAIException(
-                error_code=VisionAIErrorCode.VAI_ERR_017,
-                message_kwargs={
-                    "extra_attributes": extra_attr,
-                    "ontology_class_name": label_class,
-                    "ontology_class_attribute_name_set": ontology_attr_name_type_set,
-                },
+            error_list.append(
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_017,
+                    message_kwargs={
+                        "extra_attributes": extra_attr,
+                        "ontology_class_name": label_class,
+                        "ontology_class_attribute_name_set": ontology_attr_name_type_set,
+                    },
+                )
             )
 
         for label_attr_name_type, label_attr_options in label_attrs_data.items():
@@ -304,15 +308,17 @@ def validate_attributes(
             )
             extra_options = processed_options - ontology_attr_options
             if not ontology_attr_options or extra_options:
-                return VisionAIException(
-                    error_code=VisionAIErrorCode.VAI_ERR_017,
-                    message_kwargs={
-                        "extra_attributes": label_attr_name_type,
-                        "ontology_class_name": label_class,
-                        "ontology_class_attribute_name_set": extra_options,
-                    },
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_017,
+                        message_kwargs={
+                            "extra_attributes": label_attr_name_type,
+                            "ontology_class_name": label_class,
+                            "ontology_class_attribute_name_set": extra_options,
+                        },
+                    )
                 )
-    return None
+    return error_list
 
 
 def validate_frame_object_sensors_data(
@@ -346,13 +352,23 @@ def validate_frame_object_sensors_data(
                         cur_obj_coor_sensor.add(coor_sensor)
         extra = cur_obj_stream_sensor - sensor_name_set
         if has_multi_sensor and extra:
-            return f"frame stream sensor(s) {extra} are not in visionai streams {sensor_name_set}"
+            return VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_003,
+                message_kwargs={
+                    "data_type": "frame stream",
+                    "extra_sensors": extra,
+                    "root_sensor": sensor_name_set,
+                },
+            )
         extra = cur_obj_coor_sensor - sensor_name_set
         if has_lidar_sensor and extra:
-            return f"current frame coordinate system sensor(s) {extra} are not in visionai streams {sensor_name_set}"
             return VisionAIException(
-                error_code=VisionAIErrorCode.VAI_ERR_019,
-                message_kwargs={"root_key": "frame_properties"},
+                error_code=VisionAIErrorCode.VAI_ERR_003,
+                message_kwargs={
+                    "data_type": "coordinate system",
+                    "extra_sensors": extra,
+                    "root_sensor": sensor_name_set,
+                },
             )
 
         frame_properties = frame_obj.get("frame_properties")
@@ -368,7 +384,7 @@ def validate_frame_object_sensors_data(
         if extra:
             return VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_012,
-                message_kwargs={"sensor_name": extra},
+                message_kwargs={"sensor_name": extra, "sensor_type": "camera or lidar"},
             )
 
     return None
@@ -900,16 +916,21 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
 
             if tags_count <= 0 and cls_list:
                 error_list.append(
-                    VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_019)
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_018,
+                        message_kwargs={"root_key": "tags"},
+                    )
                 )
             # validate whether annotation class indices are lower or higher than allowed
-            if max(cls_list) >= tags_count or min(cls_list) < 0:
+            if tags_count >= 0 and max(cls_list) >= tags_count or min(cls_list) < 0:
                 error_list.append(
                     VisionAIException(
                         error_code=VisionAIErrorCode.VAI_ERR_039,
                         message_kwargs={
                             "frame_num": frame_num,
-                            "class_list": cls_list,
+                            "class_list": list(
+                                set(cls_list)
+                            ),  # only need to show unique classes
                             "tags_count": tags_count - 1,
                         },
                     )
@@ -919,7 +940,7 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
             if img_area != -1 and pixel_total != img_area:
                 error_list.append(
                     VisionAIException(
-                        error_code=VisionAIErrorCode.VAI_ERR_039,
+                        error_code=VisionAIErrorCode.VAI_ERR_040,
                         message_kwargs={
                             "frame_num": frame_num,
                             "pixel_total": pixel_total,
@@ -927,6 +948,7 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
                         },
                     )
                 )
+    print("validate_dynamic_attrs_data_pointer_semantic_values error list ", error_list)
     return error_list
 
 
@@ -1142,8 +1164,7 @@ def validate_visionai_children(
     valid_attr_exception = validate_attributes(
         classes_attributes_map, ontology_attributes_map
     )
-    if valid_attr_exception:
-        error_list.append(valid_attr_exception)
+    error_list += valid_attr_exception
 
     sensor_name_set = set(sensor_info.keys())
     valid_frame_sensor_error: Optional[
@@ -1166,9 +1187,7 @@ def validate_visionai_children(
     valid_attr_exception = validate_attributes(
         frames_attributes_map, ontology_attributes_map
     )
-
-    if valid_attr_exception:
-        error_list.append(valid_attr_exception)
+    error_list += valid_attr_exception
 
     error_list += validate_visionai_data(
         data_under_vai=visionai_objects,
@@ -1236,7 +1255,6 @@ def validate_objects(
         error_msg, tags_count = validate_tags(visionai=visionai, tags=tags)
         if error_msg:
             error_list += [error_msg]
-
     error_list += validate_visionai_children(
         visionai=visionai,
         ontology_data=ontology_data,
@@ -1291,8 +1309,9 @@ def validate_coor_system_obj(
         return VisionAIException(
             error_code=VisionAIErrorCode.VAI_ERR_003,
             message_kwargs={
+                "data_type": "project ontology",
                 "extra_sensors": extra_sensors,
-                "root_sensors": ontology_sensors_name_set,
+                "root_sensor": ontology_sensors_name_set,
             },
         )
 

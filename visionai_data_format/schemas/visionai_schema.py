@@ -973,15 +973,14 @@ class VisionAIModel(ExcludedNoneBaseModel):
             "objects": validate_objects,
         }
 
-        errors: List[str] = []
+        error_list: List[str] = []
 
         tags = ontology.get("tags", {})
 
         visionai = self.visionai.dict(exclude_unset=True, exclude_none=True)
 
-        err = validate_visionai_intervals(visionai=visionai)
-        if err:
-            errors.append(err)
+        errors = validate_visionai_intervals(visionai=visionai)
+        error_list += errors
 
         streams_data = ontology["streams"]
 
@@ -997,19 +996,19 @@ class VisionAIModel(ExcludedNoneBaseModel):
         )
         ontology_attributes_map = build_ontology_attributes_map(ontology)
 
-        err, visionai_sensor_info = validate_streams(
+        error, visionai_sensor_info = validate_streams(
             visionai=visionai,
             sensor_info=sensor_info,
             has_lidar_sensor=has_lidar_sensor,
             has_multi_sensor=has_multi_sensor,
         )
-        if err:
-            errors.append(err)
+        if error:
+            error_list.append(error)
 
         for ontology_type, ontology_data in ontology.items():
             if not ontology_data or ontology_type not in validator_map:
                 continue
-            err = validator_map[ontology_type](
+            errors = validator_map[ontology_type](
                 visionai=visionai,
                 ontology_data=ontology_data,
                 ontology_attributes_map=ontology_attributes_map,
@@ -1018,10 +1017,9 @@ class VisionAIModel(ExcludedNoneBaseModel):
                 has_multi_sensor=has_multi_sensor,
                 has_lidar_sensor=has_lidar_sensor,
             )
-            if err:
-                errors.append(err)
+            error_list += errors
 
-        return errors
+        return error_list
 
 
 Attributes.update_forward_refs()

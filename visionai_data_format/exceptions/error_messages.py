@@ -4,8 +4,8 @@ VAI_ERROR_MESSAGES_MAP = {
     VisionAIErrorCode.VAI_ERR_001: "The requested converter is not supported.",
     VisionAIErrorCode.VAI_ERR_002: "Please specify at least one sensor name (camera/lidar).",
     VisionAIErrorCode.VAI_ERR_003: (
-        "Sensors {extra_sensors} doesn't match with"
-        + " project ontology/root sensor {root_sensors}."
+        "{data_type} sensors {extra_sensors} doesn't match with"
+        + " {root_name} sensor {root_sensors}."
     ),
     VisionAIErrorCode.VAI_ERR_004: "Missing field {field_name} in {required_place}",
     VisionAIErrorCode.VAI_ERR_005: "Doesn't support BDD format conversion with lidar",
