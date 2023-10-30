@@ -70,7 +70,7 @@ def parse_visionai_child_type(
     return classes_attributes_map
 
 
-def validate_visionai_intervals(visionai: Dict) -> Optional[List[VisionAIException]]:
+def validate_visionai_intervals(visionai: Dict) -> List[VisionAIException]:
     """Validate frame intervals under visionai with its frames
 
     Parameters
@@ -83,7 +83,7 @@ def validate_visionai_intervals(visionai: Dict) -> Optional[List[VisionAIExcepti
     Optional[str]
         error message
     """
-    msg: Optional[str] = None
+    error: List[VisionAIException] = []
 
     visionai_frame_interval_set = {
         frame_num
@@ -97,22 +97,21 @@ def validate_visionai_intervals(visionai: Dict) -> Optional[List[VisionAIExcepti
     if visionai_frame_interval_set ^ frame_num_set:
         extra_frames = frame_num_set - visionai_frame_interval_set
         missing_frames = visionai_frame_interval_set - frame_num_set
-        msg = []
         if extra_frames:
-            msg += [
+            error += [
                 VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_024,
                     message_kwargs={"extra_frames": extra_frames},
                 )
             ]
         if missing_frames:
-            msg += [
+            error += [
                 VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_025,
                     message_kwargs={"missing_frames": missing_frames},
                 )
             ]
-    return msg
+    return error
 
 
 def validate_classes(
@@ -247,7 +246,9 @@ def validate_tags_classes(
     return (None, len(classes_set))
 
 
-def validate_tags(visionai: Dict, tags: Dict, *args, **kwargs) -> Tuple[str, int]:
+def validate_tags(
+    visionai: Dict, tags: Dict, *args, **kwargs
+) -> Tuple[Optional[VisionAIException], int]:
     # Validate the tags classes if the visionai contains this key
     ontology_classes: Set[str] = set(tags.keys())
 
@@ -581,7 +582,7 @@ def gen_intervals(range_list: List[int]) -> List[Tuple[int, int]]:
     # [0,1,2,3,5,8,9,12] -> [(0, 3), (5, 5), (8, 9), (12, 12)]
     range_list.sort()
     start, end = range_list[0], range_list[0]
-    result_intervals: list[tuple[int, int]] = [(start, end)]
+    result_intervals: List[tuple[int, int]] = [(start, end)]
     for frame_num in range_list:
         last_start, last_end = result_intervals[-1]
         if last_start <= frame_num <= last_end:
@@ -618,7 +619,7 @@ def validate_vai_data_frame_intervals(
     root_key: str,
     data_obj_under_vai_intervals: Dict[str, List],
     visionai_frame_intervals: List[Tuple[int, int]],
-) -> Tuple[bool, str]:
+) -> List[VisionAIException]:
     """validate frame intervals of object/context under visionai
 
     Parameters
@@ -632,17 +633,27 @@ def validate_vai_data_frame_intervals(
 
     Returns
     -------
-    tuple[bool,str]
-        return a tuple of boolean status and its error message
+    list[VisionAIException]
+        return a list of VisionAIException
     """
+
+    error_list: List[VisionAIException] = []
     for data_uuid, data_intervals in data_obj_under_vai_intervals.items():
         for start, end in data_intervals:
             if start > end or start < 0 or end < 0:
-                return (
-                    False,
-                    f"{root_key} {data_uuid} frame interval(s) validate {root_key} with frames error,"
-                    f"start : {start}, end : {end}",
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_032,
+                        message_kwargs={
+                            "root_key": root_key,
+                            "data_uuid": data_uuid,
+                            "start": start,
+                            "end": end,
+                        },
+                    )
                 )
+                continue
+
             if any(
                 frame_interval[0] <= start <= frame_interval[1]
                 and frame_interval[0] <= end <= frame_interval[1]
@@ -650,19 +661,26 @@ def validate_vai_data_frame_intervals(
             ):
                 continue
 
-            return (
-                False,
-                f"{root_key} {data_uuid} frame interval(s) error,"
-                + f" current interval {start,end} doesn't match with frames intervals {visionai_frame_intervals}",
+            error_list.append(
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_032,
+                    message_kwargs={
+                        "root_key": root_key,
+                        "data_uuid": data_uuid,
+                        "start": start,
+                        "end": end,
+                        "visionai_frame_intervals": visionai_frame_intervals,
+                    },
+                )
             )
-    return True, ""
+    return error_list
 
 
 def vai_data_data_pointers_intervals(
     root_key: str,
     data_pointers: Dict[Tuple[str, str], Dict],
     data_obj_under_vai_intervals: Dict[str, List],
-) -> Tuple[bool, Union[Dict[Tuple[str, str], List[Tuple[int, int]]], str]]:
+) -> Tuple[VisionAIException, Union[Dict[tuple[str, str], list[tuple[int, int]]], str]]:
     """validate intervals between data pointer and its object frame intervals
 
     Parameters
@@ -677,12 +695,13 @@ def vai_data_data_pointers_intervals(
 
     Returns
     -------
-    tuple[bool,Union[Dict[ tuple[str, str], list[tuple[int, int]]],str]]
-        return a tuple of boolean status and its contents,
+    Tuple[List[VisionAIException],Union[Dict[ tuple[str, str], list[tuple[int, int]]],str]]
+        return a tuple of error list and its contents,
         error message or a dictionary of interval range with uuid and attr name
         as its key
     """
 
+    error_list: List[VisionAIException] = []
     # merge data pointers intervals
     data_pointers_frames_intervals: Dict[
         Tuple[str, str], List[Tuple[int, int]]
@@ -694,27 +713,44 @@ def vai_data_data_pointers_intervals(
             start = int(frame_interval_info["frame_start"])
             end = int(frame_interval_info["frame_end"])
             if start > end or start < 0 or end < 0:
-                return (
-                    False,
-                    f"data pointer {data_key} frame interval(s) merge error,"
-                    f" start : {start}, end : {end}",
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_034,
+                        message_kwargs={
+                            "attribute_name": data_key,
+                            "start": start,
+                            "end": end,
+                        },
+                    )
                 )
+                continue
             if (start, end) in interval_set:
-                return (
-                    False,
-                    f"data pointer {data_key} frame interval(s) error,"
-                    f"find duplicated with start : {start}, end : {end}",
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_035,
+                        message_kwargs={
+                            "attribute_name": data_key,
+                            "start": start,
+                            "end": end,
+                        },
+                    )
                 )
+                continue
             interval_set.add((start, end))
             interval_list.extend([idx for idx in range(start, end + 1)])
         # validate whether there is any duplicate intervals
-        if len(interval_list) != len(set(interval_list)):
-            return (
-                False,
-                f"data pointer {data_key} frame interval(s) error,"
-                f" intervals has duplicate index : {interval_list}",
+        if len(interval_list) == len(set(interval_list)):
+            data_pointers_frames_intervals[data_key] = gen_intervals(interval_list)
+        else:
+            error_list.append(
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_036,
+                    message_kwargs={
+                        "attribute_name": data_key,
+                        "interval_list": interval_list,
+                    },
+                )
             )
-        data_pointers_frames_intervals[data_key] = gen_intervals(interval_list)
 
     # validate data under vai intervals with data pointers intervals
     for (
@@ -729,21 +765,28 @@ def vai_data_data_pointers_intervals(
                 for frame_interval in data_obj_under_vai_intervals[attr_uuid]
             ):
                 continue
-            return (
-                False,
-                f"{root_key} {attr_uuid} with data pointer {attr_name} frame interval(s) error,"
-                + f" current data pointer interval {start,end} doesn't match with {root_key}"
-                + f" interval {data_obj_under_vai_intervals[attr_uuid]}",
+            error_list.append(
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_037,
+                    message_kwargs={
+                        "root_key": root_key,
+                        "data_uuid": attr_uuid,
+                        "attribute_name": attr_name,
+                        "start": start,
+                        "end": end,
+                        "data_uuid_intervals": data_obj_under_vai_intervals[attr_uuid],
+                    },
+                )
             )
 
-    return True, data_pointers_frames_intervals
+    return error_list, data_pointers_frames_intervals
 
 
 def validate_dynamic_attrs_data_pointer_intervals(
     root_key: str,
     dynamic_attrs: Dict[Tuple[str, str], Dict],
     data_pointers_frames_intervals: Dict[Tuple[str, str], List[Tuple[int, int]]],
-) -> Tuple[bool, str]:
+) -> List[VisionAIException]:
     """validate dynamic attributes frames intervals with data pointer intervals
 
     Parameters
@@ -757,8 +800,8 @@ def validate_dynamic_attrs_data_pointer_intervals(
 
     Returns
     -------
-    tuple[bool,str]
-        return a tuple of boolean status and its error message
+    List[VisionAIException]
+        list of VisionAIException
     """
 
     dynamic_attrs_frames_intervals: Dict[Tuple[str, str], List[Tuple[int, int]]] = {
@@ -766,12 +809,20 @@ def validate_dynamic_attrs_data_pointer_intervals(
         for data_key, data_info in dynamic_attrs.items()
     }
 
+    error_list: List[VisionAIException] = []
+
     for attr_key, attr_intervals in dynamic_attrs_frames_intervals.items():
         data_pointer_frame_intervals = data_pointers_frames_intervals.get(attr_key)
         if not data_pointer_frame_intervals:
-            return (
-                False,
-                f"{root_key} UUID {attr_key[0]} attribute {attr_key[1]} is not found in data pointers",
+            error_list.append(
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_038,
+                    message_kwargs={
+                        "root_key": root_key,
+                        "data_uuid": attr_key[0],
+                        "attribute_name": attr_key[1],
+                    },
+                )
             )
         # validate data under frames intervals with data pointers intervals
 
@@ -782,21 +833,29 @@ def validate_dynamic_attrs_data_pointer_intervals(
                 for frame_interval in data_pointer_frame_intervals
             ):
                 continue
-            return (
-                False,
-                f"{root_key} UUID {attr_key[0]} with data pointer {attr_key[1]} frame interval(s) error,"
-                + f" current data pointer interval {start,end} doesn't match with {root_key}"
-                + f" interval {data_pointer_frame_intervals}",
+
+            error_list.append(
+                VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_037,
+                    message_kwargs={
+                        "root_key": root_key,
+                        "data_uuid": attr_key[0],
+                        "attribute_name": attr_key[1],
+                        "start": start,
+                        "end": end,
+                        "data_uuid_intervals": data_pointer_frame_intervals,
+                    },
+                )
             )
 
-    return True, ""
+    return error_list
 
 
 def validate_dynamic_attrs_data_pointer_semantic_values(
     dynamic_attrs: Dict[Tuple[str, str], Dict],
     tags_count: int,
     img_area: int = -1,
-) -> Tuple[bool, str]:
+) -> List[VisionAIException]:
     """validate dynamic attributes semantic value
 
     Parameters
@@ -814,7 +873,7 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
         return a tuple of boolean status and its error message
     """
 
-    msg: str = ""
+    error_list: List[VisionAIException] = []
     for frame_data in dynamic_attrs.values():
         for frame_num, attr_info in frame_data.items():
             if attr_info["type"] != "binary":
@@ -833,32 +892,42 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
                 cls_list.append(int(cls_idx))
 
             if tags_count <= 0 and cls_list:
-                msg += "Can't declare RLE if the `tags` is missing or empty\n"
-
+                error_list.append(
+                    VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_019)
+                )
             # validate whether annotation class indices are lower or higher than allowed
             if max(cls_list) >= tags_count or min(cls_list) < 0:
-                msg += (
-                    f"Frame {frame_num} with class indices {cls_list} contains disallowed index "
-                    + f"while only allowed from 0 to {tags_count-1} classes\n"
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_039,
+                        message_kwargs={
+                            "frame_num": frame_num,
+                            "class_list": cls_list,
+                            "tags_count": tags_count - 1,
+                        },
+                    )
                 )
 
             # TODO: retrieve saved image area
             if img_area != -1 and pixel_total != img_area:
-                msg += (
-                    f"Frame {frame_num} RLE pixel count {pixel_total}"
-                    + f" doesn't match with image with area {img_area}\n"
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_039,
+                        message_kwargs={
+                            "frame_num": frame_num,
+                            "pixel_total": pixel_total,
+                            "image_area": img_area,
+                        },
+                    )
                 )
-
-    if msg:
-        return False, msg
-    return True, ""
+    return error_list
 
 
 def generate_missing_attributes_error_message(
     extra_attribute_names: Set[str],
     missing_attribute_names: Set[str],
     dynamic_attrs: dict,
-) -> str:
+) -> List[VisionAIException]:
     """Generate error messages of extra or missing attributes from existing dynamic attributes
 
     Parameters
@@ -872,30 +941,54 @@ def generate_missing_attributes_error_message(
 
     Returns
     -------
-    str
-        error message
+    list
+        VisionAIException error list
     """
-    msg = ""
+    error_list = []
     if extra_attribute_names:
-        msg += "Extra attributes from data pointers : \n"
         for attr_name in extra_attribute_names:
             if attr_name in dynamic_attrs:
-                msg += (
-                    f"{attr_name} with frames {list(dynamic_attrs[attr_name].keys())}\n"
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_028,
+                        message_kwargs={
+                            "attribute_name": attr_name,
+                            "frame_list": list(dynamic_attrs[attr_name].keys()),
+                        },
+                    )
                 )
             else:
-                msg += f"{attr_name} \n"
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_029,
+                        message_kwargs={
+                            "attribute_name": attr_name,
+                        },
+                    )
+                )
 
     if missing_attribute_names:
-        msg += "Missing attributes from data pointers : \n"
         for attr_name in missing_attribute_names:
             if attr_name in dynamic_attrs:
-                msg += (
-                    f"{attr_name} with frames {list(dynamic_attrs[attr_name].keys())}\n"
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_030,
+                        message_kwargs={
+                            "attribute_name": attr_name,
+                            "frame_list": list(dynamic_attrs[attr_name].keys()),
+                        },
+                    )
                 )
             else:
-                msg += f"{attr_name} \n"
-    return msg
+                error_list.append(
+                    VisionAIException(
+                        error_code=VisionAIErrorCode.VAI_ERR_031,
+                        message_kwargs={
+                            "attribute_name": attr_name,
+                        },
+                    )
+                )
+    return error_list
 
 
 def validate_visionai_data(
@@ -905,7 +998,8 @@ def validate_visionai_data(
     sub_root_key: str = "context_data",
     pointer_type: str = "context_data_pointers",
     tags_count: int = -1,
-) -> Tuple[bool, str]:
+) -> List[VisionAIException]:
+    error_list: List[VisionAIException] = []
     parsed_data_pointers: Tuple[
         Dict[Tuple[str, str], Dict], Dict[str, List]
     ] = parse_data_pointers(
@@ -948,13 +1042,11 @@ def validate_visionai_data(
     if combination_attrs ^ data_pointers_keys:
         extra_attribute_names: Set[str] = combination_attrs - data_pointers_keys
         missing_attribute_names: Set[str] = data_pointers_keys - combination_attrs
-        msg: str = generate_missing_attributes_error_message(
+        error_list += generate_missing_attributes_error_message(
             extra_attribute_names=extra_attribute_names,
             missing_attribute_names=missing_attribute_names,
             dynamic_attrs=dynamic_attrs,
         )
-
-        return False, msg
 
     # retrieve frame numbers
     frame_numbers = [int(frame_num) for frame_num in frames.keys()]
@@ -963,47 +1055,46 @@ def validate_visionai_data(
     visionai_frame_intervals: List[Tuple[int, int]] = gen_intervals(frame_numbers)
 
     # validate data under vai intervals with the frame intervals
-    status, err = validate_vai_data_frame_intervals(
+    error_list += validate_vai_data_frame_intervals(
         root_key=root_key,
         data_obj_under_vai_intervals=data_obj_under_vai_intervals,
         visionai_frame_intervals=visionai_frame_intervals,
     )
-    if not status:
-        return status, err
 
     # validate data under vai intervals with data pointers intervals
-    status, return_content = vai_data_data_pointers_intervals(
+    errors, return_content = vai_data_data_pointers_intervals(
         root_key=root_key,
         data_pointers=data_pointers,
         data_obj_under_vai_intervals=data_obj_under_vai_intervals,
     )
-    if not status:
-        return status, return_content
+    if errors:
+        error_list += errors
+    else:
+        # retrieve data pointers frame intervals
+        data_pointers_frames_intervals: Dict[
+            Tuple[str, str], List[Tuple[int, int]]
+        ] = return_content
 
-    # retrieve data pointers frame intervals
-    data_pointers_frames_intervals: Dict[
-        Tuple[str, str], List[Tuple[int, int]]
-    ] = return_content
-
-    # validate dynamic attributes frames intervals with data pointer intervals
-    status, err = validate_dynamic_attrs_data_pointer_intervals(
-        root_key=root_key,
-        dynamic_attrs=dynamic_attrs,
-        data_pointers_frames_intervals=data_pointers_frames_intervals,
-    )
-
-    if not status:
-        return status, err
-
-    # validate if current image_type is semantic_segmentation
-    if root_key == "objects":
-        status, err = validate_dynamic_attrs_data_pointer_semantic_values(
+        # validate dynamic attributes frames intervals with data pointer intervals
+        errors = validate_dynamic_attrs_data_pointer_intervals(
+            root_key=root_key,
             dynamic_attrs=dynamic_attrs,
-            tags_count=tags_count,
+            data_pointers_frames_intervals=data_pointers_frames_intervals,
         )
-        if not status:
-            return status, err
-    return True, ""
+
+        if errors:
+            error_list += errors
+
+        # validate if current image_type is semantic_segmentation
+        if root_key == "objects":
+            errors = validate_dynamic_attrs_data_pointer_semantic_values(
+                dynamic_attrs=dynamic_attrs,
+                tags_count=tags_count,
+            )
+            if errors:
+                error_list += errors
+
+    return error_list
 
 
 def validate_visionai_children(
@@ -1018,7 +1109,9 @@ def validate_visionai_children(
     tags_count: int = -1,
     *args,
     **kwargs,
-) -> Optional[VisionAIException]:
+) -> List[VisionAIException]:
+    error_list: List[VisionAIException] = []
+
     if not ontology_attributes_map:
         ontology_attributes_map = {}
     ontology_classes = set(ontology_data.keys())
@@ -1032,19 +1125,23 @@ def validate_visionai_children(
     )
 
     if extra_classes:
-        return VisionAIException(
-            error_code=VisionAIErrorCode.VAI_ERR_020,
-            message_kwargs={"class_name": extra_classes},
+        error_list.append(
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_020,
+                message_kwargs={"class_name": extra_classes},
+            )
         )
 
     valid_attr_exception = validate_attributes(
         classes_attributes_map, ontology_attributes_map
     )
     if valid_attr_exception:
-        return valid_attr_exception
+        error_list.append(valid_attr_exception)
 
     sensor_name_set = set(sensor_info.keys())
-    error_msg: Optional[str] = validate_frame_object_sensors_data(
+    valid_frame_sensor_error: Optional[
+        VisionAIException
+    ] = validate_frame_object_sensors_data(
         data_root_key=root_key,
         data_child_key=data_key_map["sub_root_key"],
         frames=visionai_frames,
@@ -1053,24 +1150,20 @@ def validate_visionai_children(
         sensor_name_set=sensor_name_set,
     )
 
-    if error_msg:
-        return error_msg
+    if valid_frame_sensor_error:
+        error_list.append(valid_frame_sensor_error)
 
     frames_attributes_map: Dict[str, Dict[str, Set]] = parse_visionai_frames_objects(
         visionai_frames, visionai_objects, root_key
     )
-    valid_attr, valid_attr_data = validate_attributes(
+    valid_attr_exception = validate_attributes(
         frames_attributes_map, ontology_attributes_map
     )
 
-    if not valid_attr:
-        obj_cls, name_type, extra_option = valid_attr_data
-        return (
-            f"Attribute {root_key} error : class [{obj_cls}] attribute error [{name_type}]"
-            + f" extra options : {extra_option}"
-        )
+    if valid_attr_exception:
+        error_list.append(valid_attr_exception)
 
-    status, err = validate_visionai_data(
+    error_list += validate_visionai_data(
         data_under_vai=visionai_objects,
         frames=visionai_frames,
         root_key=root_key,
@@ -1079,8 +1172,7 @@ def validate_visionai_children(
         tags_count=tags_count,
     )
 
-    if not status:
-        return f"validate {root_key} error: {err}"
+    return error_list
 
 
 def validate_contexts(
@@ -1093,7 +1185,7 @@ def validate_contexts(
     tags_count: int = -1,
     *args,
     **kwargs,
-):
+) -> List[VisionAIException]:
     root_key = "contexts"
     data_key_map: Dict[str, str] = {
         "sub_root_key": "context_data",
@@ -1123,7 +1215,7 @@ def validate_objects(
     sensor_info: Dict,
     *args,
     **kwargs,
-):
+) -> List[VisionAIException]:
     root_key = "objects"
     data_key_map = {
         "sub_root_key": "object_data",
@@ -1131,12 +1223,14 @@ def validate_objects(
     }
 
     tags_count = -1
+
+    error_list: List[VisionAIException] = []
     if tags:
         error_msg, tags_count = validate_tags(visionai=visionai, tags=tags)
         if error_msg:
-            return error_msg
+            error_list += [error_msg]
 
-    return validate_visionai_children(
+    error_list += validate_visionai_children(
         visionai=visionai,
         ontology_data=ontology_data,
         ontology_attributes_map=ontology_attributes_map,
@@ -1147,6 +1241,8 @@ def validate_objects(
         has_multi_sensor=has_multi_sensor,
         tags_count=tags_count,
     )
+
+    return error_list
 
 
 def validate_streams_obj(
