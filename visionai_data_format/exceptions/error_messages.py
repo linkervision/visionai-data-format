@@ -36,5 +36,6 @@ VAI_ERROR_MESSAGES_MAP = {
     VisionAIErrorCode.VAI_ERR_024: "Extra frame from frame_intervals : {extra_frames}",
     VisionAIErrorCode.VAI_ERR_025: "Missing frame from frame_intervals : {missing_frames}",
     VisionAIErrorCode.VAI_ERR_026: "Missing field {field_key} with value {field_value} in {required_place}",
+    VisionAIErrorCode.VAI_ERR_027: "Empty {root_key} data",
     VisionAIErrorCode.VAI_ERR_999: "Processing Invalid",
 }

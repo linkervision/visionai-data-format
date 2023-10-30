@@ -29,4 +29,5 @@ class VisionAIErrorCode(str, Enum):
     VAI_ERR_024 = "VAI_ERR_024"
     VAI_ERR_025 = "VAI_ERR_025"
     VAI_ERR_026 = "VAI_ERR_026"
+    VAI_ERR_027 = "VAI_ERR_027"
     VAI_ERR_999 = "VAI_ERR_999"

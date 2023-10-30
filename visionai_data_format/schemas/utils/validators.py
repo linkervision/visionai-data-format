@@ -181,7 +181,15 @@ def validate_tags_classes(
         return ("", 0)
 
     if not tags:
-        return ("Can't validate empty tags", -1)
+        return (
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_027,
+                message_kwargs={
+                    "root_key": "tags",
+                },
+            ),
+            -1,
+        )
 
     tag_segmentation_data: Dict = {}
     for tag_data in tags.values():
