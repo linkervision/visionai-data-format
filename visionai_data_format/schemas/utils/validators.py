@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Set, Tuple, Union
 
+from pydantic import StrictInt, StrictStr
+
 from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
 
 from ..ontology import Ontology
@@ -680,7 +682,12 @@ def vai_data_data_pointers_intervals(
     root_key: str,
     data_pointers: Dict[Tuple[str, str], Dict],
     data_obj_under_vai_intervals: Dict[str, List],
-) -> Tuple[VisionAIException, Union[Dict[tuple[str, str], list[tuple[int, int]]], str]]:
+) -> Tuple[
+    VisionAIException,
+    Union[
+        Dict[Tuple[StrictStr, StrictStr], List[Tuple[StrictInt, StrictInt]]], StrictStr
+    ],
+]:
     """validate intervals between data pointer and its object frame intervals
 
     Parameters
