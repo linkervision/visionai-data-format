@@ -108,9 +108,17 @@ class COCOtoVAI(Converter):
                     break
 
         except VisionAIException:
-            logger.exception("Convert bdd to vai format failed")
+            logger.exception("Convert coco to vai format error")
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_041,
+                message_kwargs={
+                    "original_format": "COCO",
+                    "destination_format": "VisionAI",
+                },
+            )
+
         except Exception:
-            logger.exception("Convert bdd to vai format failed")
+            logger.exception("Convert coco to vai failed")
             raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_999)
 
     @staticmethod

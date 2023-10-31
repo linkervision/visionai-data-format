@@ -61,5 +61,6 @@ VAI_ERROR_MESSAGES_MAP = {
     + "while only allowed from 0 to {tags_count} classes.",
     VisionAIErrorCode.VAI_ERR_040: "Frame {frame_num} RLE pixel count {pixel_total} doesn't match "
     + "with image with area {image_area}.",
+    VisionAIErrorCode.VAI_ERR_041: "Convert format from {original_format} to {destination_format} format error.",
     VisionAIErrorCode.VAI_ERR_999: "Processing Invalid",
 }

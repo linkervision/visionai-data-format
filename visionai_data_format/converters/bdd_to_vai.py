@@ -357,7 +357,14 @@ class BDDtoVAI(Converter):
             )
             logger.info("[convert_bdd_to_vai] Convert finished")
         except VisionAIException:
-            logger.exception("[convert_bdd_to_vai] Convert failed")
+            logger.exception("Convert bdd to vai format error")
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_041,
+                message_kwargs={
+                    "original_format": "BDD",
+                    "destination_format": "VisionAI",
+                },
+            )
         except Exception:
-            logger.exception("[convert_bdd_to_vai] Convert failed")
+            logger.exception("Convert bdd to vai failed")
             raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_999)

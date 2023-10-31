@@ -1162,10 +1162,10 @@ def validate_visionai_children(
             )
         )
 
-    valid_attr_exception = validate_attributes(
+    ontology_attribute_exceptions: List[VisionAIException] = validate_attributes(
         classes_attributes_map, ontology_attributes_map
     )
-    error_list += valid_attr_exception
+    error_list += ontology_attribute_exceptions
 
     sensor_name_set = set(sensor_info.keys())
     valid_frame_sensor_error: Optional[
@@ -1185,10 +1185,10 @@ def validate_visionai_children(
     frames_attributes_map: Dict[str, Dict[str, Set]] = parse_visionai_frames_objects(
         visionai_frames, visionai_objects, root_key
     )
-    valid_attr_exception = validate_attributes(
+    frame_attribute_exceptions: List[VisionAIException] = validate_attributes(
         frames_attributes_map, ontology_attributes_map
     )
-    error_list += valid_attr_exception
+    error_list += frame_attribute_exceptions
 
     error_list += validate_visionai_data(
         data_under_vai=visionai_objects,
