@@ -1,5 +1,8 @@
+import re
+
 import pytest
 
+from visionai_data_format.exceptions import VisionAIException
 from visionai_data_format.schemas.ontology import Ontology
 from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
@@ -25,7 +28,16 @@ def test_validate_bbox_wrong_frame_properties_sensor_name(
         ontology=ontology,
     )
 
-    assert errors == ["Frame properties contains extra sensor(s) : {'camera2'}"]
+    with pytest.raises(
+        VisionAIException,
+        match="Contains extra stream sensors {'camera2'} with type camera or lidar",
+    ):
+        errors = VisionAIModel(
+            **fake_objects_data_wrong_frame_properties_sensor
+        ).validate_with_ontology(
+            ontology=ontology,
+        )
+        raise errors[0]
 
 
 def test_validate_bbox_wrong_streams_under_visionai(
@@ -33,13 +45,16 @@ def test_validate_bbox_wrong_streams_under_visionai(
 ):
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
-    errors = VisionAIModel(
-        **fake_objects_data_wrong_frame_properties_sensor
-    ).validate_with_ontology(
-        ontology=ontology,
-    )
-
-    assert errors == ["Frame properties contains extra sensor(s) : {'camera2'}"]
+    with pytest.raises(
+        VisionAIException,
+        match="Contains extra stream sensors {'camera2'} with type camera or lidar",
+    ):
+        errors = VisionAIModel(
+            **fake_objects_data_wrong_frame_properties_sensor
+        ).validate_with_ontology(
+            ontology=ontology,
+        )
+        raise errors[0]
 
 
 def test_validate_bbox_wrong_class_under_visionai(
@@ -47,13 +62,13 @@ def test_validate_bbox_wrong_class_under_visionai(
 ):
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
-    errors = VisionAIModel(
-        **fake_objects_data_single_lidar_wrong_class
-    ).validate_with_ontology(
-        ontology=ontology,
-    )
-
-    assert errors == ["Attribute objects with classes {'children'} doesn't accepted"]
+    with pytest.raises(VisionAIException, match="Contains extra classes {'children'}"):
+        errors = VisionAIModel(
+            **fake_objects_data_single_lidar_wrong_class
+        ).validate_with_ontology(
+            ontology=ontology,
+        )
+        raise errors[0]
 
 
 def test_validate_semantic_segmentation(
@@ -91,7 +106,15 @@ def test_validate_semantic_segmentation_visionai_wrong_tags_classes(
     ).validate_with_ontology(
         ontology=ontology,
     )
-    assert errors == ["Tag label with classes {'road'} doesn't accepted"]
+
+    assert len(errors) == 2
+    with pytest.raises(
+        expected_exception=VisionAIException, match="Contains extra classes {'road'}"
+    ):
+        raise errors[0]
+
+    with pytest.raises(expected_exception=VisionAIException, match="Invalid key tags"):
+        raise errors[1]
 
 
 def test_validate_classification(
@@ -118,12 +141,27 @@ def test_validate_wrong_visionai_frame_intervals(
         ontology=ontology,
     )
 
-    assert errors == [
-        "Extra frames from `frame_intervals` : {1, 2}\n",
-        "validate objects error: objects UUID 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer"
-        + " bbox_shape frame interval(s) error, current data pointer interval (0, 2) "
-        + "doesn't match with objects interval [(0, 0)]",
-    ]
+    assert len(errors) == 3
+
+    with pytest.raises(
+        expected_exception=VisionAIException,
+        match="Extra frame from frame_intervals : {1, 2}",
+    ):
+        raise errors[0]
+
+    message = (
+        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer bbox_shape frame interval(s) error"
+        + ", current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+    )
+    with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
+        raise errors[1]
+
+    message = (
+        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer cuboid_shape frame interval(s) "
+        + "error, current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+    )
+    with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
+        raise errors[2]
 
 
 def test_validate_wrong_object_frame_intervals(
@@ -138,11 +176,21 @@ def test_validate_wrong_object_frame_intervals(
         ontology=ontology,
     )
 
-    assert errors == [
-        "validate objects error: objects UUID 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer"
-        + " bbox_shape frame interval(s) error, current data pointer interval (0, 2) "
-        + "doesn't match with objects interval [(0, 0)]"
-    ]
+    assert len(errors) == 2
+
+    message = (
+        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer bbox_shape frame interval(s)"
+        + " error, current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+    )
+    with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
+        raise errors[0]
+
+    message = (
+        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer cuboid_shape frame"
+        + " interval(s) error, current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+    )
+    with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
+        raise errors[1]
 
 
 def test_validate_wrong_context_vector_attribute(
@@ -157,10 +205,14 @@ def test_validate_wrong_context_vector_attribute(
     ).validate_with_ontology(
         ontology=ontology,
     )
-    assert errors == [
-        "Attribute contexts error : class [*tagging] attribute error"
-        + " [TIMEOFDAY:vec] extra options : {'THIS_IS_THE_WRONG_VALUE'}"
-    ]
+    assert len(errors) == 1
+
+    message = (
+        "Contains extra attributes TIMEOFDAY:vec from ontology class *tagging "
+        + "attributes : {'THIS_IS_THE_WRONG_VALUE'}"
+    )
+    with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
+        raise errors[0]
 
 
 def test_validate_wrong_context_vector_attribute_classification(
@@ -176,7 +228,7 @@ def test_validate_wrong_context_vector_attribute_classification(
     ).validate_with_ontology(
         ontology=ontology,
     )
-    assert errors == [
-        "Attribute contexts error : class [*tagging] attribute error"
-        + " [TIMEOFDAY:vec] extra options : {'ASDFLL'}"
-    ]
+
+    message = "Contains extra attributes TIMEOFDAY:vec from ontology class *tagging attributes : {'ASDFLL'}"
+    with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
+        raise errors[0]

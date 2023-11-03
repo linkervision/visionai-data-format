@@ -443,10 +443,10 @@ validated_ontology = Ontology(**custom_ontology).dict()
 errors = VisionAIModel(**custom_visionai_data).validate_with_ontology(ontology=validated_ontology)
 
 # Shows the errors
-# If there is any error occurred, it will returns list of error messages
+# If there is any error occurred, it will returns list of exception messages
 # Otherwise, it will return empty list
 # example of errors :
-# >["validate objects error: Missing attributes from data pointers : {('893ac389-7782-4bc3-8f61-09a8e48c819f', 'bbox_shape'), ('893ac389-7782-4bc3-8f61-09a8e48c819f', 'cuboid_shape')} \n"]
+# >[visionai_data_format.exceptions.visionai.VisionAIException("frame stream sensors {'lidar2'} doesn't match with visionai streams sensor {'camera1', 'lidar1'}.")]
 print(errors)
 
 ```

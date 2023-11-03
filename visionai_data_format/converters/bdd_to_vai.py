@@ -6,6 +6,7 @@ import uuid
 from collections import defaultdict
 
 from visionai_data_format.converters.base import Converter, ConverterFactory
+from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
 from visionai_data_format.schemas.bdd_schema import BDDSchema
 from visionai_data_format.schemas.common import AnnotationFormat, OntologyImageType
 from visionai_data_format.schemas.visionai_schema import (
@@ -119,7 +120,7 @@ class BDDtoVAI(Converter):
             return
         # TODO BDD lidar convert
         if lidar_sensor_name:
-            raise NotImplementedError("Current BDD lidar convert is not supported!")
+            raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_005)
 
         try:
             logger.info(
@@ -355,5 +356,15 @@ class BDDtoVAI(Converter):
                 file_name="visionai.json",
             )
             logger.info("[convert_bdd_to_vai] Convert finished")
-        except Exception as e:
-            logger.error("[convert_bdd_to_vai] Convert failed : " + str(e))
+        except VisionAIException:
+            logger.exception("Convert bdd to vai format error")
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_041,
+                message_kwargs={
+                    "original_format": "BDD",
+                    "destination_format": "VisionAI",
+                },
+            )
+        except Exception:
+            logger.exception("Convert bdd to vai failed")
+            raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_999)

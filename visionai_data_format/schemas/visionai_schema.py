@@ -22,6 +22,7 @@ from pydantic import (
     validator,
 )
 
+from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
 from visionai_data_format.schemas.common import ExcludedNoneBaseModel
 from visionai_data_format.schemas.ontology import Ontology
 from visionai_data_format.schemas.utils.validators import (
@@ -100,9 +101,11 @@ class CoordinateSystemWRTParent(ExcludedNoneBaseModel):
 
     @validator("matrix4x4")
     def validate_matrix4x4(cls, value):
-        assert (
-            len(value) == 16
-        ), f"value {value} with length {len(value)} is not allowed"
+        if not value or len(value) != 16:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_type": "16 elements"},
+            )
         return value
 
 
@@ -118,7 +121,11 @@ class CoordinateSystem(ExcludedNoneBaseModel):
 
     @validator("pose_wrt_parent")
     def validate_pose_wrt_parent(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "pose_wrt_parent"},
+            )
         return value
 
 
@@ -139,9 +146,9 @@ class FrameInterval(ExcludedNoneBaseModel):
         frame_end = values.get("frame_end")
 
         if frame_start > frame_end:
-            raise ValueError(
-                "Range is not accepted,"
-                + f" frame start : {frame_start} , frame end : {frame_end}"
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_006,
+                message_kwargs={"frame_start": frame_start, "frame_end": frame_end},
             )
         return values
 
@@ -154,14 +161,20 @@ class IntrinsicsPinhole(ExcludedNoneBaseModel):
 
     @validator("distortion_coeffs_1xN")
     def validate_distortion_coeffs_1xN(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "distortion_coeffs_1xN"},
+            )
         return value
 
     @validator("camera_matrix_3x4")
     def validate_camera_matrix_3x4(cls, value):
-        assert (
-            value and len(value) == 12
-        ), f"value {value} is not allowed, must be a list of 12 float values"
+        if not value or len(value) != 12:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "camera_matrix_3x4"},
+            )
         return value
 
 
@@ -391,12 +404,20 @@ class Context(ExcludedNoneBaseModel):
 
     @validator("context_data", pre=True)
     def validate_context_data(cls, value):
-        assert isinstance(value, dict) and value, f"value {value} is not allowed"
+        if not isinstance(value, dict) or not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "context_data"},
+            )
         return value
 
     @validator("context_data_pointers", pre=True)
     def pre_validate_context_data_pointers(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "context_data_pointers"},
+            )
         return value
 
     @root_validator
@@ -404,8 +425,9 @@ class Context(ExcludedNoneBaseModel):
         context_data_pointers = values.get("context_data_pointers")
         context_data = values.get("context_data", {})
         if context_data and not context_data_pointers:
-            raise ValueError(
-                "context data pointers can't be empty with contexts data exists"
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_009,
+                message_kwargs={"root_key": "context"},
             )
 
         static_contexts_data_name_type_map = {}
@@ -419,16 +441,29 @@ class Context(ExcludedNoneBaseModel):
         for obj_name, obj_type in static_contexts_data_name_type_map.items():
             obj_data_dict = context_data_pointers.get(obj_name, {})
             if not obj_data_dict:
-                raise ValueError(
-                    f"Static contexts data {obj_name}:{obj_type} doesn't found under context data pointer"
-                )
-            obj_data_pointer_type = getattr(obj_data_dict, "type", "")
-            if obj_type != obj_data_pointer_type:
-                raise ValueError(
-                    f"Static contexts data {obj_name}:{obj_type} doesn't match"
-                    + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
+                raise VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_010,
+                    message_kwargs={
+                        "data_status": "static",
+                        "root_key": "context",
+                        "data_name": obj_name,
+                        "data_type": obj_type,
+                    },
                 )
 
+            obj_data_pointer_type = getattr(obj_data_dict, "type", "")
+            if obj_type != obj_data_pointer_type:
+                raise VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_011,
+                    message_kwargs={
+                        "data_status": "static",
+                        "root_key": "context",
+                        "data_name": obj_name,
+                        "data_type": obj_type,
+                        "object_name": obj_type,
+                        "object_type": obj_data_pointer_type,
+                    },
+                )
         static_context_data_name_set = set(static_contexts_data_name_type_map.keys())
         error_name_list = []
 
@@ -439,9 +474,13 @@ class Context(ExcludedNoneBaseModel):
                 error_name_list.append(f"{obj_name}:{obj_info.type}")
 
         if error_name_list:
-            raise ValueError(
-                f"Dynamic context data pointer {error_name_list}"
-                + " missing frame intervals"
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_022,
+                message_kwargs={
+                    "data_status": "dynamic",
+                    "root_key": "context",
+                    "data_name_list": error_name_list,
+                },
             )
         return values
 
@@ -482,12 +521,20 @@ class Object(ExcludedNoneBaseModel):
 
     @validator("object_data", pre=True)
     def validate_object_data(cls, value):
-        assert isinstance(value, dict) and value, f"value {value} is not allowed"
+        if not isinstance(value, dict) or not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "object_data"},
+            )
         return value
 
     @validator("object_data_pointers", pre=True)
     def pre_validate_object_data_pointers(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "object_data_pointers"},
+            )
         return value
 
     @root_validator
@@ -495,8 +542,9 @@ class Object(ExcludedNoneBaseModel):
         object_data_pointers = values.get("object_data_pointers")
         object_data = values.get("object_data", {})
         if object_data and not object_data_pointers:
-            raise ValueError(
-                "object data pointers can't be empty with objects data exists"
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_009,
+                message_kwargs={"root_key": "object"},
             )
 
         static_objects_data_name_type_map = {}
@@ -510,14 +558,27 @@ class Object(ExcludedNoneBaseModel):
         for obj_name, obj_type in static_objects_data_name_type_map.items():
             obj_data_dict = object_data_pointers.get(obj_name, {})
             if not obj_data_dict:
-                raise ValueError(
-                    f"Static objects data {obj_name}:{obj_type} doesn't found under object data pointer"
+                raise VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_010,
+                    message_kwargs={
+                        "data_status": "static",
+                        "root_key": "object",
+                        "data_name": obj_name,
+                        "data_type": obj_type,
+                    },
                 )
             obj_data_pointer_type = getattr(obj_data_dict, "type", "")
             if obj_type != obj_data_pointer_type:
-                raise ValueError(
-                    f"Static objects data {obj_name}:{obj_type} doesn't match"
-                    + f" with data_pointer {obj_name}:{obj_data_pointer_type}"
+                raise VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_011,
+                    message_kwargs={
+                        "data_status": "static",
+                        "root_key": "object",
+                        "data_name": obj_name,
+                        "data_type": obj_type,
+                        "object_name": obj_type,
+                        "object_type": obj_data_pointer_type,
+                    },
                 )
 
         static_object_data_name_set = set(static_objects_data_name_type_map.keys())
@@ -529,9 +590,13 @@ class Object(ExcludedNoneBaseModel):
                 error_name_list.append(f"{obj_name}:{obj_info.type}")
 
         if error_name_list:
-            raise ValueError(
-                f"Dynamic object data pointer {error_name_list}"
-                + " missing frame intervals"
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_022,
+                message_kwargs={
+                    "data_status": "dynamic",
+                    "root_key": "object",
+                    "data_name_list": error_name_list,
+                },
             )
         return values
 
@@ -545,9 +610,17 @@ class TagData(ExcludedNoneBaseModel):
 
     @validator("vec")
     def validate_vec(cls, values):
-        assert len(values) == 1, "Only allow one data inside list"
+        if not len(values) == 1:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_type": "1 element"},
+            )
         value = values[0]
-        assert value.type == "values", "Value {} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "tag_data"},
+            )
         return values
 
 
@@ -562,7 +635,12 @@ class Stream(ExcludedNoneBaseModel):
 
     @validator("stream_properties")
     def validate_stream_properties(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "stream_properties"},
+            )
+
         return value
 
 
@@ -581,7 +659,13 @@ class TimeStampElement(ExcludedNoneBaseModel):
     @validator("timestamp")
     def validate_timestamp(cls, value):
         iso_time_regex = r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.\d{3})(Z|[+-]((\d{2}:\d{2})|(\d{4})))$"
-        assert re.match(iso_time_regex, value), f"Wrong timestamp format : {value}"
+
+        if not re.match(iso_time_regex, value):
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "timestamp"},
+            )
+
         return value
 
 
@@ -600,7 +684,12 @@ class FramePropertyStream(ExcludedNoneBaseModel):
 
     @validator("stream_properties")
     def validate_stream_properties(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "stream_properties"},
+            )
+
         return value
 
 
@@ -669,7 +758,10 @@ class Poly2D(ObjectDataElement):
     @validator("val")
     def val_length_must_be_even(cls, v):
         if len(v) % 2 != 0:
-            raise ValueError("Array length must be even number")
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_type": "even number"},
+            )
         return v
 
 
@@ -699,7 +791,10 @@ class Binary(ObjectDataElement):
     @validator("name")
     def validate_name_field(cls, value):
         if value != "semantic_mask":
-            raise ValueError("Name value must be `semantic_mask`")
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_014,
+                message_kwargs={"data_name": "name", "required_type": "semantic_mask"},
+            )
         return value
 
 
@@ -768,7 +863,12 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("contexts")
     def validate_contexts(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "contexts"},
+            )
+
         return value
 
     frame_intervals: List[FrameInterval] = Field(
@@ -782,12 +882,19 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("frames")
     def validate_frames(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "frames"},
+            )
 
         frame_keys = list(value.keys())
-        assert all(
-            len(key) == 12 and key.isdigit() for key in frame_keys
-        ), "Key must be a digit with 12 characters length"
+
+        if not all(len(key) == 12 and key.isdigit() for key in frame_keys):
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_type": "digit with 12 characters length"},
+            )
 
         return value
 
@@ -799,7 +906,12 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("objects")
     def validate_objects(cls, value):
-        assert value, f"value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "objects"},
+            )
+
         return value
 
     coordinate_systems: Optional[Dict[StrictStr, CoordinateSystem]] = Field(
@@ -810,12 +922,19 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("coordinate_systems")
     def validate_coordinate_systems(cls, value):
-        assert value, f" Value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "coordinate_systems"},
+            )
+
         for k, v in value.items():
             if v.type == "local_cs" and "iso8855" not in k:
-                raise ValueError(
-                    f"Can't assign coordinate system {k} with local_cs type"
+                raise VisionAIException(
+                    error_code=VisionAIErrorCode.VAI_ERR_015,
+                    message_kwargs={"coordinate_system_name": k},
                 )
+
         return value
 
     streams: Dict[StrictStr, Stream] = Field(
@@ -832,7 +951,11 @@ class VisionAI(ExcludedNoneBaseModel):
 
     @validator("tags")
     def validate_tags(cls, value):
-        assert value, f" Value {value} is not allowed"
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "tags"},
+            )
         return value
 
 
@@ -842,21 +965,22 @@ class VisionAIModel(ExcludedNoneBaseModel):
 
     visionai: VisionAI
 
-    def validate_with_ontology(self, ontology: Type[Ontology]) -> List[str]:
+    def validate_with_ontology(
+        self, ontology: Type[Ontology]
+    ) -> List[VisionAIException]:
         validator_map = {
             "contexts": validate_contexts,
             "objects": validate_objects,
         }
 
-        errors: List[str] = []
+        error_list: List[str] = []
 
         tags = ontology.get("tags", {})
 
         visionai = self.visionai.dict(exclude_unset=True, exclude_none=True)
 
-        err = validate_visionai_intervals(visionai=visionai)
-        if err:
-            errors.append(err)
+        errors = validate_visionai_intervals(visionai=visionai)
+        error_list += errors
 
         streams_data = ontology["streams"]
 
@@ -872,19 +996,20 @@ class VisionAIModel(ExcludedNoneBaseModel):
         )
         ontology_attributes_map = build_ontology_attributes_map(ontology)
 
-        err, visionai_sensor_info = validate_streams(
+        error, visionai_sensor_info = validate_streams(
             visionai=visionai,
             sensor_info=sensor_info,
             has_lidar_sensor=has_lidar_sensor,
             has_multi_sensor=has_multi_sensor,
         )
-        if err:
-            errors.append(err)
+        if error:
+            error_list.append(error)
+            return error_list
 
         for ontology_type, ontology_data in ontology.items():
             if not ontology_data or ontology_type not in validator_map:
                 continue
-            err = validator_map[ontology_type](
+            errors = validator_map[ontology_type](
                 visionai=visionai,
                 ontology_data=ontology_data,
                 ontology_attributes_map=ontology_attributes_map,
@@ -893,10 +1018,9 @@ class VisionAIModel(ExcludedNoneBaseModel):
                 has_multi_sensor=has_multi_sensor,
                 has_lidar_sensor=has_lidar_sensor,
             )
-            if err:
-                errors.append(err)
+            error_list += errors
 
-        return errors
+        return error_list
 
 
 Attributes.update_forward_refs()

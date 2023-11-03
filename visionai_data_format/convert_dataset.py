@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from visionai_data_format.converters.base import ConverterFactory
+from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
 from visionai_data_format.schemas.common import AnnotationFormat, OntologyImageType
 
 
@@ -68,7 +69,7 @@ class DatasetConverter:
             image_annotation_type=image_annotation_type,
         )
         if not converter:
-            raise ValueError("The requested converter is not supported!")
+            raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_001)
         converter.convert(
             input_annotation_path=input_annotation_path,
             output_dest_folder=output_dest_folder,
@@ -182,7 +183,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.camera_sensor_name and not args.lidar_sensor_name:
-        raise ValueError("Please specify at least one sensor name (camera/lidar)!")
+        raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_002)
 
     DatasetConverter.run(
         input_format=args.input_format,
