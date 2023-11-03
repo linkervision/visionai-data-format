@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class VisionAIException(Exception):
     error_code: Optional[VisionAIErrorCode] = None
+    error_message: Optional[str] = None
 
     def __init__(
         self, error_code: StrictStr, message_kwargs: Optional[dict] = None
@@ -32,4 +33,5 @@ class VisionAIException(Exception):
             logger.exception(f"Missing required string keys for {error_code}")
 
         self.error_code = error_code
+        self.error_message = new_error_message
         super().__init__(new_error_message)

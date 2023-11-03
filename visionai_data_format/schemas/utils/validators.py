@@ -383,6 +383,7 @@ def validate_frame_object_sensors_data(
         streams_name_set = set(frame_properties["streams"].keys())
 
         extra = streams_name_set - sensor_name_set
+
         if extra:
             return VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_012,
@@ -1166,7 +1167,6 @@ def validate_visionai_children(
         classes_attributes_map, ontology_attributes_map
     )
     error_list += ontology_attribute_exceptions
-
     sensor_name_set = set(sensor_info.keys())
     valid_frame_sensor_error: Optional[
         VisionAIException
@@ -1248,7 +1248,6 @@ def validate_objects(
         "sub_root_key": "object_data",
         "pointer_type": "object_data_pointers",
     }
-
     tags_count = -1
 
     error_list: List[VisionAIException] = []
@@ -1285,7 +1284,7 @@ def validate_streams_obj(
             return VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_012,
                 message_kwargs={
-                    "sensor_name": "stream_name",
+                    "sensor_name": stream_name,
                     "sensor_type": stream_obj_type,
                 },
             )
@@ -1297,7 +1296,7 @@ def validate_coor_system_obj(
 ) -> Optional[VisionAIErrorCode]:
     if not coord_systems_data:
         return VisionAIException(
-            error_code=VisionAIErrorCode.VAI_ERR_018,
+            error_code=VisionAIErrorCode.VAI_ERR_019,
             message_kwargs={"root_key": "coordinate_systems"},
         )
     data_sensors = {

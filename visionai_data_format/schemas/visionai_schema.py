@@ -1004,6 +1004,7 @@ class VisionAIModel(ExcludedNoneBaseModel):
         )
         if error:
             error_list.append(error)
+            return error_list
 
         for ontology_type, ontology_data in ontology.items():
             if not ontology_data or ontology_type not in validator_map:
