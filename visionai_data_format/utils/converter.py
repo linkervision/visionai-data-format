@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Optional
 
 from visionai_data_format.schemas.bdd_schema import AtrributeSchema, FrameSchema
 from visionai_data_format.schemas.visionai_schema import VisionAI
@@ -18,6 +19,7 @@ def convert_vai_to_bdd(
     storage_name: str,
     container_name: str,
     annotation_name: str = "groundtruth",
+    target_classes: Optional[list] = None,
 ) -> dict:
     if not os.path.exists(folder_name) or len(os.listdir(folder_name)) == 0:
         logger.info("[convert_vai_to_bdd] Folder empty or doesn't exits")
@@ -34,7 +36,11 @@ def convert_vai_to_bdd(
         vai_json = json.loads(open(annotation_file).read())
         vai_data = validate_vai(vai_json).visionai
         cur_frame_list = convert_vai_to_bdd_single(
-            vai_data, sequence_name, storage_name, container_name
+            vai_data=vai_data,
+            sequence_name=sequence_name,
+            storage_name=storage_name,
+            container_name=container_name,
+            target_classes=target_classes,
         )
         frame_list += cur_frame_list
 
@@ -52,10 +58,12 @@ def convert_vai_to_bdd_single(
     container_name: str,
     img_extension: str = ".jpg",
     target_sensor: str = "camera",
+    target_classes: Optional[list] = None,
 ) -> list:
     frame_list = list()
     # only support sensor type is camera/bbox annotation for now
     # TODO converter for lidar annotation
+    target_classes_set = set(target_classes)
     sensor_names = [
         sensor_name
         for sensor_name, sensor_content in vai_data.streams.items()
@@ -79,6 +87,10 @@ def convert_vai_to_bdd_single(
         objects = getattr(frame_data, "objects", None) or {}
         for obj_id, obj_data in objects.items():
             classes = vai_data.objects.get(obj_id).type
+            # filter classes if target_classes is not None
+            if target_classes is not None:
+                if classes not in target_classes_set:
+                    continue
             bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
             for bbox in bboxes:
                 geometry = bbox.val
