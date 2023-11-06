@@ -86,17 +86,17 @@ def convert_vai_to_bdd_single(
         idx = 0
         objects = getattr(frame_data, "objects", None) or {}
         for obj_id, obj_data in objects.items():
-            classes = vai_data.objects.get(obj_id).type
+            class_ = vai_data.objects.get(obj_id).type
             # filter classes if target_classes is not None
             if target_classes is not None:
-                if classes not in target_classes_set:
+                if class_ not in target_classes_set:
                     continue
             bboxes = obj_data.object_data.bbox or [] if obj_data.object_data else []
             for bbox in bboxes:
                 geometry = bbox.val
                 sensor = bbox.stream  # which sensor is the bbox from
                 label = dict()
-                label["category"] = classes
+                label["category"] = class_
                 label["meta_ds"] = {}
                 label["meta_se"] = {}
                 x1, y1, x2, y2 = xywh2xyxy(geometry)
@@ -108,7 +108,7 @@ def convert_vai_to_bdd_single(
                 object_id = {
                     "project": "General",
                     "function": "General",
-                    "object": classes,
+                    "object": class_,
                     "version": VERSION,
                 }
                 label["objectId"] = object_id
