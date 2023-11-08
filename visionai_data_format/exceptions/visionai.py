@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class VisionAIException(Exception):
     error_code: Optional[VisionAIErrorCode] = None
     error_message: Optional[str] = None
+    message_kwargs: dict = {}
 
     def __init__(
         self, error_code: StrictStr, message_kwargs: Optional[dict] = None
@@ -34,4 +35,5 @@ class VisionAIException(Exception):
 
         self.error_code = error_code
         self.error_message = new_error_message
+        self.message_kwargs = message_kwargs
         super().__init__(new_error_message)
