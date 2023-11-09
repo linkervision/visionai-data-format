@@ -63,7 +63,9 @@ def convert_vai_to_bdd_single(
     frame_list = list()
     # only support sensor type is camera/bbox annotation for now
     # TODO converter for lidar annotation
-    target_classes_set = set(target_classes)
+    target_classes_set = set()
+    if target_classes is not None:
+        target_classes_set = set(target_classes)
     sensor_names = [
         sensor_name
         for sensor_name, sensor_content in vai_data.streams.items()
