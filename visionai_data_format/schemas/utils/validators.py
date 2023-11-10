@@ -280,7 +280,6 @@ def validate_attributes(
                     message_kwargs={
                         "extra_attributes": extra_attr,
                         "ontology_class_name": label_class,
-                        "ontology_class_attribute_name_set": ontology_attr_name_type_set,
                     },
                 )
             )
@@ -314,7 +313,6 @@ def validate_attributes(
                         message_kwargs={
                             "extra_attributes": label_attr_name_type,
                             "ontology_class_name": label_class,
-                            "ontology_class_attribute_name_set": extra_options,
                         },
                     )
                 )
@@ -690,7 +688,6 @@ def validate_vai_data_frame_intervals(
                         "data_uuid": data_uuid,
                         "start": start,
                         "end": end,
-                        "visionai_frame_intervals": visionai_frame_intervals,
                     },
                 )
             )
@@ -1006,7 +1003,6 @@ def generate_missing_attributes_error_message(
                         error_code=VisionAIErrorCode.VAI_ERR_030,
                         message_kwargs={
                             "attribute_name": attr_name,
-                            "frame_list": list(dynamic_attrs[attr_name].keys()),
                         },
                     )
                 )

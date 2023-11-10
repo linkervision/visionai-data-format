@@ -104,7 +104,7 @@ class CoordinateSystemWRTParent(ExcludedNoneBaseModel):
         if not value or len(value) != 16:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_013,
-                message_kwargs={"allowed_type": "16 elements"},
+                message_kwargs={"allowed_length": "16 elements"},
             )
         return value
 
@@ -427,7 +427,6 @@ class Context(ExcludedNoneBaseModel):
         if context_data and not context_data_pointers:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_009,
-                message_kwargs={"root_key": "context"},
             )
 
         static_contexts_data_name_type_map = {}
@@ -444,10 +443,8 @@ class Context(ExcludedNoneBaseModel):
                 raise VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_010,
                     message_kwargs={
-                        "data_status": "static",
-                        "root_key": "context",
                         "data_name": obj_name,
-                        "data_type": obj_type,
+                        "type": obj_type,
                     },
                 )
 
@@ -456,8 +453,6 @@ class Context(ExcludedNoneBaseModel):
                 raise VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_011,
                     message_kwargs={
-                        "data_status": "static",
-                        "root_key": "context",
                         "data_name": obj_name,
                         "data_type": obj_type,
                         "object_name": obj_type,
@@ -477,8 +472,6 @@ class Context(ExcludedNoneBaseModel):
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_022,
                 message_kwargs={
-                    "data_status": "dynamic",
-                    "root_key": "context",
                     "data_name_list": error_name_list,
                 },
             )
@@ -544,7 +537,6 @@ class Object(ExcludedNoneBaseModel):
         if object_data and not object_data_pointers:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_009,
-                message_kwargs={"root_key": "object"},
             )
 
         static_objects_data_name_type_map = {}
@@ -561,10 +553,8 @@ class Object(ExcludedNoneBaseModel):
                 raise VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_010,
                     message_kwargs={
-                        "data_status": "static",
-                        "root_key": "object",
                         "data_name": obj_name,
-                        "data_type": obj_type,
+                        "type": obj_type,
                     },
                 )
             obj_data_pointer_type = getattr(obj_data_dict, "type", "")
@@ -572,8 +562,6 @@ class Object(ExcludedNoneBaseModel):
                 raise VisionAIException(
                     error_code=VisionAIErrorCode.VAI_ERR_011,
                     message_kwargs={
-                        "data_status": "static",
-                        "root_key": "object",
                         "data_name": obj_name,
                         "data_type": obj_type,
                         "object_name": obj_type,
@@ -593,8 +581,6 @@ class Object(ExcludedNoneBaseModel):
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_022,
                 message_kwargs={
-                    "data_status": "dynamic",
-                    "root_key": "object",
                     "data_name_list": error_name_list,
                 },
             )
@@ -613,7 +599,7 @@ class TagData(ExcludedNoneBaseModel):
         if not len(values) == 1:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_013,
-                message_kwargs={"allowed_type": "1 element"},
+                message_kwargs={"allowed_length": "1 element"},
             )
         value = values[0]
         if not value:
@@ -760,7 +746,7 @@ class Poly2D(ObjectDataElement):
         if len(v) % 2 != 0:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_013,
-                message_kwargs={"allowed_type": "even number"},
+                message_kwargs={"allowed_length": "even number"},
             )
         return v
 
@@ -893,7 +879,7 @@ class VisionAI(ExcludedNoneBaseModel):
         if not all(len(key) == 12 and key.isdigit() for key in frame_keys):
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_013,
-                message_kwargs={"allowed_type": "digit with 12 characters length"},
+                message_kwargs={"allowed_length": "digit with 12 characters length"},
             )
 
         return value

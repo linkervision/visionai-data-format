@@ -30,7 +30,8 @@ def test_validate_bbox_wrong_frame_properties_sensor_name(
 
     with pytest.raises(
         VisionAIException,
-        match="Contains extra stream sensors {'camera2'} with type camera or lidar",
+        match="Additional stream sensors {'camera2'} with type camera or lidar"
+        + " are present that are not required by the visionai format.",
     ):
         errors = VisionAIModel(
             **fake_objects_data_wrong_frame_properties_sensor
@@ -47,7 +48,8 @@ def test_validate_bbox_wrong_streams_under_visionai(
 
     with pytest.raises(
         VisionAIException,
-        match="Contains extra stream sensors {'camera2'} with type camera or lidar",
+        match="Additional stream sensors {'camera2'} with type camera or lidar"
+        + " are present that are not required by the visionai format.",
     ):
         errors = VisionAIModel(
             **fake_objects_data_wrong_frame_properties_sensor
@@ -62,7 +64,10 @@ def test_validate_bbox_wrong_class_under_visionai(
 ):
     ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
 
-    with pytest.raises(VisionAIException, match="Contains extra classes {'children'}"):
+    with pytest.raises(
+        VisionAIException,
+        match="The data contains additional classes {'children'} that are not expected.",
+    ):
         errors = VisionAIModel(
             **fake_objects_data_single_lidar_wrong_class
         ).validate_with_ontology(
@@ -109,11 +114,15 @@ def test_validate_semantic_segmentation_visionai_wrong_tags_classes(
 
     assert len(errors) == 2
     with pytest.raises(
-        expected_exception=VisionAIException, match="Contains extra classes {'road'}"
+        expected_exception=VisionAIException,
+        match="The data contains additional classes {'road'} that are not expected.",
     ):
         raise errors[0]
 
-    with pytest.raises(expected_exception=VisionAIException, match="Invalid key tags"):
+    with pytest.raises(
+        expected_exception=VisionAIException,
+        match="The key tags is invalid or not recognized.",
+    ):
         raise errors[1]
 
 
@@ -145,20 +154,20 @@ def test_validate_wrong_visionai_frame_intervals(
 
     with pytest.raises(
         expected_exception=VisionAIException,
-        match="Extra frame from frame_intervals : {1, 2}",
+        match="An extra frame was detected beyond the defined frame intervals: {1, 2}.",
     ):
         raise errors[0]
 
     message = (
-        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer bbox_shape frame interval(s) error"
-        + ", current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+        "For objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer bbox_shape, "
+        + "the current interval [0,2] does not match with frames objects intervals [(0, 0)]."
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[1]
 
     message = (
-        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer cuboid_shape frame interval(s) "
-        + "error, current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+        "For objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer cuboid_shape,"
+        + " the current interval [0,2] does not match with frames objects intervals [(0, 0)]."
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[2]
@@ -179,15 +188,15 @@ def test_validate_wrong_object_frame_intervals(
     assert len(errors) == 2
 
     message = (
-        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer bbox_shape frame interval(s)"
-        + " error, current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+        "For objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer bbox_shape,"
+        + " the current interval [0,2] does not match with frames objects intervals [(0, 0)]."
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[0]
 
     message = (
-        "objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer cuboid_shape frame"
-        + " interval(s) error, current interval [0,2] doesn't match with frames objects intervals [(0, 0)]"
+        "For objects 893ac389-7782-4bc3-8f61-09a8e48c819f with data pointer cuboid_shape,"
+        + " the current interval [0,2] does not match with frames objects intervals [(0, 0)]."
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[1]
@@ -207,10 +216,7 @@ def test_validate_wrong_context_vector_attribute(
     )
     assert len(errors) == 1
 
-    message = (
-        "Contains extra attributes TIMEOFDAY:vec from ontology class *tagging "
-        + "attributes : {'THIS_IS_THE_WRONG_VALUE'}"
-    )
+    message = "Extra attributes TIMEOFDAY:vec are present that are not defined in the ontology class *tagging."
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[0]
 
@@ -229,6 +235,6 @@ def test_validate_wrong_context_vector_attribute_classification(
         ontology=ontology,
     )
 
-    message = "Contains extra attributes TIMEOFDAY:vec from ontology class *tagging attributes : {'ASDFLL'}"
+    message = "Extra attributes TIMEOFDAY:vec are present that are not defined in the ontology class *tagging."
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[0]
