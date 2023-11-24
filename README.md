@@ -1,6 +1,6 @@
 # visionai-data-format
 
-`VisionAI` format is [Dataverse](https://demo.dataverse.linkervision.ai/) standardized annotation format to label objects and sequences in the context of Autonomous Driving System(ADS). `VisionAI` provides consistent and effective driving environment description and categorization in the real-world case.
+`VisionAI` format is [Dataverse](https://www.linkervision.com/visionai-platform-dataverse) standardized annotation format to label objects and sequences in the context of Autonomous Driving System(ADS). `VisionAI` provides consistent and effective driving environment description and categorization in the real-world case.
 
 This tool provides validator of `VisionAI` format schema. Currently, the library supports:
   - Validate created `VisionAI` data format
@@ -15,8 +15,8 @@ This tool provides validator of `VisionAI` format schema. Currently, the library
 
 ### Install the package
 
-```console
-foo@bar:~$pip3 install visionai-data-format
+```
+pip3 install visionai-data-format
 ```
 
 **Prerequisites**: You must have [Python 3.7](https://www.python.org/downloads/) and above to use this package.
@@ -463,8 +463,8 @@ Begin by creating a new `Ontology` that includes the project ontology. Subsequen
 #### Convert `BDD+` format data to `VisionAI` format
 (Only support box2D and camera sensor data only for now)
 
-```console
-foo@bar:~$python3 visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+```
+python3 visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 ```
 
 Arguments :
@@ -490,8 +490,8 @@ Arguments :
 (Only support box2D for now)
 The script below could help convert `VisionAI` annotation data to `BDD+` json file
 
-```console
-foo@bar:~$python3 visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
+```
+python3 visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
 ```
 
 Arguments :
@@ -543,8 +543,8 @@ Currently,only support `KITTI` dataset with structure folder :
 
 Command :
 
-```console
-foo@bar:~$python3 visionai_data_format/convert_dataset.py -input_format kitti -output_format vision_ai -image_annotation_type 2d_bounding_box -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -lidar_sensor_name lidar1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+```
+python3 visionai_data_format/convert_dataset.py -input_format kitti -output_format vision_ai -image_annotation_type 2d_bounding_box -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -lidar_sensor_name lidar1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 ```
 
 Arguments :
@@ -565,8 +565,7 @@ Arguments :
 
 ### Convert `COCO` format data to `VisionAI` format
 
-```console
-foo@bar:~$python3 visionai_data_format/convert_dataset.py -input_format coco -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./coco_instance.json -source_data_root ./coco_images/ -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+```python3 visionai_data_format/convert_dataset.py -input_format coco -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./coco_instance.json -source_data_root ./coco_images/ -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 
 ```
 
