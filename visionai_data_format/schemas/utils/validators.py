@@ -296,7 +296,7 @@ def validate_attributes(
                 continue
 
             ontology_attr_options: Set[str] = ontology_attr_name_type_dict.get(
-                label_attr_name_type, {}
+                label_attr_name_type, set()
             )
 
             # Change all attribute values to upper strings
@@ -306,6 +306,8 @@ def validate_attributes(
                 else {str(opt).upper() for opt in label_attr_options}
             )
             extra_options = processed_options - ontology_attr_options
+            # Raise error in case attribute options of current class ontology is empty
+            # or current datarow attributes contain extra attributes
             if not ontology_attr_options or extra_options:
                 error_list.append(
                     VisionAIException(
