@@ -283,6 +283,7 @@ def validate_attributes(
                     },
                 )
             )
+            return error_list
 
         for label_attr_name_type, label_attr_options in label_attrs_data.items():
             # `label_attr_name_type` is combination of attribute name with its type
@@ -296,7 +297,7 @@ def validate_attributes(
                 continue
 
             ontology_attr_options: Set[str] = ontology_attr_name_type_dict.get(
-                label_attr_name_type, {}
+                label_attr_name_type, set()
             )
 
             # Change all attribute values to upper strings
@@ -306,6 +307,8 @@ def validate_attributes(
                 else {str(opt).upper() for opt in label_attr_options}
             )
             extra_options = processed_options - ontology_attr_options
+            # Raise error in case attribute options of current class ontology is empty
+            # or current datarow attributes contain extra attributes
             if not ontology_attr_options or extra_options:
                 error_list.append(
                     VisionAIException(
@@ -847,6 +850,7 @@ def validate_dynamic_attrs_data_pointer_intervals(
                     },
                 )
             )
+            break
         # validate data under frames intervals with data pointers intervals
 
         for start, end in attr_intervals:
@@ -904,7 +908,6 @@ def validate_dynamic_attrs_data_pointer_semantic_values(
             mask_rle: str = attr_info["val"]
 
             # retrieve classes from #pixelnumVclass
-            # TODO: move this to visionai-data-format
             pixel_list: List[str] = [data for data in mask_rle.split("#") if data]
             pixel_total: int = 0
             cls_list: List[int] = []
@@ -1324,9 +1327,12 @@ def validate_streams(
     **kwargs,
 ) -> Tuple[Optional[VisionAIException], Dict[str, str]]:
     if not visionai.get("streams"):
-        return VisionAIException(
-            error_code=VisionAIErrorCode.VAI_ERR_019,
-            message_kwargs={"root_key": "streams"},
+        return (
+            VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_019,
+                message_kwargs={"root_key": "streams"},
+            ),
+            {},
         )
 
     # verify the streams based on sensors

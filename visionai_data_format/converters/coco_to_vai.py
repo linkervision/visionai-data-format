@@ -69,7 +69,8 @@ class COCOtoVAI(Converter):
 
             img_name_id_map = defaultdict(int)
             for img_info in coco_json_data.get("images"):
-                if not (file_name := img_info.get("file_name")):
+                file_name = img_info.get("file_name")
+                if not file_name:
                     raise VisionAIException(
                         error_code=VisionAIErrorCode.VAI_ERR_002,
                         message_kwargs={
