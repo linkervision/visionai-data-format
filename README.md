@@ -1,10 +1,13 @@
 # visionai-data-format
 
-`VisionAI` format is Dataverse["url"] standardized annotation format to label objects and sequences in the context of Autonomous Driving System(ADS). `VisionAI` provides consistent and effective driving environment description and categorization in the real-world case.
+`VisionAI` format is [Dataverse](https://www.linkervision.com/visionai-platform-dataverse) standardized annotation format to label objects and sequences in the context of Autonomous Driving System(ADS). `VisionAI` provides consistent and effective driving environment description and categorization in the real-world case.
 
 This tool provides validator of `VisionAI` format schema. Currently, the library supports:
   - Validate created `VisionAI` data format
   - Validate `VisionAI` data attributes with given `Ontology` information.
+
+For a more in-depth understanding of the VisionAI format, please visit this URL: https://linkervision.gitbook.io/dataverse/visionai-format/visionai-data-format.
+
 
 [Package (PyPi)](https://pypi.org/project/visionai-data-format/)    |   [Source code](https://github.com/linkernetworks/visionai-data-format)
 
@@ -16,10 +19,11 @@ This tool provides validator of `VisionAI` format schema. Currently, the library
 ### Install the package
 
 ```
-pip install visionai-data-format
+pip3 install visionai-data-format
 ```
 
 **Prerequisites**: You must have [Python 3.7](https://www.python.org/downloads/) and above to use this package.
+
 
 ## Example
 The following sections provide examples for the following:
@@ -28,6 +32,8 @@ The following sections provide examples for the following:
 * [Validate VisionAI data with given Ontology](###validate-visionai-data-with-given-ontology)
 
 ### Validate VisionAI schema
+
+#### Example
 
 To validate `VisionAI` data structure, could follow the example below:
 
@@ -191,24 +197,25 @@ validated_visionai = VisionAIModel(**custom_visionai_data).dict()
 
 ```
 
-First, we declare our custom `VisionAI` data, then call `VisionAI(**custom_visionai_data).dict()` to validate our custom data visionai schema. It will raise error if any of required fields is missing or the value type doesn't meet with defined data type ( `BaseModel` error message). Otherwise, it will return dictionary of validated `VisionAI` data
+#### Explanation
+To begin, we define our custom `VisionAI` data. Subsequently, we employ the `VisionAI(**custom_visionai_data).dict()` to ensure the conformity of our custom data with the `VisionAI` schema. If there are any missing required fields or if the value types deviate from the defined data types, an error will be raised (prompting a list of `VisionAIException` exceptions). On the other hand, if the data passes validation, the function will yield a dictionary containing the validated `VisionAI` data.
 
 ### Validate VisionAI data with given Ontology
 
-Before upload dataset into `Dataverse` platform, we could try to validate a `VisionAI` annotation with `Ontology` schema. `Ontology` schema works as a predefined `Project Ontology` data in `Dataverse`.
+#### Ontology Schema
+Before uploading a dataset to the `Dataverse` platform, it's advisable to validate VisionAI annotations using the `Ontology` schema. The `Ontology` schema serves as a predefined structure for Project `Ontology` data in `Dataverse`."
 
-`Ontology` contains `contexts`, `objects`, `streams`, and `tags` four main elements similar to `VisioniAI` schema. The difference is that `Ontology` is the union of all categories and attributes that will be compared with a `VisionAI` data.
+1. `contexts` :
+    fill this section only if the project ontology is of the `classification` type.
+2. `objects` : fill this section for project ontologies other than `classification`, such as `bounding_box` or `semantic_segmentation`.
+3. `streams` :
+    this section is mandatory as it contains project sensor-related information.
+4. `tags` :
+    complete this section for `semantic_segmentation` project ontologies.
 
-1. `contexts`
-    need to be filled if only the project ontology is `classification` type.
-2. `objects`
-    need to be filled for other project ontologies instead of `classification`, such as `bounding_box` or `semantic_segmentation`, etc.
-3. `streams`
-    required to be filled, since it is the project sensor related information.
-4. `tags`
-    need to be filled in case of `semantic_segmentation` project ontology.
+#### Example
 
-Following is the example of `Ontology` Schema and how to validate `VisionAI` data with it:
+Here is an example of the `Ontology` Schema and how to validate `VisionAI` data using it:
 
 ```Python
 
@@ -443,28 +450,31 @@ validated_ontology = Ontology(**custom_ontology).dict()
 errors = VisionAIModel(**custom_visionai_data).validate_with_ontology(ontology=validated_ontology)
 
 # Shows the errors
-# If there is any error occurred, it will returns list of exception messages
+# If there is any error occurred, it will returns list of `VisionAIException` exceptions
 # Otherwise, it will return empty list
 # example of errors :
 # >[visionai_data_format.exceptions.visionai.VisionAIException("frame stream sensors {'lidar2'} doesn't match with visionai streams sensor {'camera1', 'lidar1'}.")]
 print(errors)
 
 ```
-
-First, create a new `Ontology` that contains the project ontology. Then, call `validate_with_ontology(ontology=validated_ontology)` to validate whether current `VisionAI` data meets the `Ontology` data information. It will returns list of error messages if any error occured, otherwise it returns empty list.
-
+#### Explanation
+Begin by creating a new `Ontology` that includes the project ontology. Subsequently, use the `validate_with_ontology(ontology=validated_ontology)` function to check if the current `VisionAI` data aligns with the information in the `Ontology`. The function will return a list of `VisionAIException` if any issues are detected; otherwise, it returns an empty list.
 
 ## Tools
-### Convert `BDD+` format data to `VisionAI` format
-#### (Only support box2D and camera sensor data only for now)
-```
- python visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+
+###  Convert `BDD+` format from/to `VisionAI` format
+
+#### Convert `BDD+` format data to `VisionAI` format
+(Only support box2D and camera sensor data only for now)
 
 ```
+python3 visionai_data_format/convert_dataset.py -input_format bddp -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./bdd_test.json -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+```
+
 Arguments :
 - `-input_format`  : input format (use bddp for BDD+)
 - `-output_format`  : output format (vision_ai)
-- `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-image_annotation_type`  : label annotation type for image (`2d_bounding_box` for box2D)
 - `-input_annotation_path`  : source annotation path (BDD+ format json file)
 - `-source_data_root`  : source data root for sensor data and calibration data (will find and copy image from this root)
 - `-output_dest_folder` : output root folder (VisionAI local root folder)
@@ -474,21 +484,20 @@ Arguments :
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extension` :image file extention (default: ".jpg")
+- `-img_extension` : image file extention (default: ".jpg")
 - `--copy_sensor_data` :enable to copy image/lidar data
 
 
 
 
-
-
-
-### Convert `VisionAI` format data to `BDD+` format
-#### (Only support box2D for now)
+#### Convert `VisionAI` format data to `BDD+` format
+(Only support box2D for now)
 The script below could help convert `VisionAI` annotation data to `BDD+` json file
+
 ```
-python visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
+python3 visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
 ```
+
 Arguments :
 - `-vai_src_folder` : VAI root folder contains VAI format json file
 - `-bdd_dest_file`  : BDD+ format file save destination
@@ -500,7 +509,8 @@ Arguments :
 
 
 ### Convert `Kitti` format data to `VisionAI` format
-#### (Only support KITTI with one camera and one lidar sensor)
+
+```(Only support KITTI with one camera and one lidar sensor)```
 
 Important:
 - image type is not restricted, could be ".jpg" or ".png", but we will convert it into ".jpg" in `VisionAI` format
@@ -538,9 +548,9 @@ Currently,only support `KITTI` dataset with structure folder :
 Command :
 
 ```
- python visionai_data_format/convert_dataset.py -input_format kitti -output_format vision_ai -image_annotation_type 2d_bounding_box -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -lidar_sensor_name lidar1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
-
+python3 visionai_data_format/convert_dataset.py -input_format kitti -output_format vision_ai -image_annotation_type 2d_bounding_box -source_data_root ./data_root -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -lidar_sensor_name lidar1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 ```
+
 Arguments :
 - `-input_format`  : input format (use kitti for KITTI)
 - `-output_format`  : output format (vision_ai)
@@ -553,16 +563,16 @@ Arguments :
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extension` :image file extention (default: ".jpg")
-- `--copy_sensor_data` :enable to copy image/lidar data
+- `-img_extension` : image file extention (default: ".jpg")
+- `--copy_sensor_data` : enable to copy image/lidar data
 
 
 ### Convert `COCO` format data to `VisionAI` format
 
-```
- python visionai_data_format/convert_dataset.py -input_format coco -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./coco_instance.json -source_data_root ./coco_images/ -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+```python3 visionai_data_format/convert_dataset.py -input_format coco -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./coco_instance.json -source_data_root ./coco_images/ -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
 
 ```
+
 Arguments :
 - `-input_format`  : input format (use coco for COCO format)
 - `-output_format`  : output format (vision_ai)
@@ -574,8 +584,8 @@ Arguments :
 - `-sequence_idx_start `  : sequence start id, by default 0
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extension` :image file extention (default: ".jpg")
-- `--copy_sensor_data` :enable to copy image/lidar data
+- `-img_extension` : image file extention (default: ".jpg")
+- `--copy_sensor_data` : enable to copy image/lidar data
 
 
 ## Troubleshooting
