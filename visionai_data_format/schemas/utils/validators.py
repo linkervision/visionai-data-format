@@ -271,7 +271,6 @@ def validate_attributes(
         ontology_attr_name_type_dict: Dict[str, Set] = attributes.get(label_class, {})
         ontology_attr_name_type_set: Set[str] = set(ontology_attr_name_type_dict.keys())
         label_name_type_set: Set[str] = set(label_attrs_data.keys())
-
         extra_attr = label_name_type_set - ontology_attr_name_type_set
         if extra_attr:
             error_list.append(
@@ -289,7 +288,6 @@ def validate_attributes(
             # `label_attr_name_type` is combination of attribute name with its type
             #  i.e : `STREAM:text`
             label_attr_name, label_attr_type = label_attr_name_type.split(":")
-
             # Check whether attribute name in the excluded attributes set
             if (
                 excluded_attributes and label_attr_name.lower() in excluded_attributes
@@ -314,7 +312,7 @@ def validate_attributes(
                     VisionAIException(
                         error_code=VisionAIErrorCode.VAI_ERR_017,
                         message_kwargs={
-                            "extra_attributes": label_attr_name_type,
+                            "extra_attributes": f"{label_attr_name_type}:{extra_options}",
                             "ontology_class_name": label_class,
                         },
                     )
