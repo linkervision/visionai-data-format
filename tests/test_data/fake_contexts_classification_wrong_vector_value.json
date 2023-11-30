@@ -8,7 +8,7 @@
                             "vec": [
                                 {
                                     "val": [
-                                        "asdfll"
+                                        "this_is_the_wrong_value2"
                                     ],
                                     "name": "timeofday",
                                     "stream": "camera1"
