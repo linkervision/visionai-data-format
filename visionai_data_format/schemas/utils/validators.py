@@ -437,7 +437,9 @@ def get_frame_object_attr_type(
         else:
             mapped_attributes = mapping_attributes_type_value(data)
         for attribute_name_type, attribute_options in mapped_attributes.items():
-            classes_attributes_map[obj_class][attribute_name_type] |= attribute_options
+            classes_attributes_map[obj_class][attribute_name_type].update(
+                attribute_options
+            )
     return classes_attributes_map
 
 
@@ -450,15 +452,20 @@ def parse_visionai_frames_objects(
     if not frames:
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
-    classes_attributes_map: Dict[str, Dict[str, Set]] = {}
+    classes_attributes_map: Dict[str, Dict[str, Set]] = defaultdict(
+        lambda: defaultdict(set)
+    )
     for data in frames.values():
         obj = data.get(root_key, None)
         if not obj:
             continue
-
-        classes_attributes_map.update(
-            get_frame_object_attr_type(obj, objects, subroot_key)
+        frame_object_attribute_type_map = get_frame_object_attr_type(
+            obj, objects, subroot_key
         )
+        # update attribute value set for each frame
+        for class_, attribute_data in frame_object_attribute_type_map.items():
+            for attribute_name, attribute_values in attribute_data.items():
+                classes_attributes_map[class_][attribute_name].update(attribute_values)
     return classes_attributes_map
 
 
