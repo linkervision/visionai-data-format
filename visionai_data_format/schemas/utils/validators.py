@@ -271,7 +271,6 @@ def validate_attributes(
         ontology_attr_name_type_dict: Dict[str, Set] = attributes.get(label_class, {})
         ontology_attr_name_type_set: Set[str] = set(ontology_attr_name_type_dict.keys())
         label_name_type_set: Set[str] = set(label_attrs_data.keys())
-
         extra_attr = label_name_type_set - ontology_attr_name_type_set
         if extra_attr:
             error_list.append(
@@ -289,7 +288,6 @@ def validate_attributes(
             # `label_attr_name_type` is combination of attribute name with its type
             #  i.e : `STREAM:text`
             label_attr_name, label_attr_type = label_attr_name_type.split(":")
-
             # Check whether attribute name in the excluded attributes set
             if (
                 excluded_attributes and label_attr_name.lower() in excluded_attributes
@@ -314,7 +312,7 @@ def validate_attributes(
                     VisionAIException(
                         error_code=VisionAIErrorCode.VAI_ERR_017,
                         message_kwargs={
-                            "extra_attributes": label_attr_name_type,
+                            "extra_attributes": f"{label_attr_name_type}:{extra_options}",
                             "ontology_class_name": label_class,
                         },
                     )
@@ -437,7 +435,9 @@ def get_frame_object_attr_type(
         else:
             mapped_attributes = mapping_attributes_type_value(data)
         for attribute_name_type, attribute_options in mapped_attributes.items():
-            classes_attributes_map[obj_class][attribute_name_type] |= attribute_options
+            classes_attributes_map[obj_class][attribute_name_type].update(
+                attribute_options
+            )
     return classes_attributes_map
 
 
@@ -450,15 +450,20 @@ def parse_visionai_frames_objects(
     if not frames:
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
-    classes_attributes_map: Dict[str, Dict[str, Set]] = {}
+    classes_attributes_map: Dict[str, Dict[str, Set]] = defaultdict(
+        lambda: defaultdict(set)
+    )
     for data in frames.values():
         obj = data.get(root_key, None)
         if not obj:
             continue
-
-        classes_attributes_map.update(
-            get_frame_object_attr_type(obj, objects, subroot_key)
+        frame_object_attribute_type_map = get_frame_object_attr_type(
+            obj, objects, subroot_key
         )
+        # update attribute value set for each frame
+        for class_, attribute_data in frame_object_attribute_type_map.items():
+            for attribute_name, attribute_values in attribute_data.items():
+                classes_attributes_map[class_][attribute_name].update(attribute_values)
     return classes_attributes_map
 
 

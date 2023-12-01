@@ -8,7 +8,7 @@
                             "vec": [
                                 {
                                     "val": [
-                                        "this_is_the_wrong_value"
+                                        "this_is_the_wrong_value1"
                                     ],
                                     "name": "timeofday",
                                     "stream": "camera1"
