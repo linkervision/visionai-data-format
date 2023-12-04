@@ -410,7 +410,7 @@ def get_frame_object_attr_type(
     all_objects: Dict[str, Dict],
     subroot_key: str,
 ) -> Dict[str, Dict[str, Set]]:
-    """get frame object/context attributes and compare"""
+    """get frame object/context attributes to compare"""
     if not frame_objects:
         return
     if subroot_key not in {"object_data", "context_data"}:
@@ -459,7 +459,7 @@ def parse_visionai_frames_objects(
     objects: Dict[str, Dict],
     root_key: str,
 ) -> Dict[str, Dict[str, Set]]:
-    """get object_data/ context_data in visionai frames"""
+    """get object_data/ context_data in visionai frames to compare"""
     if not frames:
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
