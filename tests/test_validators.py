@@ -217,7 +217,7 @@ def test_validate_wrong_context_vector_attribute(
     assert len(errors) == 1
 
     message = (
-        "Extra attributes TIMEOFDAY:vec:{'this_is_the_wrong_value1'} "
+        "Extra attributes timeofday:vec:{'this_is_the_wrong_value1'} "
         + "are present that are not defined in the ontology class *tagging."
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
@@ -239,7 +239,7 @@ def test_validate_wrong_context_vector_attribute_classification(
     )
 
     message = (
-        "Extra attributes TIMEOFDAY:vec:{'Night'} "
+        "Extra attributes timeofday:vec:{'Night'} "
         + "are present that are not defined in the ontology class *tagging."
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
