@@ -9,7 +9,7 @@ from ..ontology import Ontology
 
 
 def mapping_attributes_type_value(attributes: Dict) -> Dict[str, Set]:
-    """mapping attributes and convert to upper case to compare"""
+    """mapping attributes"""
     if not attributes:
         return {}
     attributes_map = defaultdict(set)
@@ -18,7 +18,7 @@ def mapping_attributes_type_value(attributes: Dict) -> Dict[str, Set]:
             continue
 
         for data in data_list:
-            name = data.get("name").upper()
+            name = data.get("name")
             key = f"{name}:{attr_type}"
             option = {}
             if not data.get("val"):
@@ -32,7 +32,7 @@ def mapping_attributes_type_value(attributes: Dict) -> Dict[str, Set]:
                     float,
                 ),
             ):
-                option = {str(data.get("val")).upper()}
+                option = {str(data.get("val"))}
             else:
                 val_attr_vec = data.get("attributes", {}).get("vec", [])
                 if val_attr_vec:
@@ -51,7 +51,7 @@ def mapping_attributes_type_value(attributes: Dict) -> Dict[str, Set]:
                                 "required_length": data_length,
                             },
                         )
-                option = {str(d).upper() for d in data.get("val")}
+                option = {str(d) for d in data.get("val")}
             attributes_map[key] |= option
     return attributes_map
 
@@ -149,11 +149,11 @@ def build_ontology_attributes_map(ontology: Ontology) -> Dict[str, Dict[str, Set
             for attribute_name, attribute_info in _class_data.get(
                 "attributes", {}
             ).items():
-                key = f"{attribute_name.upper()}:{attribute_info['type']}"
+                key = f"{attribute_name}:{attribute_info['type']}"
                 options = {}
                 if attribute_info.get("value"):
                     options = {
-                        val.upper() if isinstance(val, str) else val
+                        val if isinstance(val, str) else str(val)
                         for val in attribute_info["value"]
                     }
                 attributes_map[_class_name][key].update(options)
@@ -298,11 +298,11 @@ def validate_attributes(
                 label_attr_name_type, set()
             )
 
-            # Change all attribute values to upper strings
+            # Change all attribute values string set
             processed_options = (
                 set()
                 if not label_attr_options
-                else {str(opt).upper() for opt in label_attr_options}
+                else {str(opt) for opt in label_attr_options}
             )
             extra_options = processed_options - ontology_attr_options
             # Raise error in case attribute options of current class ontology is empty
@@ -397,7 +397,7 @@ def get_frame_object_attr_type(
     all_objects: Dict[str, Dict],
     subroot_key: str,
 ) -> Dict[str, Dict[str, Set]]:
-    """get frame object/context attributes and convert to upper case to compare"""
+    """get frame object/context attributes and compare"""
     if not frame_objects:
         return
     if subroot_key not in {"object_data", "context_data"}:
@@ -446,7 +446,7 @@ def parse_visionai_frames_objects(
     objects: Dict[str, Dict],
     root_key: str,
 ) -> Dict[str, Dict[str, Set]]:
-    """get vision ai frames and convert object/context type and attribute to upper case to compare"""
+    """get vision ai frames and compare"""
     if not frames:
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
