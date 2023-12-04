@@ -135,15 +135,28 @@ def validate_classes(
     return extra_classes, classes_attributes_map
 
 
-def build_ontology_attributes_map(ontology: Ontology) -> Dict[str, Dict[str, Set]]:
-    attributes_map = defaultdict(lambda: defaultdict(set))
-    ontology_keys = {"objects", "contexts", "tags"}
+def build_ontology_attributes_map(ontology: Ontology) -> Dict[str, Dict]:
+    """Mapping ontology root, categories to their attributes and attribute value set
+
+    Parameters
+    ----------
+    ontology : Ontology
+        project ontology
+
+    Returns
+    -------
+    Dict[str, Dict]
+        Mapping for ontology_root / class_name / attribute_name  / attribtue value set
+
+    """
+    attributes_map = defaultdict(lambda: defaultdict(dict))
+    ontology_keys = {"objects", "contexts"}
     for ontology_root in ontology_keys:
         ontology_info = ontology.get(ontology_root)
         if not ontology_info:
             continue
         for _class_name, _class_data in ontology_info.items():
-            attributes_map[_class_name] = defaultdict(set)
+            attributes_map[ontology_root][_class_name] = defaultdict(set)
             if not _class_data:
                 continue
             for attribute_name, attribute_info in _class_data.get(
@@ -153,10 +166,10 @@ def build_ontology_attributes_map(ontology: Ontology) -> Dict[str, Dict[str, Set
                 options = {}
                 if attribute_info.get("value"):
                     options = {
-                        val if isinstance(val, str) else str(val)
+                        str(val) if isinstance(val, str) else str(val)
                         for val in attribute_info["value"]
                     }
-                attributes_map[_class_name][key].update(options)
+                attributes_map[ontology_root][_class_name][key].update(options)
     return attributes_map
 
 
@@ -1255,6 +1268,7 @@ def validate_objects(
     tags_count = -1
 
     error_list: List[VisionAIException] = []
+    # validate ontology.tags and visionai.tags for segmentation data
     if tags:
         error_msg, tags_count = validate_tags(visionai=visionai, tags=tags)
         if error_msg:
