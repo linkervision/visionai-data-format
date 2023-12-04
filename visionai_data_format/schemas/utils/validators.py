@@ -459,7 +459,7 @@ def parse_visionai_frames_objects(
     objects: Dict[str, Dict],
     root_key: str,
 ) -> Dict[str, Dict[str, Set]]:
-    """get vision ai frames and compare"""
+    """get object_data/ context_data in visionai frames"""
     if not frames:
         return
     subroot_key = "object_data" if root_key == "objects" else "context_data"
