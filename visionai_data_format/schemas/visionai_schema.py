@@ -980,7 +980,8 @@ class VisionAIModel(ExcludedNoneBaseModel):
         has_lidar_sensor: bool = any(
             sensor_type == "lidar" for sensor_type in sensor_info.values()
         )
-        ontology_attributes_map = build_ontology_attributes_map(ontology)
+        # ontology_category_attribute_map for objects/context
+        object_context_ontology_attributes_map = build_ontology_attributes_map(ontology)
 
         error, visionai_sensor_info = validate_streams(
             visionai=visionai,
@@ -998,7 +999,9 @@ class VisionAIModel(ExcludedNoneBaseModel):
             errors = validator_map[ontology_type](
                 visionai=visionai,
                 ontology_data=ontology_data,
-                ontology_attributes_map=ontology_attributes_map,
+                ontology_attributes_map=object_context_ontology_attributes_map.get(
+                    ontology_type, {}
+                ),
                 tags=tags,
                 sensor_info=visionai_sensor_info,
                 has_multi_sensor=has_multi_sensor,
