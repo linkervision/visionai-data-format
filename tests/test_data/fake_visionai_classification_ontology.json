@@ -1,0 +1,47 @@
+{
+    "contexts": {
+        "*tagging": {
+            "attributes": {
+                "weather": {
+                    "type": "vec",
+                    "value": [
+                        "sunny",
+                        "cloudy",
+                        "rainy",
+                        "snowy",
+                        "foggy"
+                    ]
+                },
+                "timeofday": {
+                    "type": "vec",
+                    "value": [
+                        "daytime",
+                        "night",
+                        "dawndusk"
+                    ]
+                },
+                "scene": {
+                    "type": "vec",
+                    "value": [
+                        "tunnel",
+                        "residential",
+                        "parkingLot",
+                        "citystreet",
+                        "gasstations",
+                        "highway"
+                    ]
+                }
+            }
+        }
+    },
+    "objects": {
+        "dog": {
+            "attributes": {}
+        }
+    },
+    "streams": {
+        "camera1": {
+            "type": "camera"
+        }
+    }
+}

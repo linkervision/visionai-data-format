@@ -1,0 +1,221 @@
+{
+    "objects": {
+        "pedestrian": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                },
+                "activity": {
+                    "type": "text",
+                    "value": []
+                }
+            }
+        },
+        "truck": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                },
+                "color": {
+                    "type": "text",
+                    "value": []
+                },
+                "new": {
+                    "type": "boolean",
+                    "value": []
+                },
+                "year": {
+                    "type": "num",
+                    "value": []
+                },
+                "status": {
+                    "type": "vec",
+                    "value": [
+                        "stop",
+                        "run",
+                        "small",
+                        "large"
+                    ]
+                }
+            }
+        },
+        "car": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                },
+                "color": {
+                    "type": "text",
+                    "value": []
+                },
+                "new": {
+                    "type": "boolean",
+                    "value": []
+                },
+                "year": {
+                    "type": "num",
+                    "value": []
+                },
+                "status": {
+                    "type": "vec",
+                    "value": [
+                        "stop",
+                        "run",
+                        "small",
+                        "large"
+                    ]
+                }
+            }
+        },
+        "cyclist": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                }
+            }
+        },
+        "dontcare": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                }
+            }
+        },
+        "misc": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                },
+                "color": {
+                    "type": "text",
+                    "value": []
+                },
+                "info": {
+                    "type": "vec",
+                    "value": [
+                        "toyota",
+                        "new"
+                    ]
+                }
+            }
+        },
+        "van": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                }
+            }
+        },
+        "tram": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                }
+            }
+        },
+        "person_sitting": {
+            "attributes": {
+                "bbox_shape": {
+                    "type": "bbox",
+                    "value": null
+                },
+                "cuboid_shape": {
+                    "type": "cuboid",
+                    "value": null
+                }
+            }
+        }
+    },
+    "contexts":{
+        "*tagging": {
+            "attributes":{
+                "profession": {
+                    "type": "text",
+                    "value": []
+                },
+                "roadname": {
+                    "type": "text",
+                    "value": []
+                },
+                "name": {
+                    "type": "text",
+                    "value": []
+                },
+                "unknown_object": {
+                    "type": "vec",
+                    "value": [
+                        "sky",
+                        "leaves",
+                        "wheel_vehicle",
+                        "fire",
+                        "water"
+                    ]
+                },
+                "static_status": {
+                    "type": "boolean",
+                    "value": [
+                        "true",
+                        "false"
+                    ]
+                },
+                "year": {
+                    "type": "num",
+                    "value": []
+                },
+                "weather": {
+                    "type": "text",
+                    "value": []
+                }
+            }
+        }
+    },
+    "streams": {
+        "camera1": {
+            "type": "camera"
+        },
+        "lidar1": {
+            "type": "lidar"
+        }
+    },
+    "tags": null
+}

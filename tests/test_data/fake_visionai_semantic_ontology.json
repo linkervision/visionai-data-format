@@ -1,0 +1,25 @@
+{
+    "objects":{
+        "*segmentation_matrix":{}
+    },
+    "tags":{
+        "background":{},
+        "building":{},
+        "fence":{},
+        "other":{},
+        "people":{},
+        "posts":{},
+        "roadmarking":{},
+        "street":{},
+        "sidewalk":{},
+        "vegetation":{},
+        "vehicle":{},
+        "wall":{},
+        "trafficsign":{}
+    },
+    "streams": {
+        "camera1": {
+            "type": "camera"
+        }
+    }
+}
