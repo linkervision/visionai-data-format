@@ -1057,8 +1057,7 @@ def validate_visionai_data(
     data_pointers, data_obj_under_vai_intervals = parsed_data_pointers
 
     static_attrs: Dict[Tuple[str, str], Dict] = parse_static_attrs(
-        data_under_vai,
-        sub_root_key,
+        data_under_vai, sub_root_key, False
     )
 
     dynamic_attrs: Dict[Tuple[str, str], Dict] = parse_dynamic_attrs(
@@ -1268,6 +1267,10 @@ def validate_objects(
     tags_count = -1
 
     error_list: List[VisionAIException] = []
+    # We do not need tags for instance_mask, so we reset the tags_count to 2 here
+    for object in ontology_data.values():
+        if "instance_mask" in object.get("attributes", {}):
+            tags_count = 2
     # validate ontology.tags and visionai.tags for segmentation data
     if tags:
         error_msg, tags_count = validate_tags(visionai=visionai, tags=tags)
