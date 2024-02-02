@@ -1258,6 +1258,7 @@ def validate_objects(
 
     error_list: List[VisionAIException] = []
     # We do not need tags for instance_mask, so we reset the tags_count to 2 for match the validation of segmentation
+    # For instance_mask, we'll onloy have 0 for background and 1 for the given category.
     for object in ontology_data.values():
         if "instance_mask" in object.get("attributes", {}):
             tags_count = 2
