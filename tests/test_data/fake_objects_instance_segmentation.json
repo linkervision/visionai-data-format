@@ -1,0 +1,116 @@
+{
+    "visionai": {
+        "frame_intervals": [
+            {
+                "frame_start": 0,
+                "frame_end": 0
+            }
+        ],
+        "frames": {
+            "000000000000": {
+                "objects": {
+                    "893ac389-7782-4bc3-8f61-09a8e48c819f": {
+                        "object_data": {
+                            "binary": [
+                                {
+                                    "name": "instance_mask",
+                                    "stream": "camera1",
+                                    "val": "#478092V0#6V1#1272V0#11V1#1267V0#14V1#1265V0#16V1#1263V0#18V1#1262V0#19V1#1260V0#20V1#1260V0#21V1#1258V0#22V1#1258V0#22V1#1258V0#22V1#1258V0#22V1#1258V0#22V1#1258V0#22V1#1259V0#21V1#1259V0#20V1#1260V0#20V1#1261V0#18V1#1263V0#16V1#1265V0#14V1#1267V0#12V1#1270V0#8V1#416621V0",
+                                    "data_type": "",
+                                    "encoding": "rle",
+                                    "confidence_score": 0.6,
+                                    "attributes": {
+                                        "vec": [
+                                            {
+                                                "name": "direction",
+                                                "val": [
+                                                    "front"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "contexts": {},
+                "frame_properties": {
+                    "streams": {
+                        "camera1": {
+                            "uri": "https://helenmlopsstorageqatest.blob.core.windows.net/demodataset/carla/carla_tpu_rle/000000000000/data/camera1/000000000000.jpg"
+                        }
+                    }
+                }
+            }
+        },
+        "objects": {
+            "893ac389-7782-4bc3-8f61-09a8e48c819f": {
+                "frame_intervals": [
+                    {
+                        "frame_start": 0,
+                        "frame_end": 0
+                    }
+                ],
+                "name": "people01",
+                "object_data": {
+                    "num": [
+                        {
+                            "name": "age",
+                            "val": 8
+                        }
+                    ],
+                    "boolean": [
+                        {
+                            "name": "ischild",
+                            "val": true
+                        }
+                    ]
+                },
+                "object_data_pointers": {
+                    "instance_mask": {
+                        "attributes": {
+                            "direction": "vec"
+                        },
+                        "frame_intervals": [
+                            {
+                                "frame_start": 0,
+                                "frame_end": 0
+                            }
+                        ],
+                        "type": "binary"
+                    },
+                    "ischild": {
+                        "type": "boolean",
+                        "frame_intervals": [
+                            {
+                                "frame_start": 0,
+                                "frame_end": 0
+                            }
+                        ]
+                    },
+                    "age": {
+                        "type": "num",
+                        "frame_intervals": [
+                            {
+                                "frame_start": 0,
+                                "frame_end": 0
+                            }
+                        ]
+                    }
+                },
+                "type": "people"
+            }
+        },
+        "streams": {
+            "camera1": {
+                "type": "camera",
+                "uri": "",
+                "description": "Frontal camera"
+            }
+        },
+        "metadata": {
+            "schema_version": "1.0.0"
+        }
+    }
+}

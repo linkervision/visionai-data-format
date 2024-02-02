@@ -88,6 +88,20 @@ def test_validate_semantic_segmentation(
     assert errors == []
 
 
+def test_validate_instance_segmentation(
+    fake_visionai_instance_segmentation_ontology, fake_objects_instance_segmentation
+):
+    ontology = Ontology(**fake_visionai_instance_segmentation_ontology).dict(
+        exclude_unset=True
+    )
+
+    errors = VisionAIModel(**fake_objects_instance_segmentation).validate_with_ontology(
+        ontology=ontology,
+    )
+
+    assert errors == []
+
+
 def test_validate_semantic_segmentation_visionai_without_tags(
     fake_visionai_semantic_ontology, fake_objects_semantic_segmentation_without_tags
 ):

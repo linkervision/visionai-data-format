@@ -1,0 +1,44 @@
+{
+  "objects": {
+    "car": {
+      "attributes": {
+        "instance_mask": {
+          "type": "binary",
+          "value": null
+        },
+        "age": {
+          "type": "num"
+        },
+        "ischild": {
+          "type": "boolean"
+        }
+      }
+    },
+    "people": {
+      "attributes": {
+        "instance_mask": {
+          "type": "binary",
+          "value": null
+        },
+        "direction": {
+          "type": "vec",
+          "value": [
+            "front",
+            "back"
+          ]
+        },
+        "age": {
+          "type": "num"
+        },
+        "ischild": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "streams": {
+    "camera1": {
+      "type": "camera"
+    }
+  }
+}

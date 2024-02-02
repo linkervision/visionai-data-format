@@ -557,7 +557,7 @@ def parse_dynamic_attrs(
 
 
 def parse_static_attrs(
-    data_under_vai: Dict, sub_root_key: str, only_tags: bool = True
+    data_under_vai: Dict, sub_root_key: str
 ) -> Dict[Tuple[str, str], Dict]:
     """mapping data attributes under visionai objects with
     object uuid and its name as key
@@ -568,8 +568,6 @@ def parse_static_attrs(
         data under visionai, such as `objects` or `contexts` data
     sub_root_key : str
         child key of the root key, such as `object_data` or `context_data`
-    only_tags : bool, optional
-        flag to retrieve only tags related data, by default True
 
     Returns
     -------
@@ -583,17 +581,9 @@ def parse_static_attrs(
     for uuid, data in data_under_vai.items():
         # we need to skip to parsing current contexts/objects static attributes
         # if we meets below requirements:
-        # 1. when only parsing tags data, we will skip data with type is equal to "*tagging"
-        #    ,since project tag type in visionai is *tagging
-        # 2. when we need to parsing data unrelated with tags
-        #    we will skip data with type is not equal to "*tagging"
-        # 3. when current contexts/objects doesn't contains `context_data`/`object_data`,
+        # 1. when current contexts/objects doesn't contains `context_data`/`object_data`,
         #    we could skip current contexts/objects
-        if (
-            (only_tags and data["type"] != "*tagging")
-            or (not only_tags and data["type"] == "*tagging")
-            or (sub_root_key not in data)
-        ):
+        if sub_root_key not in data:
             continue
         for attr_type, attr_list in data[sub_root_key].items():
             for attr in attr_list:
@@ -1057,7 +1047,7 @@ def validate_visionai_data(
     data_pointers, data_obj_under_vai_intervals = parsed_data_pointers
 
     static_attrs: Dict[Tuple[str, str], Dict] = parse_static_attrs(
-        data_under_vai, sub_root_key, False
+        data_under_vai, sub_root_key
     )
 
     dynamic_attrs: Dict[Tuple[str, str], Dict] = parse_dynamic_attrs(
@@ -1267,7 +1257,7 @@ def validate_objects(
     tags_count = -1
 
     error_list: List[VisionAIException] = []
-    # We do not need tags for instance_mask, so we reset the tags_count to 2 here
+    # We do not need tags for instance_mask, so we reset the tags_count to 2 for match the validation of segmentation
     for object in ontology_data.values():
         if "instance_mask" in object.get("attributes", {}):
             tags_count = 2
