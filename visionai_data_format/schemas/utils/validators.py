@@ -1257,8 +1257,9 @@ def validate_objects(
     tags_count = -1
 
     error_list: List[VisionAIException] = []
-    # We do not need tags for instance_mask, so we reset the tags_count to 2 for match the validation of segmentation
-    # For instance_mask, we'll onloy have 0 for background and 1 for the given category.
+    # We do not need tags for instance_mask, so we set the tags_count to 2 for doing the validation of segmentation
+    # For instance_mask, we'll only have 0 for background and 1 for the given category.
+    # The RLE will only have V0 and V1.
     for object in ontology_data.values():
         if "instance_mask" in object.get("attributes", {}):
             tags_count = 2
