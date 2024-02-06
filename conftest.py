@@ -43,6 +43,12 @@ def fake_visionai_semantic_ontology():
 
 
 @pytest.fixture(scope="session")
+def fake_visionai_instance_segmentation_ontology():
+    file_name = "fake_visionai_instance_segmentation_ontology.json"
+    return json.load(open(os.path.join(TEST_DATA_FOLDER, file_name)))
+
+
+@pytest.fixture(scope="session")
 def fake_visionai_classification_ontology():
     file_name = "fake_visionai_classification_ontology.json"
     return json.load(open(os.path.join(TEST_DATA_FOLDER, file_name)))
@@ -75,6 +81,12 @@ def fake_objects_semantic_segmentation_wrong_visionai_streams():
 @pytest.fixture(scope="session")
 def fake_objects_semantic_segmentation():
     file_name = "fake_objects_semantic_segmentation.json"
+    return json.load(open(os.path.join(TEST_DATA_FOLDER, file_name)))
+
+
+@pytest.fixture(scope="session")
+def fake_objects_instance_segmentation():
+    file_name = "fake_objects_instance_segmentation.json"
     return json.load(open(os.path.join(TEST_DATA_FOLDER, file_name)))
 
 

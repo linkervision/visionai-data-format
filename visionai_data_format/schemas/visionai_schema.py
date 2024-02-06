@@ -776,10 +776,13 @@ class Binary(ObjectDataElement):
 
     @validator("name")
     def validate_name_field(cls, value):
-        if value != "semantic_mask":
+        if value not in ("semantic_mask", "instance_mask"):
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_014,
-                message_kwargs={"data_name": "name", "required_type": "semantic_mask"},
+                message_kwargs={
+                    "data_name": "name",
+                    "required_type": "semantic_mask or instance_mask",
+                },
             )
         return value
 
