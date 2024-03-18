@@ -79,6 +79,7 @@ class VAItoCOCO(Converter):
             vision_ai_dict_list,  # list of vision_ai dicts
             classes_dict,
             copy_sensor_data,
+            camera_sensor_name,
         )
         logger.info("convert visionai to coco format finished")
 
@@ -86,78 +87,116 @@ class VAItoCOCO(Converter):
             json.dump(coco.dict(), f, indent=4)
 
     @staticmethod
+    def convert_single_vision_ai_to_coco(
+        dest_img_folder: str,
+        vision_ai_dict: dict,
+        category_map: dict,
+        copy_sensor_data: bool,
+        camera_sensor_name: str,
+        image_id_start: int = 0,
+        anno_id_start: int = 0,
+        img_width: Optional[int] = None,
+        img_height: Optional[int] = None,
+    ):
+        images = []
+        annotations = []
+        image_id = image_id_start
+        anno_id = anno_id_start
+        for frame_data in vision_ai_dict["visionai"]["frames"].values():
+            dest_coco_url = os.path.join(dest_img_folder, f"{image_id:012d}{IMAGE_EXT}")
+            img_url = (
+                frame_data["frame_properties"]
+                .get("streams", {})
+                .get(camera_sensor_name, {})
+                .get("uri")
+            )
+            if copy_sensor_data:
+                if os.path.splitext(img_url)[-1] not in [
+                    ".png",
+                    ".jpg",
+                    ".jpeg",
+                ]:
+                    raise ValueError("The image data type is not supported")
+                shutil.copy(img_url, dest_coco_url)
+            if img_width is None or img_height is None:
+                img = PILImage.open(img_url)
+                img_width, img_height = img.size
+            image = Image(
+                id=image_id,
+                width=img_width,
+                height=img_height,
+                file_name=f"{image_id:012d}{IMAGE_EXT}",
+                coco_url=dest_coco_url
+                # assume there is only one sensor, so there is only one img url per frame
+            )
+            images.append(image)
+
+            if not frame_data.get("objects", None):
+                continue
+
+            for object_id, object_v in frame_data["objects"].items():
+                # from [center x, center y, width, height] to [top left x, top left y, width, height]
+                center_x, center_y, width, height = object_v["object_data"]["bbox"][0][
+                    "val"
+                ]
+                bbox = [
+                    float(center_x - width / 2),
+                    float(center_y - height / 2),
+                    width,
+                    height,
+                ]
+                category = vision_ai_dict["visionai"]["objects"][object_id]["type"]
+                if category not in category_map:
+                    category_map[category] = len(category_map)
+
+                annotation = Annotation(
+                    id=anno_id,
+                    image_id=image_id,
+                    category_id=category_map[category],
+                    bbox=bbox,
+                    area=width * height,
+                    iscrowd=0,
+                )
+                annotations.append(annotation)
+                anno_id += 1
+            image_id += 1
+        return category_map, images, annotations, image_id, anno_id
+
+    @classmethod
     def _vision_ai_to_coco(
+        cls,
         dest_img_folder: str,
         vision_ai_dict_list: list[dict],
         classes_dict: dict,
         copy_sensor_data: bool,
+        camera_sensor_name: str,
     ):
         images = []
         annotations = []
 
-        image_id = 0
-        anno_id = 0
+        image_id_start = 0
+        anno_id_start = 0
         category_map = {}
 
         for vision_ai_dict in vision_ai_dict_list:
-            for frame_data in vision_ai_dict["visionai"]["frames"].values():
-                img_url = ""
-                # assume there is only one camera img url per frame
-                for p_v in frame_data["frame_properties"].values():
-                    sensor = list(p_v.keys())[0]
-                    if os.path.splitext(p_v[sensor]["uri"])[-1] in [
-                        ".png",
-                        ".jpg",
-                        ".jpeg",
-                    ]:
-                        img_url = p_v[sensor]["uri"]
-                dest_coco_url = os.path.join(
-                    dest_img_folder, f"{image_id:012d}{IMAGE_EXT}"
-                )
-                if copy_sensor_data:
-                    shutil.copy(img_url, dest_coco_url)
-                img = PILImage.open(img_url)
-                img_width, image_height = img.size
-                image = Image(
-                    id=image_id,
-                    width=img_width,
-                    height=image_height,
-                    file_name=f"{image_id:012d}{IMAGE_EXT}",
-                    coco_url=dest_coco_url
-                    # assume there is only one sensor, so there is only one img url per frame
-                )
-                images.append(image)
-
-                if not frame_data.get("objects", None):
-                    continue
-
-                for object_id, object_v in frame_data["objects"].items():
-                    # from [center x, center y, width, height] to [top left x, top left y, width, height]
-                    center_x, center_y, width, height = object_v["object_data"]["bbox"][
-                        0
-                    ]["val"]
-                    bbox = [
-                        float(center_x - width / 2),
-                        float(center_y - height / 2),
-                        width,
-                        height,
-                    ]
-                    category = vision_ai_dict["visionai"]["objects"][object_id]["type"]
-                    if category not in category_map:
-                        category_map[category] = len(category_map)
-
-                    annotation = Annotation(
-                        id=anno_id,
-                        image_id=image_id,
-                        category_id=category_map[category],
-                        bbox=bbox,
-                        area=width * height,
-                        iscrowd=0,
-                    )
-                    annotations.append(annotation)
-                    anno_id += 1
-
-                image_id += 1
+            (
+                category_map,
+                image_update,
+                anno_update,
+                image_id_start,
+                anno_id_start,
+            ) = cls.convert_single_vision_ai_to_coco(
+                dest_img_folder=dest_img_folder,
+                vision_ai_dict=vision_ai_dict,
+                classes_dict=classes_dict,
+                copy_sensor_data=copy_sensor_data,
+                camera_sensor_name=camera_sensor_name,
+                image_id_start=image_id_start,
+                anno_id_start=anno_id_start,
+                category_map=category_map,
+            )
+            images.extend(image_update)
+            annotations.extend(anno_update)
 
         # add retrieved categories from sequences
         categories = [
