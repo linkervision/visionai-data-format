@@ -53,7 +53,7 @@ class DatasetConverter:
         annotation_name : str, optional
             output annotation name, by default "groundtruth"
         img_extension : str, optional
-            img file extention, by default ".jpg"
+            img file extension, by default ".jpg"
 
         Raises
         ------
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-input_annotation_path",
         type=str,
-        required=True,
+        default="",
         help="BDD json path or coco annotation dir",
     )
     parser.add_argument(

@@ -32,37 +32,37 @@ class VAItoCOCO(Converter):
     @classmethod
     def convert(
         cls,
-        input_annotation_path: str,
-        output_dest_folder: str,
-        ontology_classes: str,  # ','.join(ontology_classes_list)
-        camera_sensor_name: str,
         source_data_root: str,
+        output_dest_folder: str,
         uri_root: str,
-        lidar_sensor_name: Optional[str] = None,
-        sequence_idx_start: int = 0,
+        camera_sensor_name: str,
+        ontology_classes: str = "",  # ','.join(ontology_classes_list)
         copy_sensor_data: bool = True,
         n_frame: int = -1,
         annotation_name: str = "groundtruth",
-        img_extension: str = ".jpg",
+        img_extension: str = IMAGE_EXT,
+        **kwargs,
     ) -> None:
         logger.info(
-            f"vision_ai to coco from {input_annotation_path} to {output_dest_folder}"
+            f"convert vision_ai to coco from {source_data_root} to {output_dest_folder}"
         )
+        category_map = gen_ontology_classes_dict(ontology_classes)
 
-        # generate ./labels.json #
-
-        classes_dict = gen_ontology_classes_dict(ontology_classes)
-
-        sequence_folder_list = os.listdir(input_annotation_path)
+        sequence_folder_list = os.listdir(source_data_root)
         vision_ai_dict_list = []
         logger.info("retrieve visionai annotations started")
         for sequence in sequence_folder_list:
-            ground_truth_path = os.path.join(
-                input_annotation_path, sequence, annotation_name, VISIONAI_JSON
+            annotation_path = os.path.join(
+                source_data_root,
+                sequence,
+                "annotations",
+                annotation_name,
+                VISIONAI_JSON,
             )
-            logger.info(f"retrieve annotation from {ground_truth_path}")
-            with open(ground_truth_path) as f:
+            logger.info(f"retrieve annotation from {annotation_path}")
+            with open(annotation_path) as f:
                 vision_ai_dict_list.append(json.load(f))
+
         logger.info("retrieve visionai annotations finished")
 
         dest_img_folder = os.path.join(output_dest_folder, DATA_PATH)
@@ -75,11 +75,15 @@ class VAItoCOCO(Converter):
 
         logger.info("convert visionai to coco format started")
         coco = cls._vision_ai_to_coco(
-            dest_img_folder,
-            vision_ai_dict_list,  # list of vision_ai dicts
-            classes_dict,
-            copy_sensor_data,
-            camera_sensor_name,
+            dest_img_folder=dest_img_folder,
+            vision_ai_dict_list=vision_ai_dict_list,  # list of vision_ai dicts
+            copy_sensor_data=copy_sensor_data,
+            camera_sensor_name=camera_sensor_name,
+            source_data_root=source_data_root,
+            uri_root=uri_root,
+            category_map=category_map,
+            n_frame=n_frame,
+            img_extension=img_extension,
         )
         logger.info("convert visionai to coco format finished")
 
@@ -92,24 +96,34 @@ class VAItoCOCO(Converter):
         vision_ai_dict: dict,
         category_map: dict,
         copy_sensor_data: bool,
+        source_data_root: str,
+        uri_root: str,
         camera_sensor_name: str,
+        n_frame: int = -1,
+        img_extension: str = IMAGE_EXT,
         image_id_start: int = 0,
         anno_id_start: int = 0,
         img_width: Optional[int] = None,
         img_height: Optional[int] = None,
-    ):
+    ) -> tuple[dict, list, list, int, int, int]:
         images = []
         annotations = []
         image_id = image_id_start
         anno_id = anno_id_start
         for frame_data in vision_ai_dict["visionai"]["frames"].values():
-            dest_coco_url = os.path.join(dest_img_folder, f"{image_id:012d}{IMAGE_EXT}")
+            if len(images) == n_frame:
+                break
+            dest_coco_url = os.path.join(uri_root, f"{image_id:012d}{img_extension}")
+            dest_coco_img = os.path.join(
+                dest_img_folder, f"{image_id:012d}{img_extension}"
+            )
             img_url = (
                 frame_data["frame_properties"]
                 .get("streams", {})
                 .get(camera_sensor_name, {})
                 .get("uri")
             )
+            source_image_path = "/".join([source_data_root] + (img_url.split("/")[-4:]))
             if copy_sensor_data:
                 if os.path.splitext(img_url)[-1] not in [
                     ".png",
@@ -117,9 +131,9 @@ class VAItoCOCO(Converter):
                     ".jpeg",
                 ]:
                     raise ValueError("The image data type is not supported")
-                shutil.copy(img_url, dest_coco_url)
+                shutil.copy(source_image_path, dest_coco_img)
             if img_width is None or img_height is None:
-                img = PILImage.open(img_url)
+                img = PILImage.open(source_image_path)
                 img_width, img_height = img.size
             image = Image(
                 id=image_id,
@@ -160,24 +174,28 @@ class VAItoCOCO(Converter):
                 annotations.append(annotation)
                 anno_id += 1
             image_id += 1
-        return category_map, images, annotations, image_id, anno_id
+        if n_frame != -1:
+            n_frame -= len(images)
+        return (category_map, images, annotations, image_id, anno_id, n_frame)
 
     @classmethod
     def _vision_ai_to_coco(
         cls,
         dest_img_folder: str,
         vision_ai_dict_list: list[dict],
-        classes_dict: dict,
         copy_sensor_data: bool,
         camera_sensor_name: str,
-    ):
+        source_data_root: str,
+        uri_root: str,
+        category_map: dict,
+        n_frame: int = -1,
+        img_extension: str = IMAGE_EXT,
+    ) -> COCO:
         images = []
         annotations = []
 
         image_id_start = 0
         anno_id_start = 0
-        category_map = {}
-
         for vision_ai_dict in vision_ai_dict_list:
             (
                 category_map,
@@ -185,36 +203,32 @@ class VAItoCOCO(Converter):
                 anno_update,
                 image_id_start,
                 anno_id_start,
+                n_frame,
             ) = cls.convert_single_vision_ai_to_coco(
                 dest_img_folder=dest_img_folder,
                 vision_ai_dict=vision_ai_dict,
-                classes_dict=classes_dict,
                 copy_sensor_data=copy_sensor_data,
+                source_data_root=source_data_root,
+                uri_root=uri_root,
                 camera_sensor_name=camera_sensor_name,
                 image_id_start=image_id_start,
                 anno_id_start=anno_id_start,
                 category_map=category_map,
+                n_frame=n_frame,
+                img_extension=img_extension,
             )
             images.extend(image_update)
             annotations.extend(anno_update)
+            if n_frame == 0:
+                break
 
         # add retrieved categories from sequences
         categories = [
             Category(
-                id=id,
-                name=cls,
+                id=class_id,
+                name=class_name,
             )
-            for cls, id in category_map.items()
+            for class_name, class_id in category_map.items()
         ]
-
-        if classes_dict:
-            category_map_size = len(category_map)
-            for cls, id in classes_dict.items():
-                category = Category(
-                    id=id + category_map_size,
-                    name=cls,
-                )
-                categories.append(category)
-
         coco = COCO(categories=categories, images=images, annotations=annotations)
         return coco

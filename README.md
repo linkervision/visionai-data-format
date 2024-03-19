@@ -484,7 +484,7 @@ Arguments :
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extension` : image file extention (default: ".jpg")
+- `-img_extension` : image file extension (default: ".jpg")
 - `--copy_sensor_data` :enable to copy image/lidar data
 
 
@@ -495,7 +495,7 @@ Arguments :
 The script below could help convert `VisionAI` annotation data to `BDD+` json file
 
 ```
-python3 visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storge1 -container_name dataset1 -annotation_name groundtruth
+python3 visionai_data_format/vai_to_bdd.py -vai_src_folder /path_for_visionai_root_folder -bdd_dest_file /dest_path/bdd.json -company_code 99 -storage_name storage1 -container_name dataset1 -annotation_name groundtruth
 ```
 
 Arguments :
@@ -563,7 +563,7 @@ Arguments :
 - `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
 - `-lidar_sensor_name`  : lidar sensor name (default: "", specified it if need to convert lidar data)
 - `-annotation_name` : annotation folder name (default: "groundtruth")
-- `-img_extension` : image file extention (default: ".jpg")
+- `-img_extension` : image file extension (default: ".jpg")
 - `--copy_sensor_data` : enable to copy image/lidar data
 
 
@@ -578,15 +578,23 @@ Arguments :
 - `-input_format`  : input format (use coco for COCO format)
 - `-output_format`  : output format (vision_ai)
 - `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
-- `-source_data_root`  : image data folder
-- `-output_dest_folder` : output root folder (VisionAI local root folder)
-- `-uri_root` : uri root for target upload VAI storage i.e: https://azuresorate/vai_dataset
+- `-source_data_root`  : visionai local data root folder
+- `-output_dest_folder` : output root folder (COCO local root folder)
+- `-uri_root` : uri root for target upload for coco i.e: https://azuresorate/coco_dataset
 - `-n_frame`  : number of frame to be converted (-1 means all), by default -1
 - `-sequence_idx_start `  : sequence start id, by default 0
-- `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
-- `-annotation_name` : annotation folder name (default: "groundtruth")
+- `-camera_sensor_name`  : camera sensor name (required for getting the target camera sensor data)
+- `-annotation_name` : VisionAI annotation folder name (default: "groundtruth")
 - `-img_extension` : image file extention (default: ".jpg")
-- `--copy_sensor_data` : enable to copy image/lidar data
+- `--copy_sensor_data` : enable to copy image data
+
+
+### Convert `VisionAI` format data to `COCO` format
+
+```
+python3 visionai_data_format/convert_dataset.py -input_format vision_ai -output_format coco -image_annotation_type 2d_bounding_box -source_data_root ./visionai_data_root -output_dest_folder ~/coco_output_dir -uri_root http://storage_test -n_frame 5 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+
+```
 
 
 ## Troubleshooting
