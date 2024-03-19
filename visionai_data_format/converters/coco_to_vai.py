@@ -54,6 +54,7 @@ class COCOtoVAI(Converter):
         n_frame: int = -1,
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
+        **kwargs,
     ) -> None:
         try:
             raw_data = json.load(open(input_annotation_path))

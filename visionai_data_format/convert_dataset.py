@@ -25,6 +25,7 @@ class DatasetConverter:
         n_frame: int = -1,
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
+        ontology_classes: str = "",
     ):
         """Run Dataset Converter
 
@@ -53,7 +54,7 @@ class DatasetConverter:
         annotation_name : str, optional
             output annotation name, by default "groundtruth"
         img_extension : str, optional
-            img file extention, by default ".jpg"
+            img file extension, by default ".jpg"
 
         Raises
         ------
@@ -82,6 +83,7 @@ class DatasetConverter:
             n_frame=n_frame,
             annotation_name=annotation_name,
             img_extension=img_extension,
+            ontology_classes=ontology_classes,
         )
 
 
@@ -109,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-input_annotation_path",
         type=str,
-        required=True,
+        default="",
         help="BDD json path or coco annotation dir",
     )
     parser.add_argument(
@@ -166,11 +168,16 @@ if __name__ == "__main__":
         default=-1,
     )
     parser.add_argument(
+        "--ontology_classes",
+        type=str,
+        default="",
+        help="','.join(ontology_classes_list), add this if we required category id follow the specified order ",
+    )
+    parser.add_argument(
         "--copy_sensor_data",
         action="store_true",
         help="enable to copy image/lidar data",
     )
-
     FORMAT = "%(asctime)s[%(process)d][%(levelname)s] %(name)-16s : %(message)s"
     DATEFMT = "[%d-%m-%Y %H:%M:%S]"
 
@@ -200,4 +207,5 @@ if __name__ == "__main__":
         img_extension=args.img_extension,
         n_frame=args.n_frame,
         copy_sensor_data=args.copy_sensor_data,
+        ontology_classes=args.ontology_classes,
     )
