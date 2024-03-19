@@ -44,12 +44,12 @@ class VAItoCOCO(Converter):
         **kwargs,
     ) -> None:
         logger.info(
-            f"convert vision_ai to coco from {source_data_root} to {output_dest_folder}"
+            f"convert VisionAI to coco from {source_data_root} to {output_dest_folder}"
         )
         category_map = gen_ontology_classes_dict(ontology_classes)
 
         sequence_folder_list = os.listdir(source_data_root)
-        vision_ai_dict_list = []
+        visionai_dict_list = []
         logger.info("retrieve visionai annotations started")
         for sequence in sequence_folder_list:
             annotation_path = os.path.join(
@@ -61,7 +61,7 @@ class VAItoCOCO(Converter):
             )
             logger.info(f"retrieve annotation from {annotation_path}")
             with open(annotation_path) as f:
-                vision_ai_dict_list.append(json.load(f))
+                visionai_dict_list.append(json.load(f))
 
         logger.info("retrieve visionai annotations finished")
 
@@ -74,9 +74,9 @@ class VAItoCOCO(Converter):
         os.makedirs(dest_json_folder, exist_ok=True)
 
         logger.info("convert visionai to coco format started")
-        coco = cls._vision_ai_to_coco(
+        coco = cls._visionai_to_coco(
             dest_img_folder=dest_img_folder,
-            vision_ai_dict_list=vision_ai_dict_list,  # list of vision_ai dicts
+            visionai_dict_list=visionai_dict_list,  # list of visionai dicts
             copy_sensor_data=copy_sensor_data,
             camera_sensor_name=camera_sensor_name,
             source_data_root=source_data_root,
@@ -91,9 +91,9 @@ class VAItoCOCO(Converter):
             json.dump(coco.dict(), f, indent=4)
 
     @staticmethod
-    def convert_single_vision_ai_to_coco(
+    def convert_single_visionai_to_coco(
         dest_img_folder: str,
-        vision_ai_dict: dict,
+        visionai_dict: dict,
         category_map: dict,
         copy_sensor_data: bool,
         source_data_root: str,
@@ -106,11 +106,52 @@ class VAItoCOCO(Converter):
         img_width: Optional[int] = None,
         img_height: Optional[int] = None,
     ) -> tuple[dict, list, list, int, int, int]:
+        """Convert single visionai data to coco format
+
+        Parameters
+        ----------
+        dest_img_folder : str
+        visionai_dict : dict
+        category_map : dict
+        copy_sensor_data : bool
+        source_data_root : str
+        uri_root : str
+            uri root for target upload for coco uploaded
+        camera_sensor_name : str
+            for getting the target camera sensor data
+        n_frame : int, optional
+            number of frame to be converted (-1 means all), by default -1
+        img_extension : str, optional
+            by default IMAGE_EXT (.jpg)
+        image_id_start : int, optional
+            by default 0
+        anno_id_start : int, optional
+            by default 0
+        img_width : Optional[int], optional
+            by default None
+        img_height : Optional[int], optional
+            by default None
+
+        Returns
+        -------
+        tuple[dict, list, list, int, int, int]
+            category_map: dict
+            images: list of coco images
+            annotations: list of coco annotations
+            image_id: int (image_id_start for next sequence)
+            anno_id: int (anno_id_start for next sequence)
+            n_frame: int (number of frames left to be converted)
+
+        Raises
+        ------
+        ValueError
+            image data type is not supported
+        """
         images = []
         annotations = []
         image_id = image_id_start
         anno_id = anno_id_start
-        for frame_data in vision_ai_dict["visionai"]["frames"].values():
+        for frame_data in visionai_dict["visionai"]["frames"].values():
             if len(images) == n_frame:
                 break
             dest_coco_url = os.path.join(uri_root, f"{image_id:012d}{img_extension}")
@@ -159,7 +200,7 @@ class VAItoCOCO(Converter):
                     width,
                     height,
                 ]
-                category = vision_ai_dict["visionai"]["objects"][object_id]["type"]
+                category = visionai_dict["visionai"]["objects"][object_id]["type"]
                 if category not in category_map:
                     category_map[category] = len(category_map)
 
@@ -179,10 +220,10 @@ class VAItoCOCO(Converter):
         return (category_map, images, annotations, image_id, anno_id, n_frame)
 
     @classmethod
-    def _vision_ai_to_coco(
+    def _visionai_to_coco(
         cls,
         dest_img_folder: str,
-        vision_ai_dict_list: list[dict],
+        visionai_dict_list: list[dict],
         copy_sensor_data: bool,
         camera_sensor_name: str,
         source_data_root: str,
@@ -196,7 +237,7 @@ class VAItoCOCO(Converter):
 
         image_id_start = 0
         anno_id_start = 0
-        for vision_ai_dict in vision_ai_dict_list:
+        for visionai_dict in visionai_dict_list:
             (
                 category_map,
                 image_update,
@@ -204,9 +245,9 @@ class VAItoCOCO(Converter):
                 image_id_start,
                 anno_id_start,
                 n_frame,
-            ) = cls.convert_single_vision_ai_to_coco(
+            ) = cls.convert_single_visionai_to_coco(
                 dest_img_folder=dest_img_folder,
-                vision_ai_dict=vision_ai_dict,
+                visionai_dict=visionai_dict,
                 copy_sensor_data=copy_sensor_data,
                 source_data_root=source_data_root,
                 uri_root=uri_root,
@@ -222,7 +263,7 @@ class VAItoCOCO(Converter):
             if n_frame == 0:
                 break
 
-        # add retrieved categories from sequences
+        # generate category objects
         categories = [
             Category(
                 id=class_id,
