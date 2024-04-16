@@ -291,7 +291,7 @@ class VecBaseNoName(ExcludedNoneBaseModel):
         description="This attribute specifies whether the vector shall be"
         + " considered as a descriptor of individual values or as a definition of a range.",
     )
-    val: List[Union[float, int, str]] = Field(
+    val: List[Union[str, int, float]] = Field(
         ..., description="The values of the vector (list)."
     )
 
