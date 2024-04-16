@@ -21,7 +21,7 @@ class AttributeType(str, Enum):
 
 class Attribute(BaseModel):
     type: AttributeType
-    value: Optional[List[Union[float, str, int]]] = None
+    value: Optional[List[Union[str, int, float]]] = None
 
     class Config:
         use_enum_values = True
