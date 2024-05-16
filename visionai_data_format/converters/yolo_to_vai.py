@@ -3,7 +3,6 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from visionai_data_format.converters.base import Converter, ConverterFactory
 from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
@@ -30,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 YOLO_IMAGE_FOLDER = "images"
 YOLO_LABEL_FOLDER = "labels"
+IMAGE_EXTS = ["jpg", ".jpeg", ".png"]
 
 
 @ConverterFactory.register(
@@ -50,13 +50,11 @@ class YOLOtoVAI(Converter):
     @classmethod
     def convert(
         cls,
-        input_annotation_path: str,
         output_dest_folder: str,
         camera_sensor_name: str,
         source_data_root: str,
         uri_root: str,
         classes_file_name: str = "classes.txt",
-        lidar_sensor_name: Optional[str] = None,
         sequence_idx_start: int = 0,
         copy_sensor_data: bool = True,
         n_frame: int = -1,
@@ -75,10 +73,10 @@ class YOLOtoVAI(Converter):
             image_folder_path = Path(source_data_root) / YOLO_IMAGE_FOLDER
             annotation_folder = Path(source_data_root) / YOLO_LABEL_FOLDER
 
-            image_file_paths = image_folder_path.rglob("*.jpg")
-            image_file_paths += image_folder_path.rglob("*.png")
-            image_file_paths += image_folder_path.rglob("*.jpeg")
-
+            image_file_paths = []
+            # Get image files
+            for img_ext in IMAGE_EXTS:
+                image_file_paths += list(image_folder_path.rglob(f"*{img_ext}"))
             for sequence_idx, img_file in enumerate(
                 image_file_paths, sequence_idx_start
             ):
