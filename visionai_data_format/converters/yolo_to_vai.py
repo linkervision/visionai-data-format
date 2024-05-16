@@ -3,6 +3,9 @@ import os
 import shutil
 import uuid
 from pathlib import Path
+from typing import Optional
+
+from PIL import Image
 
 from visionai_data_format.converters.base import Converter, ConverterFactory
 from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
@@ -60,6 +63,8 @@ class YOLOtoVAI(Converter):
         n_frame: int = -1,
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
+        img_height: Optional[int] = None,
+        img_width: Optional[int] = None,
         **kwargs,
     ) -> None:
         try:
@@ -93,12 +98,15 @@ class YOLOtoVAI(Converter):
                     )
                     label_list = []
                 dest_sequence_name = f"{sequence_idx:012d}"
-                h, w = (720, 1280)
+                if not img_height or not img_width:
+                    img = Image.open(str(img_file))
+                    img_width, img_height = img.size
+
                 vai_data = cls.convert_yolo_label_vai(
                     image_file_path=str(img_file),
                     label_list=label_list,
-                    img_height=h,
-                    img_width=w,
+                    img_height=img_height,
+                    img_width=img_width,
                     vai_dest_folder=output_dest_folder,
                     classes_list=classes_list,
                     camera_sensor_name=camera_sensor_name,

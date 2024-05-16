@@ -569,7 +569,6 @@ Arguments :
 
 ```
 python3 visionai_data_format/convert_dataset.py -input_format coco -output_format vision_ai -image_annotation_type 2d_bounding_box -input_annotation_path ./coco_instance.json -source_data_root ./coco_images/ -output_dest_folder ~/visionai_output_dir -uri_root http://storage_test -n_frame 5 -sequence_idx_start 0 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
-
 ```
 
 Arguments :
@@ -591,7 +590,6 @@ Arguments :
 
 ```
 python3 visionai_data_format/convert_dataset.py -input_format vision_ai -output_format coco -image_annotation_type 2d_bounding_box -source_data_root ./visionai_data_root -output_dest_folder ~/coco_output_dir -uri_root http://storage_test -n_frame 5 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
-
 ```
 Arguments :
 - `-input_format`  : input format (vision_ai)
