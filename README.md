@@ -575,6 +575,7 @@ Arguments :
 - `-input_format`  : input format (use coco for COCO format)
 - `-output_format`  : output format (vision_ai)
 - `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-input_annotation_path` : input annotation path for coco-label.json file
 - `-source_data_root`  : image data folder
 - `-output_dest_folder` : output root folder (VisionAI local root folder)
 - `-uri_root` : uri root for target upload VisionAI storage i.e: https://azuresorate/vai_dataset
