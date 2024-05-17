@@ -58,8 +58,8 @@ class DatasetConverter:
             output annotation name, by default "groundtruth"
         img_extension : str, optional
             img file extension, by default ".jpg"
-        ontology_classes: str
-        classes_file_name: str = "classes.txt",
+        ontology_classes: str, by default: ""
+        classes_file_name: str, by default: "classes.txt",
         img_height: int, optional
         img_width: int, optional
 

@@ -52,6 +52,11 @@ class VAItoCOCO(Converter):
         visionai_dict_list = []
         logger.info("retrieve visionai annotations started")
         for sequence in sequence_folder_list:
+            if not os.path.isdir(os.path.join(source_data_root, sequence)):
+                logger.info(
+                    f"file {sequence} is ignore since it is not a sequence folder"
+                )
+                continue
             annotation_path = os.path.join(
                 source_data_root,
                 sequence,
@@ -154,7 +159,9 @@ class VAItoCOCO(Converter):
         for frame_data in visionai_dict["visionai"]["frames"].values():
             if len(images) == n_frame:
                 break
-            dest_coco_url = os.path.join(uri_root, f"{image_id:012d}{img_extension}")
+            dest_coco_url = os.path.join(
+                uri_root, COCO_IMAGE_PATH, f"{image_id:012d}{img_extension}"
+            )
             dest_coco_img = os.path.join(
                 dest_img_folder, f"{image_id:012d}{img_extension}"
             )
