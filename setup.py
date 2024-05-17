@@ -4,7 +4,7 @@ AUTHOR = "LinkerVision"
 PACKAGE_NAME = "visionai-data-format"
 PACKAGE_VERSION = "1.4.0"
 DESC = "converter tool for visionai format"
-REQUIRED = ["pydantic==1.*"]
+REQUIRED = ["pydantic==1.*", "pillow"]
 REQUIRES_PYTHON = ">=3.7, <4"
 EXTRAS = {
     "test": [
