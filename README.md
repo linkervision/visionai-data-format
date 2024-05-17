@@ -628,6 +628,23 @@ Arguments :
 - `-img_width` : image width for all images (default: None, which will read the image and get the size)
 
 
+* The `YOLO` dataset should follow the data structure as below:
+```bash
+.yolo-format-root_folder
+├── classes.txt
+├── images
+│   ├── 000000.png
+│   ├── 000001.png
+│   ├── 000002.png
+│   └── 000003.png
+├── labels
+│   ├── 000000.txt
+│   ├── 000001.txt
+│   ├── 000002.txt
+│   ├── 000003.txt
+```
+
+
 ## Troubleshooting
 
 (WIP)
