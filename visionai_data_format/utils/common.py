@@ -1,5 +1,5 @@
 ANNOT_PATH = "annotations"
-DATA_PATH = "data"
+COCO_IMAGE_PATH = "images"
 GROUND_TRUTH_FOLDER = "annotations/groundtruth/"
 BBOX_NAME = "bbox_shape"
 IMAGE_EXT = ".jpg"

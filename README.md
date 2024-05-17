@@ -628,13 +628,6 @@ Arguments :
 - `-img_width` : image width for all images (default: None, which will read the image and get the size)
 
 
-
-
-
-
-
-
-
 ## Troubleshooting
 
 (WIP)
