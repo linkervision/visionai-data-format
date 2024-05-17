@@ -53,11 +53,10 @@ class YOLOtoVAI(Converter):
     @classmethod
     def convert(
         cls,
-        output_dest_folder: str,
         camera_sensor_name: str,
         source_data_root: str,
+        output_dest_folder: str,
         uri_root: str,
-        classes_file_name: str = "classes.txt",
         sequence_idx_start: int = 0,
         copy_sensor_data: bool = True,
         n_frame: int = -1,
@@ -65,13 +64,41 @@ class YOLOtoVAI(Converter):
         img_extension: str = ".jpg",
         img_height: Optional[int] = None,
         img_width: Optional[int] = None,
+        classes_file_name: str = "classes.txt",
         **kwargs,
     ) -> None:
+        """convert yolo format data to visionai data format
+
+        Parameters
+        ----------
+        camera_sensor_name : str
+        source_data_root : str
+            data root folder of yolo format
+        output_dest_folder : str
+        uri_root : str
+            uri root for target upload VisionAI
+        sequence_idx_start : int, optional
+            sequence start id, by default 0
+        copy_sensor_data : bool, optional
+            enable to copy image data, by default True
+        n_frame : int, optional
+            number of frame to be converted (-1 means all), by default -1
+        annotation_name : str, optional
+            VisionAI annotation folder name , by default "groundtruth"
+        img_extension : str, optional
+            image file extension, by default ".jpg"
+        img_height : Optional[int], optional
+            image height for all images, by default None
+        img_width : Optional[int], optional
+            image width for all images, by default None
+        classes_file_name : str, optional
+            txt file contain category names in each line, by default "classes.txt"
+        """
         try:
             classes_file_path = os.path.join(source_data_root, classes_file_name)
             if not Path(classes_file_path).exists():
                 raise FileNotFoundError(
-                    "Please ensure your classes file is under source data root"
+                    "Please ensure your classes txt file is under source data root"
                 )
             with open(classes_file_path) as classes_file:
                 classes_list: list = [line.strip() for line in classes_file]

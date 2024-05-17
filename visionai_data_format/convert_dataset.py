@@ -26,6 +26,9 @@ class DatasetConverter:
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
         ontology_classes: str = "",
+        classes_file_name: str = "classes.txt",
+        img_height: Optional[int] = None,
+        img_width: Optional[int] = None,
     ):
         """Run Dataset Converter
 
@@ -55,6 +58,11 @@ class DatasetConverter:
             output annotation name, by default "groundtruth"
         img_extension : str, optional
             img file extension, by default ".jpg"
+        ontology_classes: str
+        classes_file_name: str = "classes.txt",
+        img_height: int, optional
+        img_width: int, optional
+
 
         Raises
         ------
@@ -84,6 +92,9 @@ class DatasetConverter:
             annotation_name=annotation_name,
             img_extension=img_extension,
             ontology_classes=ontology_classes,
+            classes_file_name=classes_file_name,
+            img_height=img_height,
+            img_width=img_width,
         )
 
 
@@ -107,7 +118,6 @@ if __name__ == "__main__":
         required=True,
         help="2d_bounding_box",
     )
-
     parser.add_argument(
         "-input_annotation_path",
         type=str,
@@ -138,7 +148,6 @@ if __name__ == "__main__":
         help="Camera Sensor name, i.e : `camera1`",
         default="",
     )
-
     parser.add_argument(
         "-lidar_sensor_name",
         type=str,
@@ -148,7 +157,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-sequence_idx_start", type=int, help="sequence id start number", default=0
     )
-
     parser.add_argument(
         "-annotation_name",
         type=str,
@@ -162,6 +170,18 @@ if __name__ == "__main__":
         help="image extention (default: .jpg)",
     )
     parser.add_argument(
+        "-img_width",
+        type=int,
+        required=False,
+        help="image width",
+    )
+    parser.add_argument(
+        "-img_height",
+        type=int,
+        required=False,
+        help="image height",
+    )
+    parser.add_argument(
         "-n_frame",
         type=int,
         help="target convert frame number, -1 means all",
@@ -172,6 +192,12 @@ if __name__ == "__main__":
         type=str,
         default="",
         help="','.join(ontology_classes_list), add this if we required category id follow the specified order ",
+    )
+    parser.add_argument(
+        "-classes_file",
+        type=str,
+        default="classes.txt",
+        help="file for store category names for yolo format",
     )
     parser.add_argument(
         "--copy_sensor_data",
@@ -191,7 +217,6 @@ if __name__ == "__main__":
 
     if not args.camera_sensor_name and not args.lidar_sensor_name:
         raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_002)
-
     DatasetConverter.run(
         input_format=args.input_format,
         output_format=args.output_format,
@@ -208,4 +233,7 @@ if __name__ == "__main__":
         n_frame=args.n_frame,
         copy_sensor_data=args.copy_sensor_data,
         ontology_classes=args.ontology_classes,
+        classes_file_name=args.classes_file,
+        img_width=args.img_width,
+        img_height=args.img_height,
     )

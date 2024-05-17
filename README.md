@@ -604,6 +604,37 @@ Arguments :
 - `-img_extension` : image file extension (default: ".jpg")
 - `--copy_sensor_data` : enable to copy image data
 
+### Convert `YOLO` format data to `VisionAI` format
+
+```
+python3 visionai_data_format/convert_dataset.py -input_format yolo -output_format vision_ai -image_annotation_type 2d_bounding_box -source_data_root ./path_to_yolo_format_dir -output_dest_folder ./output_visionai_dir -n_frame -1 -sequence_idx_start 0 -uri_root http://storage_test -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg  --copy_sensor_data -classes_file category.txt
+```
+
+Arguments :
+- `-input_format`  : input format (use yolo for YOLO format)
+- `-output_format`  : output format (vision_ai)
+- `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-source_data_root`  : data root folder of yolo format
+- `-output_dest_folder` : output root folder (VisionAI local root folder)
+- `-uri_root` : uri root for target upload VisionAI storage i.e: https://azuresorate/vai_dataset
+- `-n_frame`  : number of frame to be converted (-1 means all), by default -1
+- `-sequence_idx_start `  : sequence start id, by default 0
+- `-camera_sensor_name`  : camera sensor name (default: "", specified it if need to convert camera data)
+- `-annotation_name` : VisionAI annotation folder name (default: "groundtruth")
+- `-img_extension` : image file extension (default: ".jpg")
+- `--copy_sensor_data` : enable to copy image data
+- `-classes_file` : txt file contain category names in each line, by default "classes.txt"
+- `-img_height` : image height for all images (default: None, which will read the image and get the size)
+- `-img_width` : image width for all images (default: None, which will read the image and get the size)
+
+
+
+
+
+
+
+
+
 ## Troubleshooting
 
 (WIP)

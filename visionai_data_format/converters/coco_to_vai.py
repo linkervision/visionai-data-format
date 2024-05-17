@@ -92,19 +92,28 @@ class COCOtoVAI(Converter):
                 logger.info(
                     f"convert sequence {old_sequence_idx} to {dest_sequence_name}"
                 )
-                cls.convert_coco_to_vai(
+                vai_data = cls.convert_coco_to_vai(
                     image_data=image_data,
                     img_name_id_map=img_name_id_map,
                     vai_dest_folder=output_dest_folder,
                     camera_sensor_name=camera_sensor_name,
                     dest_sequence_name=dest_sequence_name,
                     uri_root=uri_root,
-                    annotation_name=annotation_name,
                     img_extension=img_extension,
                     copy_sensor_data=copy_sensor_data,
                     source_data_root=source_data_root,
                     class_id_name_map=class_id_name_map,
                     img_id_annotations_map=img_id_annotations_map,
+                )
+                save_as_json(
+                    vai_data,
+                    folder_name=os.path.join(
+                        output_dest_folder,
+                        dest_sequence_name,
+                        "annotations",
+                        annotation_name,
+                    ),
+                    file_name="visionai.json",
                 )
                 if n_frame == 0:
                     break
@@ -134,10 +143,9 @@ class COCOtoVAI(Converter):
         source_data_root: str,
         class_id_name_map: dict[str, str],
         img_id_annotations_map: dict[str, list[dict]],
-        annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
         copy_sensor_data: bool = True,
-    ) -> None:
+    ) -> dict:
         try:
             image_file_name = image_data["file_name"]
             image_file_path = os.path.join(source_data_root, image_file_name)
@@ -238,15 +246,7 @@ class COCOtoVAI(Converter):
                 vai_data["visionai"].pop("objects")
 
             vai_data = validate_vai(vai_data).dict(exclude_none=True)
-
-            save_as_json(
-                vai_data,
-                folder_name=os.path.join(
-                    vai_dest_folder, dest_sequence_name, "annotations", annotation_name
-                ),
-                file_name="visionai.json",
-            )
-
             logger.info("[convert_coco_to_vai] Convert finished")
+            return vai_data
         except Exception as e:
             logger.error("[convert_coco_to_vai] Convert failed : " + str(e))
