@@ -12,8 +12,8 @@ from visionai_data_format.schemas.common import AnnotationFormat, OntologyImageT
 from visionai_data_format.utils.classes import gen_ontology_classes_dict
 from visionai_data_format.utils.common import (
     ANNOT_PATH,
+    COCO_IMAGE_PATH,
     COCO_LABEL_FILE,
-    DATA_PATH,
     IMAGE_EXT,
     VISIONAI_JSON,
 )
@@ -52,6 +52,11 @@ class VAItoCOCO(Converter):
         visionai_dict_list = []
         logger.info("retrieve visionai annotations started")
         for sequence in sequence_folder_list:
+            if not os.path.isdir(os.path.join(source_data_root, sequence)):
+                logger.info(
+                    f"file {sequence} is ignore since it is not a sequence folder"
+                )
+                continue
             annotation_path = os.path.join(
                 source_data_root,
                 sequence,
@@ -65,7 +70,7 @@ class VAItoCOCO(Converter):
 
         logger.info("retrieve visionai annotations finished")
 
-        dest_img_folder = os.path.join(output_dest_folder, DATA_PATH)
+        dest_img_folder = os.path.join(output_dest_folder, COCO_IMAGE_PATH)
         dest_json_folder = os.path.join(output_dest_folder, ANNOT_PATH)
         if copy_sensor_data:
             # create {dest}/data folder #
@@ -154,7 +159,9 @@ class VAItoCOCO(Converter):
         for frame_data in visionai_dict["visionai"]["frames"].values():
             if len(images) == n_frame:
                 break
-            dest_coco_url = os.path.join(uri_root, f"{image_id:012d}{img_extension}")
+            dest_coco_url = os.path.join(
+                uri_root, COCO_IMAGE_PATH, f"{image_id:012d}{img_extension}"
+            )
             dest_coco_img = os.path.join(
                 dest_img_folder, f"{image_id:012d}{img_extension}"
             )

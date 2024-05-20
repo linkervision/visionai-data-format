@@ -39,6 +39,7 @@ class AnnotationFormat(str, Enum, metaclass=BaseEnumMeta):
     BDDP = "bddp"
     IMAGE = "image"
     KITTI = "kitti"
+    YOLO = "yolo"
 
 
 class DatasetType(str, Enum, metaclass=BaseEnumMeta):

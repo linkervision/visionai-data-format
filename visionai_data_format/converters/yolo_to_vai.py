@@ -1,10 +1,11 @@
-import json
 import logging
 import os
 import shutil
 import uuid
-from collections import defaultdict
+from pathlib import Path
 from typing import Optional
+
+from PIL import Image
 
 from visionai_data_format.converters.base import Converter, ConverterFactory
 from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
@@ -23,88 +24,125 @@ from visionai_data_format.schemas.visionai_schema import (
     Stream,
     StreamType,
 )
-from visionai_data_format.utils.validator import (
-    save_as_json,
-    validate_coco,
-    validate_vai,
-)
+from visionai_data_format.utils.validator import save_as_json, validate_vai
 
-__all__ = ["COCOtoVAI"]
+__all__ = ["YOLOtoVAI"]
 
 logger = logging.getLogger(__name__)
 
+YOLO_IMAGE_FOLDER = "images"
+YOLO_LABEL_FOLDER = "labels"
+IMAGE_EXTS = ["jpg", ".jpeg", ".png"]
+
 
 @ConverterFactory.register(
-    from_=AnnotationFormat.COCO,
+    from_=AnnotationFormat.YOLO,
     to_=AnnotationFormat.VISION_AI,
     image_annotation_type=OntologyImageType._2D_BOUNDING_BOX,
 )
-class COCOtoVAI(Converter):
+class YOLOtoVAI(Converter):
+    @staticmethod
+    def nxywh2xywh(obj, img_w, img_h):
+        x = int(obj[0] * img_w)
+        y = int(obj[1] * img_h)
+        w = int(obj[2] * img_w)
+        h = int(obj[3] * img_h)
+
+        return x, y, w, h
+
     @classmethod
     def convert(
         cls,
-        input_annotation_path: str,
-        output_dest_folder: str,
         camera_sensor_name: str,
         source_data_root: str,
+        output_dest_folder: str,
         uri_root: str,
-        lidar_sensor_name: Optional[str] = None,
         sequence_idx_start: int = 0,
         copy_sensor_data: bool = True,
         n_frame: int = -1,
         annotation_name: str = "groundtruth",
         img_extension: str = ".jpg",
+        img_height: Optional[int] = None,
+        img_width: Optional[int] = None,
+        classes_file_name: str = "classes.txt",
         **kwargs,
     ) -> None:
+        """convert yolo format data to visionai data format
+
+        Parameters
+        ----------
+        camera_sensor_name : str
+        source_data_root : str
+            data root folder of yolo format
+        output_dest_folder : str
+        uri_root : str
+            uri root for target upload VisionAI
+        sequence_idx_start : int, optional
+            sequence start id, by default 0
+        copy_sensor_data : bool, optional
+            enable to copy image data, by default True
+        n_frame : int, optional
+            number of frame to be converted (-1 means all), by default -1
+        annotation_name : str, optional
+            VisionAI annotation folder name , by default "groundtruth"
+        img_extension : str, optional
+            image file extension, by default ".jpg"
+        img_height : Optional[int], optional
+            image height for all images, by default None
+        img_width : Optional[int], optional
+            image width for all images, by default None
+        classes_file_name : str, optional
+            txt file contain category names in each line, by default "classes.txt"
+        """
         try:
-            raw_data = json.load(open(input_annotation_path))
-            coco_json_data = validate_coco(raw_data).dict()
+            classes_file_path = os.path.join(source_data_root, classes_file_name)
+            if not Path(classes_file_path).exists():
+                raise FileNotFoundError(
+                    "Please ensure your classes txt file is under source data root"
+                )
+            with open(classes_file_path) as classes_file:
+                classes_list: list = [line.strip() for line in classes_file]
+            image_folder_path = Path(source_data_root) / YOLO_IMAGE_FOLDER
+            annotation_folder = Path(source_data_root) / YOLO_LABEL_FOLDER
 
-            class_id_name_map: dict[str, str] = {
-                str(class_info["id"]): class_info["name"]
-                for class_info in coco_json_data["categories"]
-            }
-            img_id_annotations_map = defaultdict(list)
-            for annot_info in coco_json_data.pop("annotations", {}):
-                img_id_annotations_map[annot_info.get("image_id")].append(annot_info)
-
-            img_name_id_map = defaultdict(int)
-            for img_info in coco_json_data.get("images"):
-                file_name = img_info.get("file_name")
-                if not file_name:
-                    raise VisionAIException(
-                        error_code=VisionAIErrorCode.VAI_ERR_002,
-                        message_kwargs={
-                            "field_name": "file_name",
-                            "required_place": "images",
-                        },
-                    )
-                img_name_id_map[file_name] = img_info["id"]
-
-            for sequence_idx, image_data in enumerate(
-                coco_json_data["images"], sequence_idx_start
+            image_file_paths = []
+            # Get image files
+            for img_ext in IMAGE_EXTS:
+                image_file_paths += list(image_folder_path.rglob(f"*{img_ext}"))
+            for sequence_idx, img_file in enumerate(
+                image_file_paths, sequence_idx_start
             ):
                 if n_frame > 0:
                     n_frame -= 1
+                annotation_path = annotation_folder / f"{img_file.stem}.txt"
+                # The image may not have any applicable annotation txt file.
+                if annotation_path.exists():
+                    with open(str(annotation_path)) as anno_file:
+                        label_list: list = [line.strip() for line in anno_file]
+                else:
+                    logging.info(
+                        f"{str(img_file)} has not mapping annotation file and is consider as an empty image."
+                    )
+                    label_list = []
                 dest_sequence_name = f"{sequence_idx:012d}"
-                image_path = image_data["file_name"]
-                old_sequence_idx = os.path.splitext(image_path)[0].split(os.sep)[-1]
-                logger.info(
-                    f"convert sequence {old_sequence_idx} to {dest_sequence_name}"
-                )
-                vai_data = cls.convert_coco_to_vai(
-                    image_data=image_data,
-                    img_name_id_map=img_name_id_map,
+                if not img_height or not img_width:
+                    img = Image.open(str(img_file))
+                    img_width, img_height = img.size
+
+                vai_data = cls.convert_yolo_label_vai(
+                    image_file_path=str(img_file),
+                    label_list=label_list,
+                    img_height=img_height,
+                    img_width=img_width,
                     vai_dest_folder=output_dest_folder,
+                    classes_list=classes_list,
                     camera_sensor_name=camera_sensor_name,
                     dest_sequence_name=dest_sequence_name,
                     uri_root=uri_root,
                     img_extension=img_extension,
                     copy_sensor_data=copy_sensor_data,
-                    source_data_root=source_data_root,
-                    class_id_name_map=class_id_name_map,
-                    img_id_annotations_map=img_id_annotations_map,
                 )
+
                 save_as_json(
                     vai_data,
                     folder_name=os.path.join(
@@ -123,37 +161,31 @@ class COCOtoVAI(Converter):
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_041,
                 message_kwargs={
-                    "original_format": "COCO",
+                    "original_format": "YOLO",
                     "destination_format": "VisionAI",
                 },
             )
 
         except Exception:
-            logger.exception("Convert coco to vai failed")
+            logger.exception("Convert yolo to vai failed")
             raise VisionAIException(error_code=VisionAIErrorCode.VAI_ERR_999)
 
-    @staticmethod
-    def convert_coco_to_vai(
-        image_data: dict,
+    @classmethod
+    def convert_yolo_label_vai(
+        cls,
+        image_file_path: str,
+        label_list: list,
+        classes_list: list,
+        img_height: int,
+        img_width: int,
         vai_dest_folder: str,
         camera_sensor_name: str,
         dest_sequence_name: str,
         uri_root: str,
-        img_name_id_map: dict,
-        source_data_root: str,
-        class_id_name_map: dict[str, str],
-        img_id_annotations_map: dict[str, list[dict]],
         img_extension: str = ".jpg",
         copy_sensor_data: bool = True,
     ) -> dict:
         try:
-            image_file_name = image_data["file_name"]
-            image_file_path = os.path.join(source_data_root, image_file_name)
-
-            logger.info(
-                f"[convert_coco_to_vai] Convert started (copy sensor data is {copy_sensor_data})"
-            )
-            img_id: int = img_name_id_map[image_file_name]
             frames = {}
             objects = {}
             frame_intervals = []
@@ -179,19 +211,17 @@ class COCOtoVAI(Converter):
                 ),
                 objects={},
             )
-
-            # parse coco: annotations
-            for idx, annot_info in enumerate(img_id_annotations_map.pop(img_id, [])):
+            streams = {camera_sensor_name: Stream(type=StreamType.CAMERA)}
+            frame_intervals = [FrameInterval(frame_start=0, frame_end=0)]
+            # parse yolo-labels
+            for obj_idx, label in enumerate(label_list):
                 object_id = str(uuid.uuid4())
+                label_items = label.split()
+                # yolo format [class_id, center x, center y, width, height]
+                class_id = int(label_items[0])
+                obj = [float(loc) for loc in label_items[1:]]
 
-                # from [top left x, top left y, width, height] to [center x, center y, width, height]
-                top_left_x, top_left_y, width, height = annot_info["bbox"]
-                bbox = [
-                    float(top_left_x + width / 2),
-                    float(top_left_y + height / 2),
-                    width,
-                    height,
-                ]
+                bbox = cls.nxywh2xywh(obj=obj, img_h=img_height, img_w=img_width)
 
                 objects_under_frames = {
                     object_id: ObjectUnderFrame(
@@ -211,27 +241,18 @@ class COCOtoVAI(Converter):
                 # to vision_ai: objects
                 object_under_vai = {
                     object_id: Object(
-                        name=class_id_name_map[str(annot_info["category_id"])]
-                        + f"{idx:03d}",
-                        type=class_id_name_map[str(annot_info["category_id"])],
-                        frame_intervals=[
-                            FrameInterval(frame_start=0, frame_end=0)  # TODO: fixme
-                        ],
+                        name=f"{classes_list[class_id]}_{obj_idx}",
+                        type=classes_list[class_id],
+                        frame_intervals=frame_intervals,
                         object_data_pointers={
                             bbox_name: ObjectDataPointer(
                                 type=ObjectType.BBOX,
-                                frame_intervals=[
-                                    FrameInterval(
-                                        frame_start=0, frame_end=0
-                                    )  # TODO: fixme
-                                ],
+                                frame_intervals=frame_intervals,
                             )
                         },
                     )
                 }
                 objects.update(object_under_vai)
-            streams = {camera_sensor_name: Stream(type=StreamType.CAMERA)}
-            frame_intervals = [FrameInterval(frame_start=0, frame_end=0)]
 
             vai_data = {
                 "visionai": {
@@ -244,9 +265,8 @@ class COCOtoVAI(Converter):
             }
             if not objects:
                 vai_data["visionai"].pop("objects")
-
             vai_data = validate_vai(vai_data).dict(exclude_none=True)
-            logger.info("[convert_coco_to_vai] Convert finished")
+            logger.info("[convert_yolo_to_vai] Convert finished")
             return vai_data
         except Exception as e:
-            logger.error("[convert_coco_to_vai] Convert failed : " + str(e))
+            logger.error("[convert_yolo_to_vai] Convert failed : " + str(e))
