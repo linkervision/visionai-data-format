@@ -193,6 +193,7 @@ class VAItoCOCO(Converter):
             )
             images.append(image)
 
+            image_id += 1
             if not frame_data.get("objects", None):
                 continue
 
@@ -221,7 +222,6 @@ class VAItoCOCO(Converter):
                 )
                 annotations.append(annotation)
                 anno_id += 1
-            image_id += 1
         if n_frame != -1:
             n_frame -= len(images)
         return (category_map, images, annotations, image_id, anno_id, n_frame)
