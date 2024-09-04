@@ -258,3 +258,22 @@ def test_validate_wrong_context_vector_attribute_classification(
     )
     with pytest.raises(expected_exception=VisionAIException, match=re.escape(message)):
         raise errors[0]
+
+
+def test_validate_single_lidar_without_camera_intrinsics_pinhole(
+    fake_visionai_ontology,
+    fake_objects_data_single_lidar_without_camera_intrinsics_pinhole,
+):
+    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+
+    with pytest.raises(
+        VisionAIException,
+        match="Missing field intrinsics_pinhole with value at camera stream_properties "
+        + "when sensors contain at least one lidar",
+    ):
+        errors = VisionAIModel(
+            **fake_objects_data_single_lidar_without_camera_intrinsics_pinhole
+        ).validate_with_ontology(
+            ontology=ontology,
+        )
+        raise errors[0]

@@ -930,6 +930,35 @@ class VisionAI(ExcludedNoneBaseModel):
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
 
+    @validator("streams")
+    def validate_streams(cls, value):
+        if not value:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_023,
+                message_kwargs={"root_key": "streams"},
+            )
+
+        lidar_count = 0
+        camera_without_intrinsics_count = 0
+        for _, s in value.items():
+            if s.type == "lidar":
+                lidar_count += 1
+            if s.type == "camera" and (
+                not s.stream_properties or not s.stream_properties.intrinsics_pinhole
+            ):
+                camera_without_intrinsics_count += 1
+        if lidar_count and camera_without_intrinsics_count:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_042,
+                message_kwargs={
+                    "attribute_name": "stream_properties",
+                    "field_key": "intrinsics_pinhole",
+                    "type": "camera",
+                },
+            )
+
+        return value
+
     metadata: Metadata
 
     tags: Optional[Dict[StrictStr, Tag]] = Field(
