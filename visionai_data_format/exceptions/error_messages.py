@@ -72,5 +72,7 @@ VAI_ERROR_MESSAGES_MAP = {
     + "{pixel_total} in frame {frame_num} does not correspond with the area {image_area} of the image.",
     VisionAIErrorCode.VAI_ERR_041: "An error occurred while converting data from"
     + " {original_format} to {destination_format} format.",
+    VisionAIErrorCode.VAI_ERR_042: "Missing field {field_key} with value at {type} {attribute_name}"
+    + " when sensors contain at least one lidar",
     VisionAIErrorCode.VAI_ERR_999: "An invalid process has been identified.",
 }
