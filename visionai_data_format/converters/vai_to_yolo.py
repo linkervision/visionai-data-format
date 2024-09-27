@@ -12,6 +12,7 @@ from visionai_data_format.utils.classes import gen_ontology_classes_dict
 from visionai_data_format.utils.common import (
     IMAGE_EXT,
     VISIONAI_JSON,
+    YOLO_CATEGORY_FILE,
     YOLO_IMAGE_FOLDER,
     YOLO_LABEL_FOLDER,
 )
@@ -104,7 +105,7 @@ class VAItoYOLO(Converter):
                 dump_annotation = "\n".join(labels)
                 with open(label_path, "w") as f:
                     f.write(dump_annotation)
-        dest_category_path = os.path.join(output_dest_folder, "classes.txt")
+        dest_category_path = os.path.join(output_dest_folder, YOLO_CATEGORY_FILE)
         if not category_map:
             logging.info("No annotation objects are found. Category file is empty.")
         dump_classes = "\n".join(list(category_map.keys()))
