@@ -104,13 +104,13 @@ if __name__ == "__main__":
         "-input_format",
         type=str,
         required=True,
-        help="bddp/coco/kitti",
+        help="vision_ai/bddp/coco/kitti/yolo",
     )
     parser.add_argument(
         "-output_format",
         type=str,
         required=True,
-        help="vision_ai",
+        help="vision_ai/yolo/coco",
     )
     parser.add_argument(
         "-image_annotation_type",
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-uri_root",
         type=str,
-        required=True,
+        default="",
         help="uri root for storage i.e: https://azuresorate/container1",
     )
     parser.add_argument(

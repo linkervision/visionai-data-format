@@ -645,6 +645,23 @@ Arguments :
 │   ├── 000003.txt
 ```
 
+### Convert `VisionAI` format data to `YOLO` format
+
+```
+python visionai_data_format/convert_dataset.py -input_format vision_ai -output_format yolo -image_annotation_type 2d_bounding_box -source_data_root ~/path-to-visionai-root-folder -output_dest_folder ./path-to-yolo-output-folder -n_frame 5 -camera_sensor_name camera1 -annotation_name groundtruth -img_extension .jpg --copy_sensor_data
+```
+Arguments :
+- `-input_format`  : input format (vision_ai)
+- `-output_format`  : output format (use coco for COCO format)
+- `-image_annotation_type`  : label annotation type for image (2d_bounding_box for box2D)
+- `-source_data_root`  : visionai local data root folder
+- `-output_dest_folder` : output root folder (output local root folder)
+- `-n_frame`  : number of frame to be converted (-1 means all), by default -1
+- `-camera_sensor_name`  : camera sensor name (required for getting the target camera sensor data)
+- `-annotation_name` : VisionAI annotation folder name (default: "groundtruth")
+- `-img_extension` : image file extension (default: ".jpg")
+- `--copy_sensor_data` : enable to copy image data
+
 
 ## Troubleshooting
 
