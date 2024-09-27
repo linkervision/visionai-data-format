@@ -5,6 +5,7 @@ from typing import Optional
 from visionai_data_format.converters.base import ConverterFactory
 from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
 from visionai_data_format.schemas.common import AnnotationFormat, OntologyImageType
+from visionai_data_format.utils.common import YOLO_CATEGORY_FILE
 
 
 class DatasetConverter:
@@ -104,13 +105,13 @@ if __name__ == "__main__":
         "-input_format",
         type=str,
         required=True,
-        help="bddp/coco/kitti",
+        help="vision_ai/bddp/coco/kitti/yolo",
     )
     parser.add_argument(
         "-output_format",
         type=str,
         required=True,
-        help="vision_ai",
+        help="vision_ai/yolo/coco",
     )
     parser.add_argument(
         "-image_annotation_type",
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-uri_root",
         type=str,
-        required=True,
+        default="",
         help="uri root for storage i.e: https://azuresorate/container1",
     )
     parser.add_argument(
@@ -196,7 +197,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-classes_file",
         type=str,
-        default="classes.txt",
+        default=YOLO_CATEGORY_FILE,
         help="file for store category names for yolo format",
     )
     parser.add_argument(

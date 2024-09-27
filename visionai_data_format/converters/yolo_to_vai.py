@@ -24,14 +24,13 @@ from visionai_data_format.schemas.visionai_schema import (
     Stream,
     StreamType,
 )
+from visionai_data_format.utils.common import YOLO_IMAGE_FOLDER, YOLO_LABEL_FOLDER
 from visionai_data_format.utils.validator import save_as_json, validate_vai
 
 __all__ = ["YOLOtoVAI"]
 
 logger = logging.getLogger(__name__)
 
-YOLO_IMAGE_FOLDER = "images"
-YOLO_LABEL_FOLDER = "labels"
 IMAGE_EXTS = ["jpg", ".jpeg", ".png"]
 
 
