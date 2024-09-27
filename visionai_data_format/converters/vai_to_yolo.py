@@ -28,11 +28,11 @@ logger = logging.getLogger(__name__)
 )
 class VAItoYOLO(Converter):
     @staticmethod
-    def xywh2nxywh(obj, img_w, img_h) -> list:
-        nx = int(obj[0] * img_w)
-        ny = int(obj[1] * img_h)
-        nw = int(obj[2] * img_w)
-        nh = int(obj[3] * img_h)
+    def xywh2nxywh(obj: list, img_w: int, img_h: int) -> list:
+        nx = round(float(obj[0]) / img_w, 5)
+        ny = round(float(obj[1]) / img_h, 5)
+        nw = round(float(obj[2]) / img_w, 5)
+        nh = round(float(obj[3]) / img_h, 5)
         return [nx, ny, nw, nh]
 
     @classmethod
@@ -56,7 +56,7 @@ class VAItoYOLO(Converter):
         dest_img_folder = os.path.join(output_dest_folder, YOLO_IMAGE_FOLDER)
         dest_label_folder = os.path.join(output_dest_folder, YOLO_LABEL_FOLDER)
         if copy_sensor_data:
-            # create {dest}/data folder #
+            # create {dest}/images folder #
             os.makedirs(dest_img_folder, exist_ok=True)
         # create {dest}/labels folder #
         os.makedirs(dest_label_folder, exist_ok=True)
@@ -97,6 +97,7 @@ class VAItoYOLO(Converter):
                 n_frame=n_frame,
                 img_extension=img_extension,
             )
+            # output frame labels to files
             for img_path, labels in image_labels_map.items():
                 label_path = (
                     f"{dest_label_folder}/{img_path.split('/')[-1].split('.')[0] }.txt"
@@ -104,7 +105,12 @@ class VAItoYOLO(Converter):
                 dump_annotation = "\n".join(labels)
                 with open(label_path, "w") as f:
                     f.write(dump_annotation)
-
+        dest_category_path = os.path.join(output_dest_folder, "classes.txt")
+        if not category_map:
+            logging.info("No annotation objects are found. Category file is empty.")
+        dump_classes = "\n".join(list(category_map.keys()))
+        with open(dest_category_path, "w") as f:
+            f.write(dump_classes)
         logger.info("convert visionai to yolo format finished")
 
     @classmethod
@@ -122,8 +128,8 @@ class VAItoYOLO(Converter):
         image_id_start: int = 0,
         img_width: Optional[int] = None,
         img_height: Optional[int] = None,
-    ) -> tuple[dict, list, list, int, int, int]:
-        """Convert single visionai data to coco format
+    ) -> tuple[dict, dict, int, int]:
+        """Convert single visionai data to yolo format
 
         Parameters
         ----------
@@ -133,7 +139,7 @@ class VAItoYOLO(Converter):
         copy_sensor_data : bool
         source_data_root : str
         uri_root : str
-            uri root for target upload for coco uploaded
+            uri root for target upload root folder
         camera_sensor_name : str
             for getting the target camera sensor data
         n_frame : int, optional
@@ -141,8 +147,6 @@ class VAItoYOLO(Converter):
         img_extension : str, optional
             by default IMAGE_EXT (.jpg)
         image_id_start : int, optional
-            by default 0
-        anno_id_start : int, optional
             by default 0
         img_width : Optional[int], optional
             by default None
@@ -198,12 +202,12 @@ class VAItoYOLO(Converter):
                 continue
 
             for object_id, object_v in frame_data["objects"].items():
-                # from [center x, center y, width, height] to [top left x, top left y, width, height]
+                # from [center x, center y, width, height] to [n-center x, n-center y, n-width, n-height]
                 center_x, center_y, width, height = object_v["object_data"]["bbox"][0][
                     "val"
                 ]
                 bbox = cls.xywh2nxywh(
-                    [center_x, center_y, width, height],
+                    obj=[center_x, center_y, width, height],
                     img_w=img_width,
                     img_h=img_height,
                 )
@@ -211,6 +215,7 @@ class VAItoYOLO(Converter):
                 if category not in category_map:
                     category_map[category] = len(category_map)
                 category_id = category_map[category]
+                # join category and bbox as string for output to txt file
                 image_labels_map[dest_yolo_url].append(
                     " ".join(map(str, [category_id] + bbox))
                 )
