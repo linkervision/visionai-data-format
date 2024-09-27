@@ -24,10 +24,7 @@ from visionai_data_format.schemas.visionai_schema import (
     Stream,
     StreamType,
 )
-from visionai_data_format.schemas.yolo_schema import (
-    YOLO_IMAGE_FOLDER,
-    YOLO_LABEL_FOLDER,
-)
+from visionai_data_format.utils.common import YOLO_IMAGE_FOLDER, YOLO_LABEL_FOLDER
 from visionai_data_format.utils.validator import save_as_json, validate_vai
 
 __all__ = ["YOLOtoVAI"]
