@@ -74,5 +74,8 @@ VAI_ERROR_MESSAGES_MAP = {
     + " {original_format} to {destination_format} format.",
     VisionAIErrorCode.VAI_ERR_042: "Missing field {field_key} with value at {type} {attribute_name}"
     + " when sensors contain at least one lidar",
+    VisionAIErrorCode.VAI_ERR_043: "Invalid Run-Length Encoding (RLE) format: {rle_data}",
+    VisionAIErrorCode.VAI_ERR_044: "RLE data exceeds image dimensions. RLE length: {rle_length}, "
+    + "image width: {image_width}, image height: {image_height}",
     VisionAIErrorCode.VAI_ERR_999: "An invalid process has been identified.",
 }

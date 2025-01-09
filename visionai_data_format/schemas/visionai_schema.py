@@ -982,6 +982,16 @@ class VisionAIModel(ExcludedNoneBaseModel):
         extra = Extra.forbid
 
     visionai: VisionAI
+    image_width: Optional[StrictInt] = Field(
+        default=None,
+        description="The width of the image in pixels. Optional.",
+        exclude=True,
+    )
+    image_height: Optional[StrictInt] = Field(
+        default=None,
+        description="The height of the image in pixels. Optional.",
+        exclude=True,
+    )
 
     def validate_with_ontology(
         self, ontology: Type[Ontology]
@@ -1042,6 +1052,58 @@ class VisionAIModel(ExcludedNoneBaseModel):
             error_list += errors
 
         return error_list
+
+    @root_validator
+    def validate_binary_elements(cls, values):
+        def get_rle_length(rle_data: str) -> int:
+            matches = None
+            # Match RLE data of format "#{pixel_count}V{cls_idx}"
+            if re.fullmatch(r"^(#\d+V\d+)+$", rle_data):
+                matches = re.findall(r"#(\d+)V\d+", rle_data)
+            if not matches:
+                raise ValueError(f"Invalid RLE data format: {rle_data}")
+
+            total_length = sum(int(pixel_count) for pixel_count in matches)
+            return total_length
+
+        visionai = values.get("visionai")
+        frames = visionai.frames if visionai else None
+        image_width = values.get("image_width")
+        image_height = values.get("image_height")
+        if not frames or not image_width or not image_height:
+            return values
+
+        for _, frame in frames.items():
+            objects = frame.objects
+            for _, obj_under_frame in objects.items():
+                dynamic_object_data = obj_under_frame.object_data
+                binaries = (
+                    dynamic_object_data.binary if dynamic_object_data.binary else []
+                )
+
+                for binary in binaries:
+                    if isinstance(binary, Binary) and binary.encoding == "rle":
+                        rle_data = binary.val
+                        try:
+                            rle_length = get_rle_length(rle_data)
+                        except Exception:
+                            raise VisionAIException(
+                                error_code=VisionAIErrorCode.VAI_ERR_043,
+                                message_kwargs={"rle_data": rle_data},
+                            )
+
+                        max_pixels = image_width * image_height
+                        if rle_length > max_pixels:
+                            raise VisionAIException(
+                                error_code=VisionAIErrorCode.VAI_ERR_044,
+                                message_kwargs={
+                                    "rle_length": rle_length,
+                                    "image_width": image_width,
+                                    "image_height": image_height,
+                                },
+                            )
+
+        return values
 
 
 Attributes.update_forward_refs()
