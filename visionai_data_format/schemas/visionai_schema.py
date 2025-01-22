@@ -1074,7 +1074,9 @@ class VisionAIModel(ExcludedNoneBaseModel):
             return values
 
         for _, frame in frames.items():
-            objects = frame.objects
+            objects = getattr(frame, "objects", None)
+            if not objects:
+                continue
             for _, obj_under_frame in objects.items():
                 dynamic_object_data = obj_under_frame.object_data
                 binaries = (
