@@ -86,7 +86,7 @@ class CategorySchema(BaseModel):
     meta_ds: MetaDsSchema = {}
     meta_se: MetaSeSchema = {}
     uuid: str = Field(default_factory=gen_uuid)
-    objectId: Optional[ObjectIdSchema]
+    objectId: Optional[ObjectIdSchema] = None
     segment: Optional[SegmentSchema] = None
 
     def dict(self, *args, **kwargs) -> Dict:
