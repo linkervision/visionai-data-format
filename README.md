@@ -193,12 +193,12 @@ custom_visionai_data = {
 # validate custom data
 # If the data structure doesn't meets the VisionAI requirements, it would raise BaseModel error message
 # otherwise, it will returns dictionary of validated visionai data
-validated_visionai = VisionAIModel(**custom_visionai_data).dict()
+validated_visionai = VisionAIModel(**custom_visionai_data).model_dump()
 
 ```
 
 #### Explanation
-To begin, we define our custom `VisionAI` data. Subsequently, we employ the `VisionAI(**custom_visionai_data).dict()` to ensure the conformity of our custom data with the `VisionAI` schema. If there are any missing required fields or if the value types deviate from the defined data types, an error will be raised (prompting a list of `VisionAIException` exceptions). On the other hand, if the data passes validation, the function will yield a dictionary containing the validated `VisionAI` data.
+To begin, we define our custom `VisionAI` data. Subsequently, we employ the `VisionAI(**custom_visionai_data).model_dump()` to ensure the conformity of our custom data with the `VisionAI` schema. If there are any missing required fields or if the value types deviate from the defined data types, an error will be raised (prompting a list of `VisionAIException` exceptions). On the other hand, if the data passes validation, the function will yield a dictionary containing the validated `VisionAI` data.
 
 ### Validate VisionAI data with given Ontology
 
@@ -444,7 +444,7 @@ custom_ontology = {
 }
 
 # Validate your custom ontology
-validated_ontology = Ontology(**custom_ontology).dict()
+validated_ontology = Ontology(**custom_ontology).model_dump()
 
 # Validate VisionAI data with our ontology, custom_visionai_data is the custom data from upper example
 errors = VisionAIModel(**custom_visionai_data).validate_with_ontology(ontology=validated_ontology)

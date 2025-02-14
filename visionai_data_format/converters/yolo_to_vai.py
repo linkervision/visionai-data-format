@@ -264,7 +264,7 @@ class YOLOtoVAI(Converter):
             }
             if not objects:
                 vai_data["visionai"].pop("objects")
-            vai_data = validate_vai(vai_data).dict(exclude_none=True)
+            vai_data = validate_vai(vai_data).model_dump(exclude_none=True)
             logger.info("[convert_yolo_to_vai] Convert finished")
             return vai_data
         except Exception as e:

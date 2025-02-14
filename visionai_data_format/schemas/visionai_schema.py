@@ -12,14 +12,13 @@ except ImportError:
     from typing_extensions import Literal  #
 
 from pydantic import (
-    Extra,
+    ConfigDict,
     Field,
     StrictBool,
     StrictInt,
     StrictStr,
-    conlist,
-    root_validator,
-    validator,
+    field_validator,
+    model_validator,
 )
 
 from visionai_data_format.exceptions import VisionAIErrorCode, VisionAIException
@@ -87,8 +86,7 @@ class StreamType(str, Enum):
 
 
 class Attributes(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     boolean: List[StaticBoolean] = Field(default_factory=list)
     num: List[StaticNum] = Field(default_factory=list)
@@ -99,7 +97,8 @@ class Attributes(ExcludedNoneBaseModel):
 class CoordinateSystemWRTParent(ExcludedNoneBaseModel):
     matrix4x4: List[Union[float, int]]
 
-    @validator("matrix4x4")
+    @field_validator("matrix4x4")
+    @classmethod
     def validate_matrix4x4(cls, value):
         if not value or len(value) != 16:
             raise VisionAIException(
@@ -115,11 +114,10 @@ class CoordinateSystem(ExcludedNoneBaseModel):
     children: List[StrictStr]
     pose_wrt_parent: Optional[CoordinateSystemWRTParent] = Field(default=None)
 
-    class Config:
-        extra = Extra.forbid
-        use_enum_values = True
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
 
-    @validator("pose_wrt_parent")
+    @field_validator("pose_wrt_parent")
+    @classmethod
     def validate_pose_wrt_parent(cls, value):
         if not value:
             raise VisionAIException(
@@ -130,8 +128,7 @@ class CoordinateSystem(ExcludedNoneBaseModel):
 
 
 class FrameInterval(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     frame_start: StrictInt = Field(
         ..., description="Initial frame number of the interval."
@@ -140,17 +137,17 @@ class FrameInterval(ExcludedNoneBaseModel):
         ..., description="Ending frame number of the interval."
     )
 
-    @root_validator
-    def validate_frame_range(cls, values):
-        frame_start = values.get("frame_start")
-        frame_end = values.get("frame_end")
-
-        if frame_start > frame_end:
+    @model_validator(mode="after")
+    def validate_frame_range(self) -> FrameInterval:
+        if self.frame_start > self.frame_end:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_006,
-                message_kwargs={"frame_start": frame_start, "frame_end": frame_end},
+                message_kwargs={
+                    "frame_start": self.frame_start,
+                    "frame_end": self.frame_end,
+                },
             )
-        return values
+        return self
 
 
 class IntrinsicsPinhole(ExcludedNoneBaseModel):
@@ -159,7 +156,8 @@ class IntrinsicsPinhole(ExcludedNoneBaseModel):
     height_px: int
     width_px: int
 
-    @validator("distortion_coeffs_1xN")
+    @field_validator("distortion_coeffs_1xN")
+    @classmethod
     def validate_distortion_coeffs_1xN(cls, value):
         if not value:
             raise VisionAIException(
@@ -168,7 +166,8 @@ class IntrinsicsPinhole(ExcludedNoneBaseModel):
             )
         return value
 
-    @validator("camera_matrix_3x4")
+    @field_validator("camera_matrix_3x4")
+    @classmethod
     def validate_camera_matrix_3x4(cls, value):
         if not value or len(value) != 12:
             raise VisionAIException(
@@ -179,9 +178,7 @@ class IntrinsicsPinhole(ExcludedNoneBaseModel):
 
 
 class Metadata(ExcludedNoneBaseModel):
-    class Config:
-        use_enum_values = True
-        extra = Extra.allow
+    model_config = ConfigDict(use_enum_values=True, extra="allow")
 
     schema_version: SchemaVersion = Field(
         description="Version number of the VisionAI schema this annotation JSON object follows.",
@@ -202,9 +199,7 @@ class StaticBoolean(ExcludedNoneBaseModel):
     )
     val: StrictBool = Field(..., description="The boolean value.")
 
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
 
 class DynamicBoolean(StaticBoolean):
@@ -220,9 +215,7 @@ class DynamicBoolean(StaticBoolean):
 
 
 class StaticNum(ExcludedNoneBaseModel):
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
     attributes: Optional[Attributes] = None
     name: StrictStr = Field(
@@ -253,9 +246,7 @@ class DynamicNum(StaticNum):
 
 
 class StaticText(ExcludedNoneBaseModel):
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
     attributes: Optional[Attributes] = None
     name: Optional[StrictStr] = Field(
@@ -295,9 +286,7 @@ class VecBaseNoName(ExcludedNoneBaseModel):
         ..., description="The values of the vector (list)."
     )
 
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
 
 class StaticVec(VecBaseNoName):
@@ -364,19 +353,15 @@ class ElementDataPointer(ExcludedNoneBaseModel):
 
 
 class ContextDataStatic(BaseStaticElementData):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class DynamicContextData(BaseDynamicElementData):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class ContextDataPointer(ElementDataPointer):
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
     type: AttributeType = Field(
         ..., description="Type of the element data pointed by this pointer."
@@ -384,8 +369,7 @@ class ContextDataPointer(ElementDataPointer):
 
 
 class Context(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     frame_intervals: List[FrameInterval] = Field(
         ...,
@@ -402,7 +386,8 @@ class Context(ExcludedNoneBaseModel):
         description="The type of a context, defines the class the context corresponds to.",
     )
 
-    @validator("context_data", pre=True)
+    @field_validator("context_data", mode="before")
+    @classmethod
     def validate_context_data(cls, value):
         if not isinstance(value, dict) or not value:
             raise VisionAIException(
@@ -411,7 +396,8 @@ class Context(ExcludedNoneBaseModel):
             )
         return value
 
-    @validator("context_data_pointers", pre=True)
+    @field_validator("context_data_pointers", mode="before")
+    @classmethod
     def pre_validate_context_data_pointers(cls, value):
         if not value:
             raise VisionAIException(
@@ -420,10 +406,10 @@ class Context(ExcludedNoneBaseModel):
             )
         return value
 
-    @root_validator
-    def validate_context_data_relations(cls, values):
-        context_data_pointers = values.get("context_data_pointers")
-        context_data = values.get("context_data", {})
+    @model_validator(mode="after")
+    def validate_context_data_relations(self):
+        context_data_pointers = self.context_data_pointers
+        context_data = self.context_data
         if context_data and not context_data_pointers:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_009,
@@ -475,13 +461,11 @@ class Context(ExcludedNoneBaseModel):
                     "data_name_list": error_name_list,
                 },
             )
-        return values
+        return self
 
 
 class ObjectDataPointer(ElementDataPointer):
-    class Config:
-        use_enum_values = True
-        extra = Extra.forbid
+    model_config = ConfigDict(use_enum_values=True, extra="forbid")
 
     type: ObjectType = Field(
         ..., description="Type of the element data pointed by this pointer."
@@ -489,13 +473,11 @@ class ObjectDataPointer(ElementDataPointer):
 
 
 class ObjectDataStatic(BaseStaticElementData):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
 
 class Object(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     frame_intervals: List[FrameInterval] = Field(
         ...,
@@ -512,7 +494,8 @@ class Object(ExcludedNoneBaseModel):
         description="The type of an object, defines the class the object corresponds to.",
     )
 
-    @validator("object_data", pre=True)
+    @field_validator("object_data", mode="before")
+    @classmethod
     def validate_object_data(cls, value):
         if not isinstance(value, dict) or not value:
             raise VisionAIException(
@@ -521,7 +504,8 @@ class Object(ExcludedNoneBaseModel):
             )
         return value
 
-    @validator("object_data_pointers", pre=True)
+    @field_validator("object_data_pointers", mode="before")
+    @classmethod
     def pre_validate_object_data_pointers(cls, value):
         if not value:
             raise VisionAIException(
@@ -530,10 +514,10 @@ class Object(ExcludedNoneBaseModel):
             )
         return value
 
-    @root_validator
-    def validate_object_data_relations(cls, values):
-        object_data_pointers = values.get("object_data_pointers")
-        object_data = values.get("object_data", {})
+    @model_validator(mode="after")
+    def validate_object_data_relations(self):
+        object_data_pointers = self.object_data_pointers
+        object_data = self.object_data
         if object_data and not object_data_pointers:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_009,
@@ -584,7 +568,7 @@ class Object(ExcludedNoneBaseModel):
                     "data_name_list": error_name_list,
                 },
             )
-        return values
+        return self
 
 
 class StreamProperties(ExcludedNoneBaseModel):
@@ -594,7 +578,8 @@ class StreamProperties(ExcludedNoneBaseModel):
 class TagData(ExcludedNoneBaseModel):
     vec: List[StaticVec] = Field(...)
 
-    @validator("vec")
+    @field_validator("vec")
+    @classmethod
     def validate_vec(cls, values):
         if not len(values) == 1:
             raise VisionAIException(
@@ -616,17 +601,16 @@ class Stream(ExcludedNoneBaseModel):
     description: Optional[StrictStr] = ""
     stream_properties: Optional[StreamProperties] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
-    @validator("stream_properties")
+    @field_validator("stream_properties")
+    @classmethod
     def validate_stream_properties(cls, value):
         if not value:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_023,
                 message_kwargs={"root_key": "stream_properties"},
             )
-
         return value
 
 
@@ -639,10 +623,10 @@ class Tag(ExcludedNoneBaseModel):
 class TimeStampElement(ExcludedNoneBaseModel):
     timestamp: str
 
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
-    @validator("timestamp")
+    @field_validator("timestamp")
+    @classmethod
     def validate_timestamp(cls, value):
         iso_time_regex = r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}\.\d{3})(Z|[+-]((\d{2}:\d{2})|(\d{4})))$"
 
@@ -665,17 +649,16 @@ class FramePropertyStream(ExcludedNoneBaseModel):
         None, description="Additional properties of the stream"
     )
 
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
-    @validator("stream_properties")
+    @field_validator("stream_properties")
+    @classmethod
     def validate_stream_properties(cls, value):
         if not value:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_023,
                 message_kwargs={"root_key": "stream_properties"},
             )
-
         return value
 
 
@@ -705,35 +688,41 @@ class ObjectDataElement(ExcludedNoneBaseModel):
 
 
 class Bbox(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
+    val: List[Union[float, int]] = Field(...)
 
-    val: conlist(
-        Union[float, int],
-        max_items=4,
-        min_items=4,
-    )
+    @field_validator("val")
+    @classmethod
+    def validate_val_length(cls, v):
+        if len(v) != 4:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_length": "4 elements"},
+            )
+        return v
 
 
 class Cuboid(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
-    val: conlist(
-        Union[float, int],
-        min_items=9,
-        max_items=9,
-    )
+    val: List[Union[float, int]] = Field(...)
+
+    @field_validator("val")
+    @classmethod
+    def validate_val_length(cls, v):
+        if len(v) != 9:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_length": "9 elements"},
+            )
+        return v
 
 
 class Poly2D(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
-    val: conlist(
-        Union[float, int],
-        min_items=2,
-    )
+    val: List[Union[float, int]] = Field(...)
+
     closed: StrictBool = Field(
         ...,
         description="The boolean value to define whether current polygon is a polygon or a polyline",
@@ -741,7 +730,8 @@ class Poly2D(ObjectDataElement):
 
     mode: Literal["MODE_POLY2D_ABSOLUTE"] = "MODE_POLY2D_ABSOLUTE"
 
-    @validator("val")
+    @field_validator("val")
+    @classmethod
     def val_length_must_be_even(cls, v):
         if len(v) % 2 != 0:
             raise VisionAIException(
@@ -752,14 +742,19 @@ class Poly2D(ObjectDataElement):
 
 
 class Point2D(ObjectDataElement):
-    class Config:
-        extra = Extra.allow
+    model_config = ConfigDict(extra="allow")
 
-    val: conlist(
-        Union[float, int],
-        max_items=2,
-        min_items=2,
-    )
+    val: List[Union[float, int]] = Field(...)
+
+    @field_validator("val")
+    @classmethod
+    def validate_val_length(cls, v):
+        if len(v) != 2:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_length": "2 elements"},
+            )
+        return v
 
 
 class Binary(ObjectDataElement):
@@ -774,7 +769,8 @@ class Binary(ObjectDataElement):
     )
     val: StrictStr = Field(...)
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def validate_name_field(cls, value):
         if value not in ("semantic_mask", "instance_mask"):
             raise VisionAIException(
@@ -788,8 +784,7 @@ class Binary(ObjectDataElement):
 
 
 class DynamicObjectData(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     bbox: Optional[List[Bbox]] = Field(
         None, description='List of "bbox" that describe this object.'
@@ -818,8 +813,7 @@ class ContextUnderFrame(ExcludedNoneBaseModel):
 
 
 class Frame(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     objects: Optional[Dict[StrictStr, ObjectUnderFrame]] = Field(
         default=None,
@@ -841,8 +835,7 @@ class Frame(ExcludedNoneBaseModel):
 
 
 class VisionAI(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     contexts: Optional[Dict[StrictStr, Context]] = Field(
         default=None,
@@ -850,7 +843,8 @@ class VisionAI(ExcludedNoneBaseModel):
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
 
-    @validator("contexts")
+    @field_validator("contexts")
+    @classmethod
     def validate_contexts(cls, value):
         if not value:
             raise VisionAIException(
@@ -869,7 +863,8 @@ class VisionAI(ExcludedNoneBaseModel):
         + " Keys are strings containing numerical frame identifiers, which are denoted as master frame numbers.",
     )
 
-    @validator("frames")
+    @field_validator("frames")
+    @classmethod
     def validate_frames(cls, value):
         if not value:
             raise VisionAIException(
@@ -893,7 +888,8 @@ class VisionAI(ExcludedNoneBaseModel):
         + " Object keys are strings containing numerical UIDs or 32 bytes UUIDs.",
     )
 
-    @validator("objects")
+    @field_validator("objects")
+    @classmethod
     def validate_objects(cls, value):
         if not value:
             raise VisionAIException(
@@ -909,7 +905,8 @@ class VisionAI(ExcludedNoneBaseModel):
         + " Values are dictionary containing information of current key device.",
     )
 
-    @validator("coordinate_systems")
+    @field_validator("coordinate_systems")
+    @classmethod
     def validate_coordinate_systems(cls, value):
         if not value:
             raise VisionAIException(
@@ -930,7 +927,8 @@ class VisionAI(ExcludedNoneBaseModel):
         description="This is the JSON object of VisionAI that contains the streams and their details.",
     )
 
-    @validator("streams")
+    @field_validator("streams")
+    @classmethod
     def validate_streams(cls, value):
         if not value:
             raise VisionAIException(
@@ -967,7 +965,8 @@ class VisionAI(ExcludedNoneBaseModel):
         + " Values are dictionary containing information of current sequence.",
     )
 
-    @validator("tags")
+    @field_validator("tags")
+    @classmethod
     def validate_tags(cls, value):
         if not value:
             raise VisionAIException(
@@ -978,8 +977,7 @@ class VisionAI(ExcludedNoneBaseModel):
 
 
 class VisionAIModel(ExcludedNoneBaseModel):
-    class Config:
-        extra = Extra.forbid
+    model_config = ConfigDict(extra="forbid")
 
     visionai: VisionAI
     image_width: Optional[StrictInt] = Field(
@@ -1005,7 +1003,7 @@ class VisionAIModel(ExcludedNoneBaseModel):
 
         tags = ontology.get("tags", {})
 
-        visionai = self.visionai.dict(exclude_unset=True, exclude_none=True)
+        visionai = self.visionai.model_dump(exclude_unset=True, exclude_none=True)
 
         errors = validate_visionai_intervals(visionai=visionai)
         error_list += errors
@@ -1053,7 +1051,7 @@ class VisionAIModel(ExcludedNoneBaseModel):
 
         return error_list
 
-    @root_validator
+    @model_validator(mode="after")
     def validate_binary_elements(cls, values):
         def get_rle_length(rle_data: str) -> int:
             matches = None
@@ -1066,10 +1064,11 @@ class VisionAIModel(ExcludedNoneBaseModel):
             total_length = sum(int(pixel_count) for pixel_count in matches)
             return total_length
 
-        visionai = values.get("visionai")
-        frames = visionai.frames if visionai else None
-        image_width = values.get("image_width")
-        image_height = values.get("image_height")
+        values_dict = values.model_dump()
+        visionai = values_dict.get("visionai")
+        frames = visionai.get("frames") if visionai else None
+        image_width = values_dict.get("image_width")
+        image_height = values_dict.get("image_height")
         if not frames or not image_width or not image_height:
             return values
 
@@ -1108,12 +1107,12 @@ class VisionAIModel(ExcludedNoneBaseModel):
         return values
 
 
-Attributes.update_forward_refs()
-Context.update_forward_refs()
-ContextDataPointer.update_forward_refs()
-ContextUnderFrame.update_forward_refs()
-Frame.update_forward_refs()
-Object.update_forward_refs()
-DynamicObjectData.update_forward_refs()
-ObjectUnderFrame.update_forward_refs()
-VisionAI.update_forward_refs()
+Attributes.model_rebuild()
+Context.model_rebuild()
+ContextDataPointer.model_rebuild()
+ContextUnderFrame.model_rebuild()
+Frame.model_rebuild()
+Object.model_rebuild()
+DynamicObjectData.model_rebuild()
+ObjectUnderFrame.model_rebuild()
+VisionAI.model_rebuild()

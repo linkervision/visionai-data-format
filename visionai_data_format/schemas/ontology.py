@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictStr
 
 from visionai_data_format.schemas.common import SensorType
 
@@ -23,8 +23,7 @@ class Attribute(BaseModel):
     type: AttributeType
     value: Optional[List[Union[str, int, float]]] = None
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class OntologyInfo(BaseModel):
@@ -34,8 +33,7 @@ class OntologyInfo(BaseModel):
 class Stream(BaseModel):
     type: SensorType
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class Ontology(BaseModel):

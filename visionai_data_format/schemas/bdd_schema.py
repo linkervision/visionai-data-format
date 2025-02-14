@@ -2,7 +2,7 @@
 from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
-from pydantic import BaseModel, Extra, Field, conlist
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 BDD_VERSION = "1.1.4"
 
@@ -15,8 +15,8 @@ class ObjectIdSchema(BaseModel):
 
 
 class MetaDsSchema(BaseModel):
-    score: Optional[float]
-    coco_url: Optional[str]
+    score: Optional[float] = None
+    coco_url: Optional[str] = None
 
 
 class ResolutionSchema(BaseModel):
@@ -29,12 +29,11 @@ class MetaSeSchema(BaseModel):
     resolution: Optional[ResolutionSchema] = None
 
 
-class AtrributeSchema(BaseModel):
+class AttributeSchema(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     cameraIndex: Optional[int] = 0
     INSTANCE_ID: int = 0
-
-    class Config:
-        extra = Extra.allow
 
 
 class Box2dSchema(BaseModel):
@@ -54,34 +53,33 @@ class PolyInfo(BaseModel):
     types: Optional[str] = None
 
 
-class PolygonSchema(BaseModel):
-    __root__: List[PolyInfo]
+class PolygonSchema(RootModel):
+    root: List[PolyInfo]
 
 
 class FrameLabelSchema(BaseModel):
     category: str
-    attributes: Optional[AtrributeSchema] = AtrributeSchema().dict()
+    attributes: Optional[AttributeSchema] = AttributeSchema().model_dump()
 
 
 class SegmentSchema(BaseModel):
-    bbox: conlist(
-        Union[float, int],
-        max_items=4,
-        min_items=4,
-    )
-
+    bbox: List[Union[float, int]] = Field(default=[0, 0, 0, 0])
     counts: List[int]
+    resolution: List[int] = Field(default=[0, 0])
 
-    resolution: conlist(
-        int,
-        max_items=2,
-        min_items=2,
+    model_config = ConfigDict(
+        json_schema_extra={
+            "properties": {
+                "bbox": {"minItems": 4, "maxItems": 4},
+                "resolution": {"minItems": 2, "maxItems": 2},
+            }
+        }
     )
 
 
 class CategorySchema(BaseModel):
     category: str
-    attributes: Optional[AtrributeSchema] = AtrributeSchema().dict()
+    attributes: Optional[AttributeSchema] = AttributeSchema().model_dump()
     box2d: Optional[Box2dSchema] = None
     poly2d: Optional[PolygonSchema] = None
     point2d: Optional[PolygonSchema] = None
@@ -93,7 +91,7 @@ class CategorySchema(BaseModel):
 
     def dict(self, *args, **kwargs) -> Dict:
         kwargs.pop("exclude_none")
-        return super().dict(*args, exclude_none=True, **kwargs)
+        return super().model_dump(*args, exclude_none=True, **kwargs)
 
 
 class FrameSchema(BaseModel):

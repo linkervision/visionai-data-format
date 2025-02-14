@@ -3,7 +3,7 @@ import logging
 import os
 from typing import Optional
 
-from visionai_data_format.schemas.bdd_schema import AtrributeSchema, FrameSchema
+from visionai_data_format.schemas.bdd_schema import AttributeSchema, FrameSchema
 from visionai_data_format.schemas.visionai_schema import VisionAI
 
 from .calculation import xywh2xyxy
@@ -84,7 +84,7 @@ def convert_vai_to_bdd_single(
                 lidarPlaneURLs=[img_name],
                 labels=[],
             )
-            sensor_frame[sensor] = frame_temp.dict()
+            sensor_frame[sensor] = frame_temp.model_dump()
         idx = 0
         objects = getattr(frame_data, "objects", None) or {}
         for obj_id, obj_data in objects.items():
@@ -114,7 +114,7 @@ def convert_vai_to_bdd_single(
                     "version": VERSION,
                 }
                 label["objectId"] = object_id
-                label["attributes"] = AtrributeSchema(INSTANCE_ID=idx).dict()
+                label["attributes"] = AttributeSchema(INSTANCE_ID=idx).model_dump()
                 sensor_frame[sensor]["labels"].append(label)
                 idx += 1
         # frame for different sensors is consider a unique frame in bdd

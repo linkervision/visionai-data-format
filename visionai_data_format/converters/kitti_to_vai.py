@@ -423,7 +423,7 @@ class KITTItoVAI(Converter):
                     "streams": streams,
                 }
             }
-            vai_data = validate_vai(vai_data).dict(exclude_none=True)
+            vai_data = validate_vai(vai_data).model_dump(exclude_none=True)
             save_as_json(
                 vai_data,
                 folder_name=os.path.join(
