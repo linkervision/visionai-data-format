@@ -721,7 +721,10 @@ class Cuboid(ObjectDataElement):
 class Poly2D(ObjectDataElement):
     model_config = ConfigDict(extra="allow")
 
-    val: List[Union[float, int]] = Field(...)
+    val: List[Union[float, int]] = Field(
+        ...,
+        description="List of coordinates forming a polygon/polyline. Must have at least 2 items and be even-numbered.",
+    )
 
     closed: StrictBool = Field(
         ...,
@@ -732,7 +735,12 @@ class Poly2D(ObjectDataElement):
 
     @field_validator("val")
     @classmethod
-    def val_length_must_be_even(cls, v):
+    def validate_val_length(cls, v):
+        if len(v) < 2:
+            raise VisionAIException(
+                error_code=VisionAIErrorCode.VAI_ERR_013,
+                message_kwargs={"allowed_length": "minimum 2 items"},
+            )
         if len(v) % 2 != 0:
             raise VisionAIException(
                 error_code=VisionAIErrorCode.VAI_ERR_013,
