@@ -22,7 +22,7 @@ For a more in-depth understanding of the VisionAI format, please visit this URL:
 pip3 install visionai-data-format
 ```
 
-**Prerequisites**: You must have [Python 3.7](https://www.python.org/downloads/) and above to use this package.
+**Prerequisites**: You must have [Python 3.8](https://www.python.org/downloads/) and above to use this package.
 
 
 ## Example
