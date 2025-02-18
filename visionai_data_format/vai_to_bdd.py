@@ -13,7 +13,7 @@ def vai_to_bdd(
     company_code: int,
     storage_name: str,
     container_name: str,
-    annotation_name:str
+    annotation_name: str,
 ) -> None:
     try:
         bdd_data = convert_vai_to_bdd(
@@ -21,10 +21,10 @@ def vai_to_bdd(
             company_code=company_code,
             storage_name=storage_name,
             container_name=container_name,
-            annotation_name=annotation_name
+            annotation_name=annotation_name,
         )
         bdd = validate_bdd(data=bdd_data)
-        save_as_json(bdd.dict(), file_name=bdd_dest_file)
+        save_as_json(bdd.model_dump(), file_name=bdd_dest_file)
     except Exception as e:
         logger.error("Convert vai to bdd format failed : " + str(e))
 

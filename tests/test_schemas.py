@@ -36,7 +36,7 @@ def test_coco():
         "annotations": [],
     }
 
-    assert COCO(**input_data).dict() == generated_data
+    assert COCO(**input_data).model_dump() == generated_data
 
 
 def test_visionai_model():
@@ -54,7 +54,7 @@ def test_visionai_model():
         }
     }
     with pytest.raises(Exception):
-        assert VisionAIModel(**input_data).dict() == generated_data
+        assert VisionAIModel(**input_data).model_dump() == generated_data
 
 
 def test_visionai(
@@ -64,12 +64,12 @@ def test_visionai(
     fake_generated_objects_visionai_data,
 ):
     assert (
-        VisionAIModel(**fake_raw_visionai_data).dict(exclude_unset=True)
+        VisionAIModel(**fake_raw_visionai_data).model_dump(exclude_unset=True)
         == fake_generated_raw_visionai_data
     )
 
     assert (
-        VisionAIModel(**fake_objects_visionai_data).dict(exclude_unset=True)
+        VisionAIModel(**fake_objects_visionai_data).model_dump(exclude_unset=True)
         == fake_generated_objects_visionai_data
     )
 
@@ -84,4 +84,4 @@ def test_bdd():
         "meta_se": {},
         "frame_list": [],
     }
-    assert BDDSchema(**input_data).dict() == generated_data
+    assert BDDSchema(**input_data).model_dump() == generated_data

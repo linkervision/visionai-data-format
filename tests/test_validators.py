@@ -8,7 +8,7 @@ from visionai_data_format.schemas.visionai_schema import VisionAIModel
 
 
 def test_validate_bbox(fake_visionai_ontology, fake_objects_data_single_lidar):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     errors = VisionAIModel(**fake_objects_data_single_lidar).validate_with_ontology(
         ontology=ontology,
@@ -20,7 +20,7 @@ def test_validate_bbox(fake_visionai_ontology, fake_objects_data_single_lidar):
 def test_validate_bbox_wrong_frame_properties_sensor_name(
     fake_visionai_ontology, fake_objects_data_wrong_frame_properties_sensor
 ):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     errors = VisionAIModel(
         **fake_objects_data_wrong_frame_properties_sensor
@@ -44,7 +44,7 @@ def test_validate_bbox_wrong_frame_properties_sensor_name(
 def test_validate_bbox_wrong_streams_under_visionai(
     fake_visionai_ontology, fake_objects_data_wrong_frame_properties_sensor
 ):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     with pytest.raises(
         VisionAIException,
@@ -62,7 +62,7 @@ def test_validate_bbox_wrong_streams_under_visionai(
 def test_validate_bbox_wrong_class_under_visionai(
     fake_visionai_ontology, fake_objects_data_single_lidar_wrong_class
 ):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     with pytest.raises(
         VisionAIException,
@@ -79,7 +79,9 @@ def test_validate_bbox_wrong_class_under_visionai(
 def test_validate_semantic_segmentation(
     fake_visionai_semantic_ontology, fake_objects_semantic_segmentation
 ):
-    ontology = Ontology(**fake_visionai_semantic_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_semantic_ontology).model_dump(
+        exclude_unset=True
+    )
 
     errors = VisionAIModel(**fake_objects_semantic_segmentation).validate_with_ontology(
         ontology=ontology,
@@ -91,7 +93,7 @@ def test_validate_semantic_segmentation(
 def test_validate_instance_segmentation(
     fake_visionai_instance_segmentation_ontology, fake_objects_instance_segmentation
 ):
-    ontology = Ontology(**fake_visionai_instance_segmentation_ontology).dict(
+    ontology = Ontology(**fake_visionai_instance_segmentation_ontology).model_dump(
         exclude_unset=True
     )
 
@@ -105,7 +107,9 @@ def test_validate_instance_segmentation(
 def test_validate_semantic_segmentation_visionai_without_tags(
     fake_visionai_semantic_ontology, fake_objects_semantic_segmentation_without_tags
 ):
-    ontology = Ontology(**fake_visionai_semantic_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_semantic_ontology).model_dump(
+        exclude_unset=True
+    )
     with pytest.raises(Exception):
         errors = VisionAIModel(
             **fake_objects_semantic_segmentation_without_tags
@@ -119,7 +123,9 @@ def test_validate_semantic_segmentation_visionai_wrong_tags_classes(
     fake_visionai_semantic_ontology,
     fake_objects_semantic_segmentation_wrong_tags_classes,
 ):
-    ontology = Ontology(**fake_visionai_semantic_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_semantic_ontology).model_dump(
+        exclude_unset=True
+    )
     errors = VisionAIModel(
         **fake_objects_semantic_segmentation_wrong_tags_classes
     ).validate_with_ontology(
@@ -143,7 +149,7 @@ def test_validate_semantic_segmentation_visionai_wrong_tags_classes(
 def test_validate_classification(
     fake_visionai_classification_ontology, fake_contexts_data
 ):
-    ontology = Ontology(**fake_visionai_classification_ontology).dict(
+    ontology = Ontology(**fake_visionai_classification_ontology).model_dump(
         exclude_unset=True
     )
     errors = VisionAIModel(**fake_contexts_data).validate_with_ontology(
@@ -156,7 +162,7 @@ def test_validate_wrong_visionai_frame_intervals(
     fake_visionai_ontology,
     fake_objects_data_single_lidar_wrong_visionai_frame_intervals,
 ):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     errors = VisionAIModel(
         **fake_objects_data_single_lidar_wrong_visionai_frame_intervals
@@ -191,7 +197,7 @@ def test_validate_wrong_object_frame_intervals(
     fake_visionai_ontology,
     fake_objects_data_single_lidar_wrong_objects_frame_intervals,
 ):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     errors = VisionAIModel(
         **fake_objects_data_single_lidar_wrong_objects_frame_intervals
@@ -219,7 +225,7 @@ def test_validate_wrong_object_frame_intervals(
 def test_validate_wrong_context_vector_attribute(
     fake_visionai_classification_ontology, fake_contexts_data_wrong_vector_value
 ):
-    ontology = Ontology(**fake_visionai_classification_ontology).dict(
+    ontology = Ontology(**fake_visionai_classification_ontology).model_dump(
         exclude_unset=True
     )
 
@@ -242,7 +248,7 @@ def test_validate_wrong_context_vector_attribute_classification(
     fake_visionai_classification_ontology,
     fake_contexts_classification_wrong_vector_value,
 ):
-    ontology = Ontology(**fake_visionai_classification_ontology).dict(
+    ontology = Ontology(**fake_visionai_classification_ontology).model_dump(
         exclude_unset=True
     )
 
@@ -264,7 +270,7 @@ def test_validate_single_lidar_without_camera_intrinsics_pinhole(
     fake_visionai_ontology,
     fake_objects_data_single_lidar_without_camera_intrinsics_pinhole,
 ):
-    ontology = Ontology(**fake_visionai_ontology).dict(exclude_unset=True)
+    ontology = Ontology(**fake_visionai_ontology).model_dump(exclude_unset=True)
 
     with pytest.raises(
         VisionAIException,

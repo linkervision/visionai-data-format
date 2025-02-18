@@ -62,7 +62,7 @@ class BDDtoVAI(Converter):
     ) -> None:
         try:
             raw_data = json.load(open(input_annotation_path))
-            bdd_data = validate_bdd(raw_data).dict()
+            bdd_data = validate_bdd(raw_data).model_dump()
             # create sequence/frame/mapping
             sequence_frames = defaultdict(list)
             for frame in bdd_data["frame_list"]:
@@ -78,7 +78,7 @@ class BDDtoVAI(Converter):
                     if n_frame < frame_count:
                         frame_list = frame_list[:n_frame]
                     n_frame -= len(frame_list)
-                sequence_bdd_data = BDDSchema(frame_list=frame_list).dict()
+                sequence_bdd_data = BDDSchema(frame_list=frame_list).model_dump()
                 sequence_name = f"{seq_id:012d}"
                 logger.info(f"convert sequence {sequence_key} to {sequence_name}")
                 cls.convert_sequence_bdd_to_vai(
@@ -348,7 +348,7 @@ class BDDtoVAI(Converter):
             if not contexts:
                 vai_data["visionai"].pop("contexts")
 
-            vai_data = validate_vai(vai_data).dict(exclude_none=True)
+            vai_data = validate_vai(vai_data).model_dump(exclude_none=True)
             save_as_json(
                 vai_data,
                 folder_name=os.path.join(

@@ -1,7 +1,7 @@
 from enum import Enum, EnumMeta
 from typing import Any, Optional, Set
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseEnumMeta(EnumMeta):
@@ -47,17 +47,19 @@ class DatasetType(str, Enum, metaclass=BaseEnumMeta):
     RAW_DATA = "raw_data"
 
 
-class ExcludedNoneBaseModel(BaseModel, smart_union=True):
-    def dict(self, **kwargs):
+class ExcludedNoneBaseModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    def model_dump(self, **kwargs):
         exclude_none = kwargs.pop("exclude_none", True)
         exclude_unset = kwargs.pop("exclude_unset", True)
-        return super().dict(
+        return super().model_dump(
             exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
         )
 
-    def json(self, **kwargs):
+    def model_dump_json(self, **kwargs):
         exclude_none = kwargs.pop("exclude_none", True)
         exclude_unset = kwargs.pop("exclude_unset", True)
-        return super().json(
+        return super().model_dump_json(
             exclude_none=exclude_none, exclude_unset=exclude_unset, **kwargs
         )

@@ -58,7 +58,7 @@ class COCOtoVAI(Converter):
     ) -> None:
         try:
             raw_data = json.load(open(input_annotation_path))
-            coco_json_data = validate_coco(raw_data).dict()
+            coco_json_data = validate_coco(raw_data).model_dump()
 
             class_id_name_map: dict[str, str] = {
                 str(class_info["id"]): class_info["name"]
@@ -245,7 +245,7 @@ class COCOtoVAI(Converter):
             if not objects:
                 vai_data["visionai"].pop("objects")
 
-            vai_data = validate_vai(vai_data).dict(exclude_none=True)
+            vai_data = validate_vai(vai_data).model_dump(exclude_none=True)
             logger.info("[convert_coco_to_vai] Convert finished")
             return vai_data
         except Exception as e:

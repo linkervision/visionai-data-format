@@ -93,7 +93,7 @@ class VAItoCOCO(Converter):
         logger.info("convert visionai to coco format finished")
 
         with open(os.path.join(dest_json_folder, COCO_LABEL_FILE), "w+") as f:
-            json.dump(coco.dict(), f, indent=4)
+            json.dump(coco.model_dump(), f, indent=4)
 
     @staticmethod
     def convert_single_visionai_to_coco(
